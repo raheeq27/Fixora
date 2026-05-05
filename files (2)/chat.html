@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>FIXORA الأردن – راسل الحرفي</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+
+<div class="chat-app">
+  <!-- رأس الصفحة مع معلومات الحرفي -->
+  <div class="chat-header">
+    <button class="back-btn" id="backBtn" title="العودة للبروفايل">✕</button>
+    <div class="provider-info">
+      <div class="provider-avatar">👨‍🔧</div>
+      <div class="provider-details">
+        <h3>محمد أبو خالد</h3>
+        <div class="provider-status">
+          <span class="status-dot"></span>
+          <span>متصل · متاح الآن</span>
+        </div>
+      </div>
+    </div>
+    <div class="country-badge">🇯🇴</div>
+  </div>
+
+  <!-- منطقة عرض الرسائل -->
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <!-- منطقة الكتابة والإرسال -->
+  <div class="chat-input-area">
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا ..." autocomplete="off">
+    <button class="send-btn" id="sendBtn">📤</button>
+  </div>
+  
+  <div class="chat-footer-note">
+    <span>🔒 رسائلك مشفرة · FIXORA الأردن</span>
+  </div>
+</div>
+
+<script src="js/chat.js"></script>
+</body>
+</html>

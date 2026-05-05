@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FIXORA — إدارة البروفايل</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/fxr-theme.css"/>
+  <link rel="stylesheet" href="css/fxr-layout.css"/>
+  <link rel="stylesheet" href="css/provider-profile-edit.css"/>
+</head>
+<body class="fxr-body">
+<div class="fxr-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="fxr-sidebar" id="fxrSidebar">
+    <div class="fxr-logo">
+      <div class="fxr-logo__icon">⚙️</div>
+      <div><div class="fxr-logo__text">FIX<span>O</span>RA</div><div class="fxr-logo__sub">Your Local Repair Platform</div></div>
+    </div>
+    <div class="fxr-sidebar-profile">
+      <div class="fxr-sidebar-profile__av" id="sidebarAv">👷</div>
+      <div>
+        <div class="fxr-sidebar-profile__name" id="sidebarName">اسم الحرفي</div>
+        <div class="fxr-sidebar-profile__spec" id="sidebarSpec">التخصص</div>
+        <div class="fxr-sidebar-avail"><span class="fxr-avail-dot"></span><span>متاح الآن</span></div>
+      </div>
+    </div>
+    <nav class="fxr-nav">
+      <span class="fxr-nav-section">لوحة التحكم</span>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">📈</span>الإحصائيات</a>
+      <a class="fxr-nav-link" href="provider-jobs.html"><span class="fxr-nav-link__icon">📥</span>طلبات العمل<span class="fxr-nav-link__badge">3</span></a>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">🔨</span>خدماتي</a>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">🖼️</span>معرض أعمالي</a>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">📅</span>جدولي</a>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">💰</span>أرباحي</a>
+      <a class="fxr-nav-link" href="provider-dashboard.html"><span class="fxr-nav-link__icon">⭐</span>تقييماتي</a>
+      <span class="fxr-nav-section">الحساب</span>
+      <a class="fxr-nav-link is-active" href="#"><span class="fxr-nav-link__icon">✏️</span>إدارة البروفايل</a>
+      <a class="fxr-nav-link fxr-nav-link--logout" href="#"><span class="fxr-nav-link__icon">🚪</span>خروج</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="fxr-main">
+    <header class="fxr-topbar">
+      <button class="fxr-topbar__hamburger" id="hamburgerBtn" aria-label="القائمة"><span></span><span></span><span></span></button>
+      <div class="fxr-topbar__title">FIX<span>O</span>RA &nbsp;—&nbsp; إدارة البروفايل</div>
+      <div class="fxr-topbar__actions">
+        <button class="fxr-notif-btn">🔔<span class="fxr-notif-dot">3</span></button>
+        <div class="fxr-topbar__user">
+          <div class="fxr-topbar__user-av">👷</div>
+          <span class="fxr-topbar__user-name" id="topbarName">اسم الحرفي</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="fxr-content">
+      <div class="fxr-page-header">
+        <div>
+          <h1 class="fxr-page-header__title">✏️ إدارة البروفايل</h1>
+          <p class="fxr-page-header__sub">بياناتك المهنية تظهر للعملاء عند البحث — احرص على دقتها</p>
+        </div>
+        <a href="provider-dashboard.html" class="fxr-btn fxr-btn--outline">← رجوع</a>
+      </div>
+
+      <!-- Tabs -->
+      <div class="fxr-ptabs" id="profileTabs">
+        <button class="fxr-ptab fxr-ptab--active" data-tab="basic">المعلومات الأساسية</button>
+        <button class="fxr-ptab" data-tab="professional">المعلومات المهنية</button>
+        <button class="fxr-ptab" data-tab="schedule">أوقات العمل</button>
+        <button class="fxr-ptab" data-tab="gallery">معرض الأعمال</button>
+        <button class="fxr-ptab" data-tab="security">الأمان</button>
+      </div>
+
+      <!-- ══ TAB: الأساسية ══ -->
+      <div class="fxr-card fxr-ppanel" id="tab-basic">
+        <!-- صورة بروفايل -->
+        <div class="fxr-pav-row">
+          <div class="fxr-pav" id="profileAvatar">
+            <span id="pavEmoji">👨‍🔧</span>
+            <div class="fxr-pav__overlay">تغيير الصورة</div>
+          </div>
+          <div>
+            <div class="fxr-pav__name" id="pavName">الاسم الأول الاسم الثاني</div>
+            <div class="fxr-pav__rating">⭐ 4.9 · 112 تقييم</div>
+            <div class="fxr-status-active">✅ حساب مفعّل ومعتمد</div>
+          </div>
+        </div>
+
+        <div class="fxr-fg2">
+          <div class="fxr-fg">
+            <label class="fxr-flbl">الاسم الأول</label>
+            <input class="fxr-fi" id="firstName" placeholder="الاسم الأول"/>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl">الاسم الثاني / اسم العائلة</label>
+            <input class="fxr-fi" id="lastName" placeholder="الاسم الثاني"/>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl">رقم الجوال (أردني 07x)</label>
+            <input class="fxr-fi" type="tel" id="phoneNum" placeholder="07xxxxxxxx" maxlength="10"/>
+            <span class="fxr-fhint" id="phoneHint">يبدأ بـ 07 — 10 أرقام</span>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl">البريد الإلكتروني</label>
+            <input class="fxr-fi" type="email" id="emailAddr" placeholder="example@gmail.com"/>
+          </div>
+          <div class="fxr-fg fxr-fg--full">
+            <label class="fxr-flbl">نبذة مختصرة عنك</label>
+            <textarea class="fxr-fi fxr-fi--ta" id="bioText" rows="3" placeholder="اكتب نبذة قصيرة عن خبرتك وخدماتك (حتى 300 حرف)..."></textarea>
+            <span class="fxr-fhint" id="bioCount">0 / 300 حرف</span>
+          </div>
+        </div>
+
+        <div class="fxr-pform-foot">
+          <button class="fxr-btn fxr-btn--outline" onclick="fxrResetBasic()">إعادة تعيين</button>
+          <button class="fxr-btn fxr-btn--primary" onclick="fxrSaveBasic()">💾 حفظ المعلومات الأساسية</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB: المهنية ══ -->
+      <div class="fxr-card fxr-ppanel fxr-ppanel--hidden" id="tab-professional">
+        <div class="fxr-fg2">
+          <div class="fxr-fg">
+            <label class="fxr-flbl" for="mainSpec">التخصص الرئيسي</label>
+            <select class="fxr-fi" id="mainSpec">
+              <option value="">اختر التخصص</option>
+              <option value="ac">تكييف وتبريد</option>
+              <option value="electric">كهرباء منزلية</option>
+              <option value="plumbing">سباكة</option>
+              <option value="carpentry">نجارة</option>
+              <option value="painting">دهانات</option>
+              <option value="appliances">أجهزة منزلية</option>
+              <option value="cleaning">تنظيف</option>
+              <option value="construction">بناء وترميم</option>
+            </select>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl" for="govSelect">المحافظة</label>
+            <select class="fxr-fi" id="govSelect">
+              <option value="">اختر المحافظة</option>
+              <option value="amman">عمّان</option>
+              <option value="irbid">إربد</option>
+              <option value="zarqa">الزرقاء</option>
+              <option value="aqaba">العقبة</option>
+              <option value="salt">السلط</option>
+              <option value="mafraq">المفرق</option>
+              <option value="karak">الكرك</option>
+              <option value="maan">معان</option>
+              <option value="tafilah">الطفيلة</option>
+              <option value="ajloun">عجلون</option>
+              <option value="jerash">جرش</option>
+              <option value="madaba">مادبا</option>
+            </select>
+          </div>
+          <div class="fxr-fg fxr-fg--full">
+            <label class="fxr-flbl">المناطق المخدومة (افصل بفاصلة)</label>
+            <input class="fxr-fi" id="serviceAreas" placeholder="مثال: الشميساني، عبدون، الجبيهة"/>
+            <span class="fxr-fhint">ستظهر هذه المناطق في بطاقتك عند البحث</span>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl">السعر الأدنى (دينار أردني)</label>
+            <input class="fxr-fi" type="number" id="priceMin" placeholder="مثال: 10" min="1"/>
+          </div>
+          <div class="fxr-fg">
+            <label class="fxr-flbl">السعر الأعلى (دينار أردني)</label>
+            <input class="fxr-fi" type="number" id="priceMax" placeholder="مثال: 50" min="1"/>
+          </div>
+          <div class="fxr-fg fxr-fg--full">
+            <label class="fxr-flbl">الخدمات الفرعية</label>
+            <div class="fxr-chk-grid" id="subServGrid"></div>
+          </div>
+          <div class="fxr-fg fxr-fg--full">
+            <label class="fxr-flbl">بطاقة الهوية الوطنية الأردنية</label>
+            <div class="fxr-upload" id="idUpload">
+              <div class="fxr-upload-icon">📎</div>
+              <div class="fxr-upload-title">اضغط لرفع صورة الهوية الوطنية</div>
+              <div class="fxr-upload-subtitle">PNG أو JPG أو PDF — حتى 5MB</div>
+              <div class="fxr-status-verified">✅ تم التحقق من الهوية</div>
+            </div>
+          </div>
+        </div>
+        <div class="fxr-pform-foot">
+          <button class="fxr-btn fxr-btn--outline">إعادة تعيين</button>
+          <button class="fxr-btn fxr-btn--primary" onclick="fxrSaveProfessional()">💾 حفظ المعلومات المهنية</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB: أوقات العمل ══ -->
+      <div class="fxr-card fxr-ppanel fxr-ppanel--hidden" id="tab-schedule">
+        <div class="fxr-card__header">
+          <span class="fxr-card__title">📅 جدول أوقات العمل الأسبوعي</span>
+          <button class="fxr-btn fxr-btn--primary fxr-btn--sm" onclick="fxrSaveSch()">💾 حفظ</button>
+        </div>
+        <div class="fxr-card__body"><div id="schRows"></div></div>
+      </div>
+
+      <!-- ══ TAB: معرض الأعمال ══ -->
+      <div class="fxr-card fxr-ppanel fxr-ppanel--hidden" id="tab-gallery">
+        <div class="fxr-card__header">
+          <span class="fxr-card__title">🖼️ معرض الأعمال</span>
+          <span class="fxr-fhint" id="galCount">0 / 20 صورة</span>
+        </div>
+        <div class="fxr-card__body">
+          <div class="fxr-upload fxr-upload-gallery" id="galUpload">
+            <div class="fxr-upload-gallery-icon">🖼️</div>
+            <div class="fxr-upload-gallery-title">اسحب وأفلت الصور هنا أو اضغط للاختيار</div>
+            <div class="fxr-upload-gallery-subtitle">PNG أو JPG — حتى 10MB للصورة</div>
+          </div>
+          <div class="fxr-gal-grid" id="galGrid"></div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: الأمان ══ -->
+      <div class="fxr-card fxr-ppanel fxr-ppanel--hidden" id="tab-security">
+        <div class="fxr-card__header"><span class="fxr-card__title">🔒 إعدادات الأمان</span></div>
+        <div class="fxr-card__body">
+          <div class="fxr-fg2 fxr-fg2-limited">
+            <div class="fxr-fg fxr-fg--full">
+              <label class="fxr-flbl">كلمة المرور الحالية</label>
+              <input class="fxr-fi" type="password" id="oldPass" placeholder="••••••••"/>
+            </div>
+            <div class="fxr-fg">
+              <label class="fxr-flbl">كلمة المرور الجديدة</label>
+              <input class="fxr-fi" type="password" id="newPass" placeholder="8 أحرف على الأقل"/>
+            </div>
+            <div class="fxr-fg">
+              <label class="fxr-flbl">تأكيد كلمة المرور</label>
+              <input class="fxr-fi" type="password" id="confirmPass" placeholder="أعد كتابة كلمة المرور"/>
+            </div>
+          </div>
+          <div class="fxr-pform-foot">
+            <button class="fxr-btn fxr-btn--primary" onclick="fxrSavePassword()">🔒 تغيير كلمة المرور</button>
+          </div>
+          <hr class="fxr-hr"/>
+          <h4 class="fxr-sessions-title">الجلسات النشطة</h4>
+          <div class="fxr-session-row">
+            <span>📱 الجوال — عمّان، الأردن</span>
+            <span class="fxr-session-current">الجلسة الحالية</span>
+          </div>
+          <div class="fxr-session-row">
+            <span>💻 الحاسوب — عمّان، الأردن</span>
+            <button class="fxr-btn fxr-btn--outline fxr-btn--sm" onclick="fxrToast('تم إنهاء الجلسة','info')">إنهاء</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="fxr-toast" id="fxrToast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="provider-profile-edit.js"></script>
+</body>
+</html>

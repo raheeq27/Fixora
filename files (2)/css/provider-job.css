@@ -1,0 +1,299 @@
+/* ========================================
+   FIXORA Provider Jobs - تنسيقات صفحة طلبات العمل
+   ======================================== */
+
+/* تبويبات الطلبات */
+.fxr-jobs-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--fxr-card);
+  padding: 8px 16px;
+  border-radius: 60px;
+  box-shadow: var(--fxr-shadow-sm);
+}
+
+.fxr-jtab {
+  padding: 6px 16px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 50px;
+  color: var(--fxr-muted);
+  transition: var(--fxr-transition);
+}
+
+.fxr-jtab:hover {
+  background: rgba(240, 122, 38, 0.1);
+  color: var(--fxr-orange);
+}
+
+.fxr-jtab--active {
+  background: var(--fxr-orange);
+  color: white;
+}
+
+.fxr-badge-inline {
+  margin-right: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  color: inherit;
+  padding: 1px 6px;
+  border-radius: 50px;
+  font-size: 10px;
+}
+
+.fxr-jtab--active .fxr-badge-inline {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* قائمة الطلبات */
+.fxr-jobs-list {
+  margin-top: 20px;
+}
+
+/* بطاقة الطلب */
+.fxr-job-card {
+  background: var(--fxr-card);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--fxr-shadow-sm);
+  transition: var(--fxr-transition);
+  border: 1px solid transparent;
+}
+
+.fxr-job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fxr-shadow-hover);
+  border-color: var(--fxr-blue);
+}
+
+.fxr-job-card.accepted {
+  border-right: 4px solid var(--fxr-success);
+}
+
+.fxr-job-card.rejected {
+  border-right: 4px solid var(--fxr-error);
+  opacity: 0.7;
+}
+
+.fxr-job-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(240, 122, 38, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.fxr-job-info {
+  flex: 1;
+}
+
+.fxr-job-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fxr-job-details {
+  font-size: 11px;
+  color: var(--fxr-muted);
+  margin-top: 4px;
+}
+
+.fxr-job-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fxr-orange);
+  margin-top: 4px;
+}
+
+.fxr-job-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 50px;
+}
+
+.fxr-job-status.pending {
+  background: rgba(240, 122, 38, 0.1);
+  color: var(--fxr-orange);
+}
+
+.fxr-job-status.accepted {
+  background: rgba(40, 200, 100, 0.1);
+  color: var(--fxr-success);
+}
+
+.fxr-job-status.rejected {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--fxr-error);
+}
+
+.fxr-job-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fxr-job-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: var(--fxr-transition);
+}
+
+.fxr-job-btn--accept {
+  background: var(--fxr-orange);
+  color: white;
+}
+
+.fxr-job-btn--accept:hover {
+  background: #d95f12;
+  transform: translateY(-1px);
+}
+
+.fxr-job-btn--reject {
+  background: transparent;
+  border: 1.5px solid #ddd;
+  color: var(--fxr-muted);
+}
+
+.fxr-job-btn--reject:hover {
+  border-color: var(--fxr-error);
+  color: var(--fxr-error);
+}
+
+.fxr-job-btn--view {
+  background: var(--fxr-blue);
+  color: var(--fxr-dark);
+}
+
+.fxr-job-btn--view:hover {
+  background: #7faec9;
+}
+
+/* صفحة فارغة */
+.fxr-empty {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--fxr-card);
+  border-radius: 20px;
+  margin-top: 20px;
+}
+
+.fxr-empty__icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.fxr-empty__title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.fxr-empty__sub {
+  font-size: 13px;
+  color: var(--fxr-muted);
+}
+
+/* مودال التفاصيل */
+.fxr-modal--detail {
+  max-width: 550px;
+  width: 90%;
+}
+
+.fxr-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
+  background: var(--fxr-dark);
+  color: white;
+}
+
+.fxr-detail-head .fxr-modal__title {
+  color: white;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.fxr-detail-head .fxr-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.fxr-detail-body {
+  padding: 20px;
+}
+
+.fxr-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.fxr-detail-label {
+  font-weight: 700;
+  color: var(--fxr-dark);
+}
+
+.fxr-detail-value {
+  color: var(--fxr-muted);
+}
+
+.fxr-detail-foot {
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* متجاوب */
+@media (max-width: 768px) {
+  .fxr-job-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .fxr-job-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .fxr-jobs-tabs {
+    border-radius: 16px;
+    justify-content: center;
+  }
+  
+  .fxr-detail-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
