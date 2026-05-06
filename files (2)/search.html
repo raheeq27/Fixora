@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIXORA الأردن — البحث والفلترة</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/search.css">
+</head>
+
+<body>
+
+  <!-- HEADER / NAVBAR -->
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Hamburger button -->
+    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+  </div>
+
+  <nav>
+    <ul class="fxr-nav">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="services.html">الخدمات</a></li>
+      <li><a href="about.html">من نحن</a></li>
+      <li><a href="contact.html">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns">
+    <a href="login.html" class="fxr-btn fxr-btn-outline">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
+
+<!-- SIDEBAR CONTENT -->
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
+      <span class="fxr-logo-text" style="font-size: 18px;">FIX<span>O</span>RA</span>
+    </a>
+    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
+    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
+    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
+    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+  </div>
+  
+  <style>
+    /* Inline CSS to guarantee sidebar works identically on all pages */
+    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
+    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
+    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
+    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); }
+    .fxr-main-sidebar.active { transform: translateX(0); }
+    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+    .fxr-sidebar-close:hover { opacity: 1; }
+    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
+    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
+    .fxr-header .fxr-logo-text { color: white; font-size: 18px; font-weight: 900; }
+    .fxr-header .fxr-logo-text span { color: #f07a26; }
+    .fxr-header .fxr-logo { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  </style>
+  <script>
+    function fxrToggleSidebar() {
+      const s = document.getElementById('fxrMainSidebar');
+      const o = document.getElementById('fxrSidebarOverlay');
+      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
+    }
+  </script>
+</aside>
+
+  <!-- SEARCH BAR SECTION -->
+  <div class="fxr-search-bar-section">
+    <div class="fxr-search-bar-wrap">
+      <span class="fxr-search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="ابحث: تكييف، سباكة، كهرباء..." autocomplete="off">
+      <button onclick="fxrPerformSearch()">بحث</button>
+    </div>
+  </div>
+
+  <!-- QUICK FILTERS (Service Categories) -->
+  <div class="fxr-quick-filters" id="quickFilters">
+    <button class="fxr-qf-chip active" data-cat="" onclick="fxrQuickFilter(this, '')">الكل</button>
+    <button class="fxr-qf-chip" data-cat="تكييف" onclick="fxrQuickFilter(this, 'تكييف')">❄️ تكييف</button>
+    <button class="fxr-qf-chip" data-cat="كهرباء" onclick="fxrQuickFilter(this, 'كهرباء')">⚡ كهرباء</button>
+    <button class="fxr-qf-chip" data-cat="سباكة" onclick="fxrQuickFilter(this, 'سباكة')">🚿 سباكة</button>
+    <button class="fxr-qf-chip" data-cat="نجارة" onclick="fxrQuickFilter(this, 'نجارة')">🪵 نجارة</button>
+    <button class="fxr-qf-chip" data-cat="دهانات" onclick="fxrQuickFilter(this, 'دهانات')">🎨 دهانات</button>
+    <button class="fxr-qf-chip" data-cat="أجهزة منزلية" onclick="fxrQuickFilter(this, 'أجهزة منزلية')">🔌 أجهزة
+      منزلية</button>
+    <button class="fxr-qf-chip" data-cat="تنظيف" onclick="fxrQuickFilter(this, 'تنظيف')">🫧 تنظيف</button>
+    <button class="fxr-qf-chip" data-cat="بناء" onclick="fxrQuickFilter(this, 'بناء')">🏗️ بناء وترميم</button>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="fxr-search-layout">
+
+    <!-- FILTER PANEL -->
+    <aside class="fxr-filter-panel" id="filterPanel">
+      <div class="fxr-filter-panel-title">🎛️ تصفية البحث</div>
+
+      <!-- Governorate Filter -->
+      <div class="fxr-filter-group">
+        <div class="fxr-filter-group-title">المحافظة</div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-amman" checked onchange="fxrApplyFilters()">
+          <label for="gov-amman">عمّان</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-irbid" onchange="fxrApplyFilters()">
+          <label for="gov-irbid">إربد</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-zarqa" onchange="fxrApplyFilters()">
+          <label for="gov-zarqa">الزرقاء</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-aqaba" onchange="fxrApplyFilters()">
+          <label for="gov-aqaba">العقبة</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-salt" onchange="fxrApplyFilters()">
+          <label for="gov-salt">السلط</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-mafraq" onchange="fxrApplyFilters()">
+          <label for="gov-mafraq">المفرق</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-karak" onchange="fxrApplyFilters()">
+          <label for="gov-karak">الكرك</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-maan" onchange="fxrApplyFilters()">
+          <label for="gov-maan">معان</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-tafilah" onchange="fxrApplyFilters()">
+          <label for="gov-tafilah">الطفيلة</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-ajloun" onchange="fxrApplyFilters()">
+          <label for="gov-ajloun">عجلون</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-jarash" onchange="fxrApplyFilters()">
+          <label for="gov-jarash">جرش</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="gov-madaba" onchange="fxrApplyFilters()">
+          <label for="gov-madaba">مادبا</label>
+        </div>
+      </div>
+
+      <!-- Rating Filter -->
+      <div class="fxr-filter-group">
+        <div class="fxr-filter-group-title">التقييم</div>
+        <div class="fxr-filter-item">
+          <input type="radio" name="ratingFilter" id="rating-all" value="all" checked onchange="fxrApplyFilters()">
+          <label for="rating-all">الكل</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="radio" name="ratingFilter" id="rating-4" value="4" onchange="fxrApplyFilters()">
+          <label for="rating-4">★★★★☆ فأعلى (4 نجوم فأكثر)</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="radio" name="ratingFilter" id="rating-45" value="4.5" onchange="fxrApplyFilters()">
+          <label for="rating-45">★★★★½ فأعلى (4.5 نجوم فأكثر)</label>
+        </div>
+        <div class="fxr-filter-item">
+          <input type="radio" name="ratingFilter" id="rating-5" value="5" onchange="fxrApplyFilters()">
+          <label for="rating-5">★★★★★ فقط (5 نجوم)</label>
+        </div>
+      </div>
+
+      <!-- Availability Filter -->
+      <div class="fxr-filter-group">
+        <div class="fxr-filter-group-title">الإتاحة</div>
+        <div class="fxr-filter-item">
+          <input type="checkbox" id="availableOnly" onchange="fxrApplyFilters()">
+          <label for="availableOnly">متاح الآن فقط ✅</label>
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <button class="fxr-filter-reset" onclick="fxrResetFilters()">إعادة تعيين الفلاتر</button>
+    </aside>
+
+    <!-- RESULTS AREA -->
+    <main class="fxr-results-area">
+      <div class="fxr-results-topbar">
+        <div class="fxr-results-count">
+          <strong id="resultsCount">0</strong> نتيجة في الأردن
+        </div>
+        <select class="fxr-sort-select" id="sortSelect" onchange="fxrSortResults()">
+          <option value="rating">الأعلى تقييماً</option>
+          <option value="reviews">الأكثر تقييماً</option>
+        </select>
+      </div>
+
+      <div class="fxr-results-grid" id="resultsGrid">
+        <!-- Results will be rendered here -->
+      </div>
+
+      <div class="fxr-pagination" id="pagination">
+        <!-- Pagination will be rendered here -->
+      </div>
+    </main>
+
+  </div>
+
+  <!-- FOOTER -->
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+  <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
+    © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
+  </div>
+  <div class="fxr-footer-links" style="display: flex; justify-content: center; gap: 20px;">
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">شروط الاستخدام</a>
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">سياسة الخصوصية</a>
+    <a href="contact.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">تواصل معنا</a>
+  </div>
+</footer>
+
+  <div class="fxr-toast" id="toast"></div>
+
+  <!-- JS Files -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/search.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXORA الأردن – تواصل معنا</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white: #fcffff;
+  --dark: #3f4a4f;
+  --blue: #91bdd1;
+  --orange: #f07a26;
+  --bg: #f0f1f0;
+  --muted: #7a8f96;
+  --shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direction:rtl}
+.sh{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-wrap:wrap}
+.sl-{color:var(--white);font-size:16px;font-weight:900;letter-spacing:2px}.sl- span{color:var(--orange)}
+.snav{display:flex;gap:4px;flex-wrap:wrap}
+.snav a{color:rgba(255,255,255,.7);font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;text-decoration:none;transition:all 0.2s}
+.snav a:hover{background:rgba(255,255,255,.1);color:white}
+.snav a.on{background:var(--orange);color:white}
+.sf{background:var(--dark);color:rgba(255,255,255,.5);padding:16px 24px;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.sf span{color:var(--orange)}
+.contact-hero{background:linear-gradient(120deg,#2a3236,#3f4a4f);padding:40px 20px;text-align:center;color:white}
+.contact-hero h1{font-size:26px;margin-bottom:8px}
+.contact-hero p{font-size:13px;color:var(--blue)}
+.contact-wrapper{max-width:1100px;margin:40px auto;padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:32px}
+@media(max-width:800px){.contact-wrapper{grid-template-columns:1fr}}
+.contact-info{background:white;border-radius:24px;padding:28px;box-shadow:var(--shadow)}
+.contact-info h3{font-size:18px;font-weight:900;margin-bottom:18px;border-right:4px solid var(--orange);padding-right:12px}
+.info-row{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.info-icon{width:42px;height:42px;background:rgba(240,122,38,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--orange);flex-shrink:0}
+.info-text h4{font-size:14px;font-weight:700;margin-bottom:4px}
+.info-text p{font-size:12px;color:var(--muted);line-height:1.5}
+.social-links{display:flex;gap:12px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid #eee}
+.social-links span{background:var(--bg);padding:8px 16px;border-radius:40px;font-size:12px;cursor:pointer;transition:all 0.2s;color:var(--dark);font-weight:600}
+.social-links span:hover{background:var(--orange);color:white}
+.contact-form{background:white;border-radius:24px;padding:28px;box-shadow:var(--shadow)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dark)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:13px;outline:none;transition:all 0.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(240,122,38,.1)}
+.submit-btn{background:var(--orange);color:white;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;width:100%;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.submit-btn:hover{background:#e06618;transform:translateY(-1px)}
+</style>
+</head>
+<body>
+
+<!-- HEADER / NAVBAR -->
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Hamburger button -->
+    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="index.html" class="fxr-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
+    </a>
+  </div>
+
+  <nav>
+    <ul class="fxr-nav" style="display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;">
+      <li><a href="index.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">الرئيسية</a></li>
+      <li><a href="services.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">الخدمات</a></li>
+      <li><a href="about.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">من نحن</a></li>
+      <li><a href="contact.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns" style="display: flex; align-items: center; gap: 10px;">
+    <a href="login.html" class="fxr-btn fxr-btn-outline" style="border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary" style="background: #f07a26; color: white; border: none; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
+
+<!-- SIDEBAR CONTENT -->
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0; display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
+      <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
+    </a>
+    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
+    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
+    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
+    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+  </div>
+  
+  <style>
+    .fxr-header { background: #3f4a4f; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; box-shadow: 0 2px 16px rgba(0,0,0,.18); font-family: 'Cairo', sans-serif;}
+    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
+    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
+    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
+    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); font-family: 'Cairo', sans-serif;}
+    .fxr-main-sidebar.active { transform: translateX(0); }
+    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+    .fxr-sidebar-close:hover { opacity: 1; }
+    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
+    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
+  </style>
+  <script>
+    function fxrToggleSidebar() {
+      const s = document.getElementById('fxrMainSidebar');
+      const o = document.getElementById('fxrSidebarOverlay');
+      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
+    }
+  </script>
+</aside>
+>
+  <h1>📞 تواصل مع فريق FIXORA الأردن</h1>
+  <p>نحن هنا للإجابة عن استفساراتك، مساعدتك في طلب خدمة، أو أي اقتراح يخدم المجتمع الأردني.</p>
+</div>
+
+<div class="contact-wrapper">
+  <div class="contact-info">
+    <h3>معلومات الاتصال</h3>
+    <div class="info-row">
+      
+    </div>
+    <div class="info-row">
+      <div class="info-icon">📞</div>
+      <div class="info-text">
+        <h4>رقم الهاتف</h4>
+        <p>+962 6 550 1234 <span style="color:var(--orange);font-size:11px">(دعم فني)</span><br/>079 123 4567 (واتساب)</p>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">✉️</div>
+      <div class="info-text">
+        <h4>البريد الإلكتروني</h4>
+        <p>support@fixora.jo<br/>partners@fixora.jo</p>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">⏰</div>
+      <div class="info-text">
+        <h4>ساعات العمل</h4>
+        <p>الأحد – الخميس: 9 ص – 8 م<br/>السبت: 10 ص – 4 م (الجمعة إجازة)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-form">
+    <h3 style="font-size:18px;font-weight:900;margin-bottom:20px;text-align:center">📨 أرسل رسالتك</h3>
+    <div class="form-group">
+      <label>الاسم الكامل</label>
+      <input type="text" placeholder="أحمد محمد العلي" id="fullname"/>
+    </div>
+    <div class="form-group">
+      <label>رقم الجوال (أردني)</label>
+      <input type="tel" placeholder="079xxxxxxx" id="phone"/>
+    </div>
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" placeholder="example@gmail.com" id="email"/>
+    </div>
+    <div class="form-group">
+      <label>نوع الاستفسار</label>
+      <select id="topic">
+        <option>طلب خدمة أو حجز</option>
+        <option>استفسار عن فاتورة</option>
+        <option>مشكلة تقنية بالموقع</option>
+        <option>الرغبة بالانضمام كحرفي</option>
+        <option>اقتراح أو شكوى</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>الرسالة</label>
+      <textarea rows="4" placeholder="اكتب تفاصيل استفسارك هنا..." id="message"></textarea>
+    </div>
+    <button class="submit-btn" id="sendBtn">إرسال الرسالة</button>
+    <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:12px">سنقوم بالرد خلال 24 ساعة في أيام العمل (السبت إلى الخميس)</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+  <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
+    © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
+  </div>
+  <div class="fxr-footer-links" style="display: flex; justify-content: center; gap: 20px;">
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">شروط الاستخدام</a>
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">سياسة الخصوصية</a>
+    <a href="contact.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">تواصل معنا</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('sendBtn').addEventListener('click', function() {
+    const name = document.getElementById('fullname').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const msg = document.getElementById('message').value.trim();
+    
+    if (!name || !phone || !msg) {
+      alert('❌ يرجى ملء جميع الحقول الأساسية: الاسم، الجوال، والرسالة.');
+      return;
+    }
+    
+    if (!phone.match(/07[0-9]{8}/)) {
+      alert('📱 يرجى إدخال رقم جوال أردني صحيح يبدأ بـ 07 ويتكون من 10 أرقام.');
+      return;
+    }
+    
+    alert('✅ شكراً لتواصلك مع FIXORA الأردن! سيقوم فريقنا بالرد عليك خلال 24 ساعة. 🇯🇴');
+    
+    // إعادة تعيين الحقول
+    document.getElementById('fullname').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('message').value = '';
+    document.getElementById('topic').selectedIndex = 0;
+  });
+</script>
+</body>
+</html>

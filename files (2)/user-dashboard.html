@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXORA الأردن – لوحة تحكم المستخدم</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/user-dashboard.css">
+</head>
+<body>
+<!-- HEADER / NAVBAR -->
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Hamburger button -->
+    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="index.html" class="fxr-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
+    </a>
+  </div>
+
+  <nav>
+    <ul class="fxr-nav" style="display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;">
+      <li><a href="index.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">الرئيسية</a></li>
+      <li><a href="services.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">الخدمات</a></li>
+      <li><a href="about.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">من نحن</a></li>
+      <li><a href="contact.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns" style="display: flex; align-items: center; gap: 10px;">
+    <button id="logoutBtn" class="logout-btn" style="background: rgba(240,122,38,.2); color: #f07a26; border: 1.5px solid #f07a26; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">تسجيل الخروج</button>
+    <a href="login.html" class="fxr-btn fxr-btn-outline" style="border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary" style="background: #f07a26; color: white; border: none; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
+
+<!-- SIDEBAR CONTENT -->
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0; display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
+      <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
+    </a>
+    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
+    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
+    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
+    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+  </div>
+  
+  <style>
+    .fxr-header { background: #3f4a4f; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; box-shadow: 0 2px 16px rgba(0,0,0,.18); font-family: 'Cairo', sans-serif;}
+    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
+    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
+    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
+    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); font-family: 'Cairo', sans-serif;}
+    .fxr-main-sidebar.active { transform: translateX(0); }
+    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+    .fxr-sidebar-close:hover { opacity: 1; }
+    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
+    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
+  </style>
+  <script>
+    function fxrToggleSidebar() {
+      const s = document.getElementById('fxrMainSidebar');
+      const o = document.getElementById('fxrSidebarOverlay');
+      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
+    }
+  </script>
+</aside>
+
+<div class="dashboard-shell">
+  
+  <!-- القائمة الجانبية -->
+  <div class="dashboard-sidebar">
+    <div class="sidebar-item active" data-tab="dashboard">
+      <span class="icon">📊</span>
+      <span>الرئيسية</span>
+    </div>
+    <div class="sidebar-item" data-tab="orders">
+      <span class="icon">📋</span>
+      <span>طلباتي</span>
+      <span class="badge" id="ordersBadge">3</span>
+    </div>
+    <div class="sidebar-item" data-tab="favorites">
+      <span class="icon">❤️</span>
+      <span>المفضلة</span>
+      <span class="badge" id="favBadge">4</span>
+    </div>
+    <div class="sidebar-item" data-tab="messages">
+      <span class="icon">💬</span>
+      <span>الرسائل</span>
+      <span class="badge" id="msgBadge">2</span>
+    </div>
+    <div class="sidebar-item" data-tab="notifications">
+      <span class="icon">🔔</span>
+      <span>الإشعارات</span>
+      <span class="badge" id="notifBadge">3</span>
+    </div>
+    <div class="sidebar-item" data-tab="profile">
+      <span class="icon">👤</span>
+      <span>حسابي</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item" data-tab="settings">
+      <span class="icon">⚙️</span>
+      <span>الإعدادات</span>
+    </div>
+  </div>
+
+  <!-- المحتوى الرئيسي -->
+  <div class="dashboard-content" id="dashboardContent">
+    
+    <!-- ========== الصفحة 7: الرئيسية ========== -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="welcome-header">
+        <h2 id="userNameDisplay">مرحباً أحمد 👋</h2>
+        <p class="last-login">آخر دخول: اليوم 10:34 ص — عمّان، الأردن 🇯🇴</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">9</div>
+          <div class="stat-label">إجمالي طلباتي</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">1</div>
+          <div class="stat-label">جارية الآن</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">4</div>
+          <div class="stat-label">حرفيون مفضلون</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>📋 آخر الطلبات</h3>
+        <div class="orders-preview">
+          <div class="order-row">
+            <span>🔧 تصليح تكييف سبليت</span>
+            <span class="provider-name">محمد أبو خالد</span>
+            <span class="status-badge status-progress">جاري</span>
+          </div>
+          <div class="order-row">
+            <span>⚡ تصليح مفتاح كهرباء</span>
+            <span class="provider-name">خالد النابلسي</span>
+            <span class="status-badge status-done">مكتمل ✓</span>
+          </div>
+          <div class="order-row">
+            <span>🚿 إصلاح تسريب ماء</span>
+            <span class="provider-name">يوسف الحوراني</span>
+            <span class="status-badge status-done">مكتمل ✓</span>
+          </div>
+        </div>
+        <button class="btn-outline view-all-btn" data-goto="orders">عرض جميع الطلبات →</button>
+      </div>
+
+      <div class="section-card">
+        <h3>🔔 آخر الإشعارات</h3>
+        <div class="notif-preview">
+          <div class="notif-item">
+            <div class="notif-icon">✅</div>
+            <div class="notif-text">تم قبول طلبك من قبل محمد أبو خالد</div>
+            <div class="notif-time">منذ 5 دقائق</div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">💬</div>
+            <div class="notif-text">رسالة جديدة من خالد النابلسي</div>
+            <div class="notif-time">منذ ساعة</div>
+          </div>
+        </div>
+        <button class="btn-outline view-all-btn" data-goto="notifications">عرض جميع الإشعارات →</button>
+      </div>
+    </div>
+
+    <!-- ========== الصفحة 8: طلباتي ========== -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="panel-header">
+        <h2>📋 طلباتي</h2>
+        <div class="order-filters">
+          <button class="filter-btn active" data-filter="all">الكل</button>
+          <button class="filter-btn" data-filter="progress">جاري ⏳</button>
+          <button class="filter-btn" data-filter="accepted">مقبول ✅</button>
+          <button class="filter-btn" data-filter="completed">مكتمل ✓</button>
+          <button class="filter-btn" data-filter="rejected">مرفوض ❌</button>
+        </div>
+      </div>
+
+      <div class="orders-list-full" id="ordersListFull">
+        <!-- سيتم ملؤها بواسطة JavaScript -->
+      </div>
+    </div>
+
+    <!-- ========== المفضلة (ضمن صفحة 8 هيكلياً) ========== -->
+    <div class="tab-panel" id="tab-favorites">
+      <div class="panel-header">
+        <h2>❤️ الحرفيون المفضلون</h2>
+        <p class="panel-sub">الحرفيون الذين تتابعهم وتثق بهم</p>
+      </div>
+      <div class="fav-grid-full" id="favListFull">
+        <!-- سيتم ملؤها بواسطة JavaScript -->
+      </div>
+    </div>
+
+    <!-- ========== الرسائل ========== -->
+    <div class="tab-panel" id="tab-messages">
+      <div class="panel-header">
+        <h2>💬 الرسائل</h2>
+        <p class="panel-sub">محادثاتك مع الحرفيين</p>
+      </div>
+      <div class="messages-list" id="messagesList">
+        <!-- سيتم ملؤها بواسطة JavaScript -->
+      </div>
+    </div>
+
+    <!-- ========== الصفحة 9: الإشعارات ========== -->
+    <div class="tab-panel" id="tab-notifications">
+      <div class="panel-header">
+        <h2>🔔 الإشعارات</h2>
+        <button class="mark-read-btn" id="markAllRead">تحديد الكل كمقروء</button>
+      </div>
+      <div class="notifications-list" id="notificationsList">
+        <!-- سيتم ملؤها بواسطة JavaScript -->
+      </div>
+    </div>
+
+    <!-- ========== حسابي ========== -->
+    <div class="tab-panel" id="tab-profile">
+      <div class="panel-header">
+        <h2>👤 حسابي الشخصي</h2>
+        <p class="panel-sub">إدارة معلومات حسابك</p>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar-section">
+          <img id="profileAvatarImg" class="profile-avatar-large" src="" alt="صورة الملف الشخصي" style="display: none;">
+          <div id="profileAvatarDefault" class="profile-avatar-large">👤</div>
+          <button type="button" class="btn-upload-picture" id="btnUploadPicture">📷 تغيير الصورة</button>
+          <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+        </div>
+        <div class="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>الاسم الأول</label>
+              <input type="text" id="profileFirstName" value="أحمد">
+            </div>
+            <div class="form-group">
+              <label>اسم العائلة</label>
+              <input type="text" id="profileLastName" value="محمد الكيلاني">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>رقم الجوال</label>
+              <input type="tel" id="profilePhone" value="0791234567">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="profileEmail" value="ahmad@example.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>المحافظة</label>
+              <select id="profileCity">
+                <option>عمّان</option><option>إربد</option><option>الزرقاء</option>
+                <option>العقبة</option><option>السلط</option><option>المفرق</option>
+                <option>الكرك</option><option>معان</option><option>الطفيلة</option>
+                <option>عجلون</option><option>جرش</option><option>مادبا</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>المنطقة التفصيلية</label>
+              <input type="text" id="profileArea" value="الشميساني، العبدلي">
+            </div>
+          </div>
+          <button class="btn-primary" id="saveProfileBtn">💾 حفظ التغييرات</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== الإعدادات ========== -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="panel-header">
+        <h2>⚙️ الإعدادات</h2>
+        <p class="panel-sub">تخصيص تجربتك على المنصة</p>
+      </div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>🔔 الإشعارات الفورية</h4>
+            <p>استلام إشعارات عند تحديث الطلبات والرسائل</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="notifToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>📧 الإشعارات البريدية</h4>
+            <p>استلام تحديثات عبر البريد الإلكتروني</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="emailToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <h4>🌙 الوضع الليلي</h4>
+            <p>تغيير مظهر الموقع للوضع الليلي</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <button class="btn-danger" id="deleteAccountBtn">🗑️ حذف حسابي</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== الفوتر ========== -->
+<!-- FOOTER -->
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+  <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
+    © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
+  </div>
+  <div class="fxr-footer-links" style="display: flex; justify-content: center; gap: 20px;">
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">شروط الاستخدام</a>
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">سياسة الخصوصية</a>
+    <a href="contact.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">تواصل معنا</a>
+  </div>
+</footer>
+
+<script src="js/user-dashboard.js"></script>
+</body>
+</html>

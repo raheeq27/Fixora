@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIXORA الأردن — الصفحة الرئيسية</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/fxr-theme.css">
+  <link rel="stylesheet" href="css/fxr-home.css">
+</head>
+<body>
+
+<!-- HEADER / NAVBAR -->
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Hamburger button -->
+    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+  </div>
+
+  <nav>
+    <ul class="fxr-nav">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="services.html">الخدمات</a></li>
+      <li><a href="about.html">من نحن</a></li>
+      <li><a href="contact.html">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns">
+    <a href="login.html" class="fxr-btn fxr-btn-outline">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
+
+<!-- SIDEBAR CONTENT -->
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
+      <span class="fxr-logo-text" style="font-size: 18px;">FIX<span>O</span>RA</span>
+    </a>
+    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
+    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
+    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
+    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+  </div>
+  
+  <style>
+    /* Inline CSS to guarantee sidebar works identically on all pages */
+    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
+    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
+    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
+    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); }
+    .fxr-main-sidebar.active { transform: translateX(0); }
+    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+    .fxr-sidebar-close:hover { opacity: 1; }
+    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
+    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
+    .fxr-header .fxr-logo-text { color: white; font-size: 18px; font-weight: 900; }
+    .fxr-header .fxr-logo-text span { color: #f07a26; }
+    .fxr-header .fxr-logo { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  </style>
+  <script>
+    function fxrToggleSidebar() {
+      const s = document.getElementById('fxrMainSidebar');
+      const o = document.getElementById('fxrSidebarOverlay');
+      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
+    }
+  </script>
+</aside>
+
+<!-- HERO SECTION -->
+<section class="fxr-hero">
+  <div class="fxr-hero-inner">
+    <div class="fxr-hero-eyebrow fxr-animate">
+      🇯🇴 &nbsp;المنصة الأردنية الأولى للخدمات المنزلية
+    </div>
+
+    <h1 class="fxr-hero-title fxr-animate fxr-animate-d1">
+      اعثر على <span>الحرفي المثالي</span><br>في أي محافظة بالأردن
+    </h1>
+
+    <p class="fxr-hero-sub fxr-animate fxr-animate-d2">
+      آلاف الحرفيين المعتمدين في عمّان وإربد والزرقاء والعقبة وجميع المحافظات<br>
+      احجز خدمتك في دقيقتين ✅
+    </p>
+
+    <div class="fxr-hero-search fxr-animate fxr-animate-d3">
+      <input type="text" id="fxrMainSearchInput" placeholder="🔍  ما الخدمة التي تحتاجها؟ (تكييف، سباكة، كهرباء...)" autocomplete="off">
+      <button onclick="fxrGoSearch()">ابحث الآن</button>
+    </div>
+
+    <div class="fxr-hero-stats">
+      <div class="fxr-hero-stat">
+        <div class="fxr-hero-stat-num">+2,400</div>
+        <div class="fxr-hero-stat-lbl">حرفي معتمد</div>
+      </div>
+      <div class="fxr-hero-stat">
+        <div class="fxr-hero-stat-num">12</div>
+        <div class="fxr-hero-stat-lbl">محافظة أردنية</div>
+      </div>
+      <div class="fxr-hero-stat">
+        <div class="fxr-hero-stat-num">4.8 ⭐</div>
+        <div class="fxr-hero-stat-lbl">متوسط التقييم</div>
+      </div>
+      <div class="fxr-hero-stat">
+        <div class="fxr-hero-stat-num">+18,000</div>
+        <div class="fxr-hero-stat-lbl">خدمة مكتملة</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICE CATEGORIES -->
+<section class="fxr-cats-section">
+  <div class="fxr-cats-header">
+    <div>
+      <h2 class="fxr-section-title">تصفح حسب الخدمة</h2>
+      <p class="fxr-section-sub">اختر التخصص الذي تحتاجه</p>
+    </div>
+    <a href="search.html" class="fxr-btn fxr-btn-outline-dark fxr-btn-sm">عرض الكل</a>
+  </div>
+
+  <div class="fxr-cats-grid">
+    <div class="fxr-cat-item" data-cat="تكييف" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>❄️</span></div>
+      <span class="fxr-cat-label">تكييف</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="كهرباء" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>⚡</span></div>
+      <span class="fxr-cat-label">كهرباء</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="سباكة" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🚿</span></div>
+      <span class="fxr-cat-label">سباكة</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="نجارة" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🪵</span></div>
+      <span class="fxr-cat-label">نجارة</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="دهانات" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🎨</span></div>
+      <span class="fxr-cat-label">دهانات</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="أجهزة منزلية" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🔌</span></div>
+      <span class="fxr-cat-label">أجهزة منزلية</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="تنظيف" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🫧</span></div>
+      <span class="fxr-cat-label">تنظيف</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="بناء وترميم" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🏗️</span></div>
+      <span class="fxr-cat-label">بناء وترميم</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="حدادة" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🔩</span></div>
+      <span class="fxr-cat-label">حدادة</span>
+    </div>
+    <div class="fxr-cat-item" data-cat="زجاج وألمنيوم" onclick="fxrCatClick(this)">
+      <div class="fxr-cat-icon"><span>🪟</span></div>
+      <span class="fxr-cat-label">زجاج وألمنيوم</span>
+    </div>
+  </div>
+</section>
+
+<!-- TOP PROVIDERS -->
+<section class="fxr-top-section">
+  <div class="fxr-section-header">
+    <div>
+      <h2 class="fxr-section-title">⭐ أعلى الحرفيين تقييماً في الأردن</h2>
+      <p class="fxr-section-sub">موثوقون من آلاف العملاء</p>
+    </div>
+    <a href="search.html" class="fxr-btn fxr-btn-outline-dark fxr-btn-sm">عرض جميع الحرفيين</a>
+  </div>
+
+  <div class="fxr-providers-grid" id="fxrTopProviders"></div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="fxr-how-section">
+  <h2 class="fxr-section-title">🔄 كيف يعمل FIXORA؟</h2>
+  <p class="fxr-section-sub">خمس خطوات بسيطة للحصول على خدمتك</p>
+
+  <div class="fxr-how-steps">
+    <div class="fxr-how-step">
+      <div class="fxr-how-num">١</div>
+      <div class="fxr-how-label">ابحث عن<br>الخدمة</div>
+    </div>
+    <div class="fxr-how-arrow">←</div>
+    <div class="fxr-how-step">
+      <div class="fxr-how-num">٢</div>
+      <div class="fxr-how-label">اختر<br>الحرفي</div>
+    </div>
+    <div class="fxr-how-arrow">←</div>
+    <div class="fxr-how-step">
+      <div class="fxr-how-num">٣</div>
+      <div class="fxr-how-label">احجز<br>الموعد</div>
+    </div>
+    <div class="fxr-how-arrow">←</div>
+    <div class="fxr-how-step">
+      <div class="fxr-how-num">٤</div>
+      <div class="fxr-how-label">استلم<br>الخدمة</div>
+    </div>
+    <div class="fxr-how-arrow">←</div>
+    <div class="fxr-how-step">
+      <div class="fxr-how-num">٥</div>
+      <div class="fxr-how-label">قيّم<br>التجربة</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BANNER -->
+<section class="fxr-trust-section">
+  <h2 class="fxr-trust-title">لماذا تختار FIXORA؟</h2>
+  <p class="fxr-trust-sub">المنصة الأردنية الأولى للخدمات المنزلية الموثوقة</p>
+
+  <div class="fxr-trust-items">
+    <div class="fxr-trust-item">
+      <div class="fxr-trust-icon">✅</div>
+      <div class="fxr-trust-text">حرفيون موثوقون<br>ومعتمدون</div>
+    </div>
+    <div class="fxr-trust-item">
+      <div class="fxr-trust-icon">💰</div>
+      <div class="fxr-trust-text">أسعار شفافة<br>بالدينار الأردني</div>
+    </div>
+    <div class="fxr-trust-item">
+      <div class="fxr-trust-icon">⚡</div>
+      <div class="fxr-trust-text">حجز سريع<br>في دقيقتين</div>
+    </div>
+    <div class="fxr-trust-item">
+      <div class="fxr-trust-icon">⭐</div>
+      <div class="fxr-trust-text">تقييمات حقيقية<br>من العملاء</div>
+    </div>
+    <div class="fxr-trust-item">
+      <div class="fxr-trust-icon">🔒</div>
+      <div class="fxr-trust-text">دفع آمن<br>ومضمون</div>
+    </div>
+  </div>
+
+  <div style="margin-top:26px">
+    <a href="register.html" class="fxr-btn fxr-btn-primary fxr-btn-lg">ابدأ الآن مجاناً ←</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+  <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
+    © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
+  </div>
+  <div class="fxr-footer-links" style="display: flex; justify-content: center; gap: 20px;">
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">شروط الاستخدام</a>
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">سياسة الخصوصية</a>
+    <a href="contact.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">تواصل معنا</a>
+  </div>
+</footer>
+
+<div class="fxr-toast" id="fxrToast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/fxr-home.js"></script>
+
+</body>
+</html>
