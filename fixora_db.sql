@@ -60,8 +60,10 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 CREATE TYPE public.booking_status AS ENUM (
     'pending',
     'confirmed',
+    'in_progress',
     'completed',
-    'cancelled'
+    'cancelled',
+    'rejected'
 );
 
 
@@ -106,10 +108,20 @@ CREATE TYPE public.notification_type AS ENUM (
 
 ALTER TYPE public.notification_type OWNER TO postgres;
 
---
--- TOC entry 900 (class 1247 OID 16447)
--- Name: user_role; Type: TYPE; Schema: public; Owner: postgres
---
+CREATE TYPE public.day_of_week_enum AS ENUM (
+    'sat',
+    'sun',
+    'mon',
+    'tue',
+    'wed',
+    'thu',
+    'fri'
+);
+
+
+ALTER TYPE public.day_of_week_enum OWNER TO postgres;
+
+
 
 CREATE TYPE public.user_role AS ENUM (
     'client',
@@ -264,7 +276,7 @@ ALTER TABLE public.provider_areas OWNER TO postgres;
 CREATE TABLE public.provider_availability (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     provider_id uuid NOT NULL,
-    day_of_week character varying(10),
+    day_of_week public.day_of_week_enum NOT NULL,
     start_time time without time zone NOT NULL,
     end_time time without time zone NOT NULL,
     is_available boolean DEFAULT true
@@ -734,24 +746,6 @@ ALTER TABLE ONLY public.service_categories
 
 
 --
--- TOC entry 3322 (class 2606 OID 16786)
--- Name: users unique_email; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT unique_email UNIQUE (email);
-
-
---
--- TOC entry 3324 (class 2606 OID 16788)
--- Name: users unique_phone; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT unique_phone UNIQUE (phone);
-
-
---
 -- TOC entry 3326 (class 2606 OID 16472)
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
@@ -824,6 +818,20 @@ CREATE TRIGGER update_provider_services_modtime BEFORE UPDATE ON public.provider
 --
 
 CREATE TRIGGER updated_user_modtime BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
+
+
+--
+-- Name: reviews update_reviews_modtime; Type: TRIGGER
+--
+
+CREATE TRIGGER update_reviews_modtime BEFORE UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
+
+
+--
+-- Name: messages update_messages_modtime; Type: TRIGGER
+--
+
+CREATE TRIGGER update_messages_modtime BEFORE UPDATE ON public.messages FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
 
 
 --
@@ -1029,4 +1037,3 @@ ALTER TABLE ONLY public.reviews
 --
 -- PostgreSQL database dump complete
 --
-
