@@ -349,8 +349,7 @@ CREATE TABLE public.reviews (
     comment text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     client_id uuid,
-    CONSTRAINT check_rating CHECK (((rating >= 1) AND (rating <= 5))),
-    CONSTRAINT reviews_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+    CONSTRAINT check_rating CHECK (((rating >= 1) AND (rating <= 5)))
 );
 
 
@@ -915,13 +914,7 @@ ALTER TABLE ONLY public.provider_availability
     ADD CONSTRAINT fk_availability_provider FOREIGN KEY (provider_id) REFERENCES public.provider_profiles(id) ON DELETE CASCADE;
 
 
---
--- TOC entry 3376 (class 2606 OID 16802)
--- Name: bookings fk_booking_category; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
 
-ALTER TABLE ONLY public.bookings
-    ADD CONSTRAINT fk_booking_category FOREIGN KEY (category_id) REFERENCES public.service_categories(id);
 
 
 --
