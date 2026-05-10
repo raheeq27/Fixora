@@ -10,4 +10,18 @@ const pool = new pg.Pool({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
 });
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+});
+
+pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('Database Connection Error ❌:', err.stack);
+    } else {
+        console.log('Database Connected Successfully ✅ at:', res.rows[0].now);
+    }
+});
+
 export default pool;
