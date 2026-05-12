@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import pool from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
+import cors from 'cors';
 
 // =========================================
 // CONFIG
@@ -12,22 +13,28 @@ dotenv.config();
 const app = express();
 
 // =========================================
-// DATABASE CONNECTION TEST
-// =========================================
-
-pool.connect()
-    .then(() => {
-        console.log('Database connected successfully');
-    })
-    .catch((err) => {
-        console.error('Database connection error:', err.message);
-    });
-
-// =========================================
 // MIDDLEWARES
 // =========================================
 
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}));
+
 app.use(express.json());
+
+// =========================================
+// DATABASE CONNECTION TEST
+// =========================================
+
+// فحص الاتصال عند تشغيل السيرفر
+pool.connect()
+    .then(() => {
+        console.log('Database connected successfully ✅');
+    })
+    .catch((err) => {
+        console.error('Database connection error ❌:', err.message);
+    });
 
 // =========================================
 // ROUTES
@@ -60,24 +67,16 @@ app.use((req, res) => {
 // =========================================
 
 app.use((err, req, res, next) => {
-
     if (process.env.NODE_ENV === 'development') {
         console.error(err.stack);
     }
 
     res.status(err.statusCode || 500).json({
         success: false,
-
         message: err.message || 'Internal Server Error',
-
         path: req.originalUrl,
-
         timestamp: new Date().toISOString(),
-
-        error:
-            process.env.NODE_ENV === 'development'
-                ? err.stack
-                : {}
+        error: process.env.NODE_ENV === 'development' ? err.stack : {}
     });
 });
 
@@ -88,5 +87,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT} 🚀`);
 });
