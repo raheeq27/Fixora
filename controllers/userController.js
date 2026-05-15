@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+<<<<<<< HEAD
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -159,31 +160,16 @@ export const getUserBookings = async (req, res, next) => {
 // =========================================
 export const registerUser = async (req, res, next) => {
     const { first_name, last_name, email, password, role, phone, governorate } = req.body;
+=======
+>>>>>>> afe07df5f52a3177e99b813f3f9a426a01763634
 
+// دالة لجلب كل المستخدمين
+export const getAllUsers = async (req, res) => {
     try {
-        const userExist = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userExist.rows.length > 0) {
-            const error = new Error('هذا الإيميل مسجل بالفعل');
-            error.statusCode = 400;
-            throw error;
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = await pool.query(
-            `INSERT INTO users (first_name, last_name, email, password_hash, role, phone, governorate) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
-            RETURNING id, first_name, last_name, email, role`,
-            [first_name, last_name, email, hashedPassword, role || 'client', phone, governorate]
-        );
-
-        res.status(201).json({
-            success: true,
-            message: 'تم إنشاء الحساب بنجاح',
-            data: newUser.rows[0]
-        });
+        const result = await pool.query('SELECT * FROM users'); 
+        res.status(200).json(result.rows);
     } catch (err) {
+<<<<<<< HEAD
         next(err);
     }
 };
@@ -234,5 +220,8 @@ export const getAllUsers = async (req, res, next) => {
         res.status(200).json({ success: true, data: users.rows });
     } catch (err) {
         next(err);
+=======
+        res.status(500).json({ error: err.message });
+>>>>>>> afe07df5f52a3177e99b813f3f9a426a01763634
     }
 };

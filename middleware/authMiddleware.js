@@ -1,26 +1,21 @@
 import jwt from 'jsonwebtoken';
 
-export const protect = async (req, res, next) => {
-    let token;
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.header('Authorization');
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = decoded;
-            return next(); 
-        } catch (error) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'رمز الدخول غير صحيح أو انتهت صلاحيته.' 
-            });
-        }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'لا يوجد توكن، الوصول ممنوع!' });
     }
 
-    if (!token) {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'فشل التحقق، يرجى تسجيل الدخول أولاً.' 
-        });
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // هون بنخزن بيانات المستخدم عشان الكنترولر يشوفها
+        next();
+    } catch (err) {
+        res.status(401).json({ message: 'التوكن غير صالح!' });
     }
-};
+}
+
+export default authMiddleware;

@@ -26,6 +26,8 @@ import {
     getUserBookings 
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import express from 'express';
+import { getAllUsers } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -33,6 +35,7 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/', protect, getAllUsers);
+router.get('/', getAllUsers);
 
 // 2. مسارات الحجوزات (شغل جمالات)
 router.post('/bookings', createBooking); // لإضافة حجز جديد
