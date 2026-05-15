@@ -1,0 +1,42 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "compat-api/css": [
+      "default",
+      {
+        "ignore": [
+          "scrollbar-width",
+          "scrollbar-width: none",
+          "accent-color",
+          "position: sticky",
+          "scrollbar-color",
+          "inset",
+          "scrollbar-width: thin",
+          "margin-inline",
+          "backdrop-filter",
+          "aspect-ratio",
+          "scroll-behavior",
+          "scroll-behavior: smooth"
+        ]
+      }
+    ],
+    "axe/forms": [
+      "default",
+      {
+        "label": "off",
+        "select-name": "off"
+      }
+    ],
+    "no-inline-styles": "off",
+    "meta-viewport": "off",
+    "css-prefix-order": "off",
+    "axe/name-role-value": [
+      "default",
+      {
+        "button-name": "off"
+      }
+    ]
+  }
+}

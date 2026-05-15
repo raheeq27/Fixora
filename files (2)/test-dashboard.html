@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/user-dashboard.css">
+</head>
+<body>
+<div class="dashboard-shell">
+  <div class="dashboard-sidebar">
+    <div class="sidebar-item active" data-tab="dashboard">
+      <span class="icon">📊</span>
+      <span>الرئيسية</span>
+    </div>
+    <div class="sidebar-item" data-tab="orders">
+      <span class="icon">📋</span>
+      <span>طلباتي</span>
+      <span class="badge" id="ordersBadge">3</span>
+    </div>
+  </div>
+  <div class="dashboard-content" id="dashboardContent">
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="welcome-header">
+        <h2 id="userNameDisplay">مرحباً أحمد 👋</h2>
+        <p class="last-login">آخر دخول: اليوم 10:34 ص</p>
+      </div>
+      <div class="section-card">
+        <h3>📋 آخر الطلبات</h3>
+        <button class="btn-outline view-all-btn" data-goto="orders">عرض جميع الطلبات →</button>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-orders">
+      <div class="panel-header">
+        <h2>📋 طلباتي</h2>
+      </div>
+      <div class="orders-list-full" id="ordersListFull"></div>
+    </div>
+  </div>
+</div>
+<button id="logoutBtn" class="logout-btn">تسجيل الخروج</button>
+<script src="js/user-dashboard.js"></script>
+</body>
+</html>

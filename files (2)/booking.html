@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIXORA الأردن — حجز الخدمة</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+<!-- HEADER / NAVBAR -->
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Hamburger button -->
+    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+  </div>
+
+  <nav>
+    <ul class="fxr-nav">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="services.html">الخدمات</a></li>
+      <li><a href="about.html">من نحن</a></li>
+      <li><a href="contact.html">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns">
+    <a href="login.html" class="fxr-btn fxr-btn-outline">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
+
+<!-- SIDEBAR CONTENT -->
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
+      <span class="fxr-logo-text" style="font-size: 18px;">FIX<span>O</span>RA</span>
+    </a>
+    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
+    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
+    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
+    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
+    
+    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
+    
+    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+  </div>
+  
+  <style>
+    /* Inline CSS to guarantee sidebar works identically on all pages */
+    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
+    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
+    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
+    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); }
+    .fxr-main-sidebar.active { transform: translateX(0); }
+    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+    .fxr-sidebar-close:hover { opacity: 1; }
+    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
+    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
+    .fxr-header .fxr-logo-text { color: white; font-size: 18px; font-weight: 900; }
+    .fxr-header .fxr-logo-text span { color: #f07a26; }
+    .fxr-header .fxr-logo { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  </style>
+  <script>
+    function fxrToggleSidebar() {
+      const s = document.getElementById('fxrMainSidebar');
+      const o = document.getElementById('fxrSidebarOverlay');
+      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
+    }
+  </script>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="fxr-booking-container">
+  
+  <!-- Progress Steps -->
+  <div class="fxr-progress-steps">
+    <div class="fxr-step active" data-step="1">
+      <div class="fxr-step-number">1</div>
+      <div class="fxr-step-label">تفاصيل الخدمة</div>
+    </div>
+    <div class="fxr-step-line"></div>
+    <div class="fxr-step" data-step="2">
+      <div class="fxr-step-number">2</div>
+      <div class="fxr-step-label">الموعد والموقع</div>
+    </div>
+    <div class="fxr-step-line"></div>
+    <div class="fxr-step" data-step="3">
+      <div class="fxr-step-number">3</div>
+      <div class="fxr-step-label">تأكيد الحجز</div>
+    </div>
+  </div>
+
+  <div class="fxr-booking-wrapper">
+    
+    <!-- STEP 1: Service Details -->
+    <div class="fxr-booking-step active" id="step1">
+      <div class="fxr-booking-card">
+        <h2 class="fxr-card-title">📋 تفاصيل الخدمة</h2>
+        
+        <!-- Provider Info Summary -->
+        <div class="fxr-provider-summary" id="providerSummary">
+          <div class="fxr-provider-avatar-sm" id="providerAvatar">👨‍🔧</div>
+          <div class="fxr-provider-summary-details">
+            <div class="fxr-provider-summary-name" id="providerName">محمد أبو خالد</div>
+            <div class="fxr-provider-summary-specialty" id="providerSpecialty">🔧 تقني تكييف وأجهزة منزلية</div>
+            <div class="fxr-provider-summary-rating" id="providerRating">★★★★★ 4.9</div>
+          </div>
+        </div>
+
+        <!-- Service Type Selection -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">نوع الخدمة <span class="fxr-required">*</span></label>
+          <select class="fxr-form-select" id="serviceType" onchange="fxrUpdateServiceDetails()">
+            <option value="">اختر نوع الخدمة</option>
+            <option value="تصليح تكييف سبليت">❄️ تصليح تكييف سبليت</option>
+            <option value="تصليح تكييف مركزي">🌀 تصليح تكييف مركزي</option>
+            <option value="شحن فريون">🧊 شحن فريون</option>
+            <option value="صيانة دورية">🔧 صيانة دورية</option>
+            <option value="تنظيف مكيفات">🧹 تنظيف مكيفات</option>
+            <option value="تصليح غسالة">👕 تصليح غسالة</option>
+            <option value="تصليح ثلاجة">🧊 تصليح ثلاجة</option>
+            <option value="تصليح سخان مياه">💧 تصليح سخان مياه</option>
+          </select>
+        </div>
+
+        <!-- Service Description -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">وصف المشكلة بالتفصيل <span class="fxr-required">*</span></label>
+          <textarea class="fxr-form-textarea" id="problemDescription" rows="4" placeholder="مثال: مكيف الغرفة الرئيسية لا يبرد بشكل جيد، ويصدر صوتاً غريباً عند التشغيل..."></textarea>
+          <div class="fxr-form-hint">كلما كانت التفاصيل أوضح، كلما استطاع الحرفي تجهيز الأدوات المناسبة</div>
+        </div>
+
+        <!-- Service Urgency -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">درجة الإلحاح</label>
+          <div class="fxr-urgency-options">
+            <label class="fxr-radio-card">
+              <input type="radio" name="urgency" value="normal" checked>
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">🟢</span>
+                <div>
+                  <div class="fxr-radio-title">عادي</div>
+                  <div class="fxr-radio-desc">خلال 2-3 أيام</div>
+                </div>
+              </div>
+            </label>
+            <label class="fxr-radio-card">
+              <input type="radio" name="urgency" value="urgent">
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">🟠</span>
+                <div>
+                  <div class="fxr-radio-title">مستعجل</div>
+                  <div class="fxr-radio-desc">خلال 24 ساعة</div>
+                </div>
+              </div>
+            </label>
+            <label class="fxr-radio-card">
+              <input type="radio" name="urgency" value="emergency">
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">🔴</span>
+                <div>
+                  <div class="fxr-radio-title">طوارئ</div>
+                  <div class="fxr-radio-desc">خلال 4 ساعات</div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="fxr-step-actions">
+          <button class="fxr-btn fxr-btn-primary" onclick="fxrNextStep(2)">التالي ←</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Date & Location -->
+    <div class="fxr-booking-step" id="step2">
+      <div class="fxr-booking-card">
+        <h2 class="fxr-card-title">📍 الموعد والموقع</h2>
+
+        <!-- Date Selection -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">اختر تاريخ الخدمة <span class="fxr-required">*</span></label>
+          <div class="fxr-date-grid" id="dateGrid">
+            <!-- Dates will be generated by JS -->
+          </div>
+        </div>
+
+        <!-- Time Selection -->
+        <div class="fxr-form-group" id="timeGroup" style="display: none;">
+          <label class="fxr-form-label">اختر الوقت المناسب <span class="fxr-required">*</span></label>
+          <div class="fxr-time-grid" id="timeGrid">
+            <!-- Times will be generated by JS -->
+          </div>
+        </div>
+
+        <!-- Location Type -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">نوع الموقع <span class="fxr-required">*</span></label>
+          <div class="fxr-location-type">
+            <label class="fxr-radio-card">
+              <input type="radio" name="locationType" value="home" checked onchange="fxrToggleLocationForm()">
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">🏠</span>
+                <div>
+                  <div class="fxr-radio-title">منزل / شقة</div>
+                  <div class="fxr-radio-desc">سيأتي الحرفي إلى موقعك</div>
+                </div>
+              </div>
+            </label>
+            <label class="fxr-radio-card">
+              <input type="radio" name="locationType" value="office" onchange="fxrToggleLocationForm()">
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">🏢</span>
+                <div>
+                  <div class="fxr-radio-title">مكتب / شركة</div>
+                  <div class="fxr-radio-desc">خدمة تجارية</div>
+                </div>
+              </div>
+            </label>
+            <label class="fxr-radio-card">
+              <input type="radio" name="locationType" value="other" onchange="fxrToggleLocationForm()">
+              <div class="fxr-radio-content">
+                <span class="fxr-radio-icon">📍</span>
+                <div>
+                  <div class="fxr-radio-title">موقع آخر</div>
+                  <div class="fxr-radio-desc">أدخل العنوان يدوياً</div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Address Form -->
+        <div class="fxr-address-form" id="addressForm">
+          <div class="fxr-form-row">
+            <div class="fxr-form-group half">
+              <label class="fxr-form-label">المحافظة <span class="fxr-required">*</span></label>
+              <select class="fxr-form-select" id="governorate">
+                <option value="عمّان">عمّان</option>
+                <option value="إربد">إربد</option>
+                <option value="الزرقاء">الزرقاء</option>
+                <option value="العقبة">العقبة</option>
+                <option value="السلط">السلط</option>
+                <option value="المفرق">المفرق</option>
+                <option value="الكرك">الكرك</option>
+                <option value="معان">معان</option>
+                <option value="الطفيلة">الطفيلة</option>
+                <option value="عجلون">عجلون</option>
+                <option value="جرش">جرش</option>
+                <option value="مادبا">مادبا</option>
+              </select>
+            </div>
+            <div class="fxr-form-group half">
+              <label class="fxr-form-label">المنطقة <span class="fxr-required">*</span></label>
+              <input type="text" class="fxr-form-input" id="area" placeholder="مثال: الشميساني، عبدون...">
+            </div>
+          </div>
+          <div class="fxr-form-group">
+            <label class="fxr-form-label">العنوان التفصيلي <span class="fxr-required">*</span></label>
+            <input type="text" class="fxr-form-input" id="addressDetail" placeholder="رقم البناية، اسم الشارع، الطابق، رقم الشقة...">
+          </div>
+          <div class="fxr-form-group">
+            <label class="fxr-form-label">معلم قريب (اختياري)</label>
+            <input type="text" class="fxr-form-input" id="landmark" placeholder="مثال: قرب مسجد النور، مقابل مستشفى الأردن...">
+          </div>
+        </div>
+
+        <!-- Additional Notes -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label">ملاحظات إضافية للحرفي (اختياري)</label>
+          <textarea class="fxr-form-textarea" id="additionalNotes" rows="2" placeholder="مثال: يرجى الاتصال قبل الوصول بنصف ساعة، البناية لا يوجد مصعد..."></textarea>
+        </div>
+
+        <div class="fxr-step-actions">
+          <button class="fxr-btn fxr-btn-outline-dark" onclick="fxrPrevStep(1)">→ السابق</button>
+          <button class="fxr-btn fxr-btn-primary" onclick="fxrNextStep(3)">التالي ←</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Confirmation -->
+    <div class="fxr-booking-step" id="step3">
+      <div class="fxr-booking-card">
+        <h2 class="fxr-card-title">✅ تأكيد الحجز</h2>
+
+        <!-- Order Summary -->
+        <div class="fxr-order-summary" id="orderSummary">
+          <!-- Summary will be populated by JS -->
+        </div>
+
+        <!-- Customer Info -->
+        <div class="fxr-customer-section">
+          <h3 class="fxr-section-subtitle">👤 معلوماتك</h3>
+          
+          <div class="fxr-form-row">
+            <div class="fxr-form-group half">
+              <label class="fxr-form-label">الاسم الكامل <span class="fxr-required">*</span></label>
+              <input type="text" class="fxr-form-input" id="customerName" placeholder="أدخل اسمك الكامل">
+            </div>
+            <div class="fxr-form-group half">
+              <label class="fxr-form-label">رقم الجوال <span class="fxr-required">*</span></label>
+              <input type="tel" class="fxr-form-input" id="customerPhone" placeholder="07xxxxxxxx">
+            </div>
+          </div>
+
+          <div class="fxr-form-group">
+            <label class="fxr-form-label">البريد الإلكتروني (اختياري)</label>
+            <input type="email" class="fxr-form-input" id="customerEmail" placeholder="example@gmail.com">
+          </div>
+        </div>
+
+
+        <!-- Terms & Conditions -->
+        <div class="fxr-terms">
+          <label class="fxr-checkbox">
+            <input type="checkbox" id="agreeTerms" onchange="fxrToggleConfirmBtn()">
+            <span class="fxr-checkmark"></span>
+            <span class="fxr-terms-text">أوافق على <a href="#">شروط الاستخدام</a> و <a href="#">سياسة الخصوصية</a> وأتعهد بدفع قيمة الخدمة المتفق عليها</span>
+          </label>
+        </div>
+
+        <div class="fxr-step-actions">
+          <button class="fxr-btn fxr-btn-outline-dark" onclick="fxrPrevStep(2)">→ السابق</button>
+          <button class="fxr-btn fxr-btn-primary fxr-btn-lg" id="confirmBtn" disabled onclick="fxrConfirmBooking()">
+            📅 تأكيد الحجز
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar - Booking Tips -->
+  <div class="fxr-booking-sidebar">
+    <div class="fxr-tips-card">
+      <h3 class="fxr-tips-title">💡 نصائح قبل الحجز</h3>
+      <ul class="fxr-tips-list">
+        <li>📸 يفضل تصوير الجهاز/المكان قبل وبعد الصيانة</li>
+        <li>📋 وضح المشكلة بأكبر قدر من التفاصيل</li>
+        <li>⏰ كن دقيقاً في تحديد الموعد لتجنب التأخير</li>
+        <li>💰 أسعار FIXORA شفافة ومحددة مسبقاً</li>
+        <li>⭐ بعد الخدمة، قيّم الحرفي لمساعدة الآخرين</li>
+      </ul>
+    </div>
+
+    <div class="fxr-support-card">
+      <div class="fxr-support-icon">📞</div>
+      <div class="fxr-support-title">تحتاج مساعدة؟</div>
+      <div class="fxr-support-number">078 000 1234</div>
+      <div class="fxr-support-hours">السبت - الخميس: 9ص - 9م</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+  <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
+    © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
+  </div>
+  <div class="fxr-footer-links" style="display: flex; justify-content: center; gap: 20px;">
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">شروط الاستخدام</a>
+    <a href="#" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">سياسة الخصوصية</a>
+    <a href="contact.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px;">تواصل معنا</a>
+  </div>
+</footer>
+
+<!-- TOAST NOTIFICATION -->
+<div class="fxr-toast" id="toast"></div>
+
+<!-- JS Files -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/booking.js"></script>
+
+</body>
+</html>
