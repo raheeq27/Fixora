@@ -332,49 +332,149 @@ function fxrToggleConfirmBtn() {
     confirmBtn.disabled = !agreeCheckbox.checked;
   }
 }
+// كود جمالات ليكون ديناميك
+// استبدلي دالة fxrConfirmBooking القديمة بهذا الكود بالكامل
 
-function fxrConfirmBooking() {
-  fxrUpdateCustomerInfo();
-  fxrUpdatePaymentMethod();
-  
-  // Validate customer info
-  if (!fxrBookingState.customerName) {
-    fxrShowToast('❌ الرجاء إدخال الاسم الكامل');
-    return;
-  }
-  if (!fxrBookingState.customerPhone) {
-    fxrShowToast('❌ الرجاء إدخال رقم الجوال');
-    return;
-  }
-  if (!fxrBookingState.customerPhone.match(/07[0-9]{8}/)) {
-    fxrShowToast('❌ الرجاء إدخال رقم جوال أردني صحيح (07xxxxxxxx)');
-    return;
-  }
-  
-  // Save booking to localStorage (simulate)
-  const booking = {
-    id: Date.now(),
-    provider: fxrProvider,
-    ...fxrBookingState,
-    bookingDate: new Date().toISOString(),
-    status: 'pending'
-  };
-  
-  const bookings = JSON.parse(localStorage.getItem('fxrBookings') || '[]');
-  bookings.push(booking);
-  localStorage.setItem('fxrBookings', JSON.stringify(bookings));
-  
-  fxrShowToast('✅ تم تأكيد حجزك بنجاح! سيتم إشعارك قريباً');
-  
-  // Redirect to user dashboard after 2 seconds
-  setTimeout(() => {
-    window.location.href = 'user-dashboard.html';
-  }, 2000);
+// async function fxrConfirmBooking() {
+//     // 1. التأكد من وجود البيانات في الذاكرة
+//     const token = localStorage.getItem('token');
+//     const userId = localStorage.getItem('userId');
+
+//     if (!token || !userId) {
+//         alert("يرجى تسجيل الدخول أولاً لتتمكن من الحجز");
+//         window.location.href = 'login.html';
+//         return;
+//     }
+
+//     // 2. المترجم الديناميكي (عشان الداتابيز تقبل الأيام)
+//     const dayMapping = {
+//         'السبت': 'sat', 'الأحد': 'sun', 'الإثنين': 'mon',
+//         'الثلاثاء': 'tue', 'الأربعاء': 'wed', 'الخميس': 'thu', 'الجمعة': 'fri'
+//     };
+
+//     // 3. تجهيز الـ Payload المطابق لجدول bookings في DBeaver
+//     const payload = {
+//         client_id: userId, // UUID
+//         provider_id: "c82c9688-296d-415a-8d30-0fd6dc74f6b4", // تأكدي من الـ ID في DBeaver
+//         category_id: 1, // رقم صحيح (Integer) كما يظهر في صورتك
+//         scheduled_at: new Date().toISOString(), // تاريخ كامل متوافق مع timestamptz
+//         day_of_week: dayMapping[fxrBookingState.selectedDay] || 'mon', // Enum
+//         notes: document.getElementById('problemDescription')?.value || "لا يوجد ملاحظات"
+//     };
+
+//     try {
+//         const res = await fetch('http://localhost:3000/api/users/bookings', {
+//             method: 'POST',
+//             headers: { 
+//                 'Content-Type': 'application/json', 
+//                 'Authorization': `Bearer ${token}` 
+//             },
+//             body: JSON.stringify(payload)
+//         });
+
+//         const result = await res.json();
+
+//         if (res.ok && result.success) {
+//             alert("✅ تم الحجز بنجاح! السطر الآن في DBeaver.");
+//             window.location.href = 'user-dashboard.html'; // الانتقال
+//         } else {
+//             alert("❌ خطأ من الداتابيز: " + result.message);
+//         }
+//     } catch (err) {
+//         alert("❌ تأكدي من تشغيل السيرفر (node app.js)");
+//     }
+// }
+// 4. إرسال البيانات (Confirm) - نسخة جمالات المطورة
+async function fxrConfirmBooking() {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+
+    if (!token || !userId) {
+        alert("يرجى تسجيل الدخول.");
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const payload = {
+        client_id: userId,
+        provider_id: "c0a8011c-992a-4f5b-802c-56905589985c", // مثال UUID
+        service_id: "772f884a-9351-4f1b-802c-56905589985c",  // مثال UUID
+        booking_date: fxrBookingState.selectedDate,
+        start_time: fxrBookingState.selectedTime, // الوقت المختار ديناميكياً
+        end_time: "12:00:00", // يمكنكِ تعديلها لتكون +ساعة من البداية
+        notes: fxrBookingState.problemDescription
+    };
+
+    try {
+        const res = await fetch('http://localhost:3000/api/bookings', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            alert(result.message);
+            window.location.href = 'user-dashboard.html';
+        } else {
+            alert("فشل الحجز: " + result.message);
+        }
+    } catch (error) {
+        alert("خطأ في الاتصال بالسيرفر.");
+    }
 }
+// function fxrConfirmBooking() {
+//   fxrUpdateCustomerInfo();
+//   fxrUpdatePaymentMethod();
+  
+//   // Validate customer info
+//   if (!fxrBookingState.customerName) {
+//     fxrShowToast('❌ الرجاء إدخال الاسم الكامل');
+//     return;
+//   }
+//   if (!fxrBookingState.customerPhone) {
+//     fxrShowToast('❌ الرجاء إدخال رقم الجوال');
+//     return;
+//   }
+//   if (!fxrBookingState.customerPhone.match(/07[0-9]{8}/)) {
+//     fxrShowToast('❌ الرجاء إدخال رقم جوال أردني صحيح (07xxxxxxxx)');
+//     return;
+//   }
+  
+//   // Save booking to localStorage (simulate)
+//   const booking = {
+//     id: Date.now(),
+//     provider: fxrProvider,
+//     ...fxrBookingState,
+//     bookingDate: new Date().toISOString(),
+//     status: 'pending'
+//   };
+  
+//   const bookings = JSON.parse(localStorage.getItem('fxrBookings') || '[]');
+//   bookings.push(booking);
+//   localStorage.setItem('fxrBookings', JSON.stringify(bookings));
+  
+//   fxrShowToast('✅ تم تأكيد حجزك بنجاح! سيتم إشعارك قريباً');
+  
+//   // Redirect to user dashboard after 2 seconds
+//   setTimeout(() => {
+//     window.location.href = 'user-dashboard.html';
+//   }, 2000);
+// }
 
 // ========================================
 // INITIALIZE PROVIDER INFO
 // ========================================
+
+
+
+// تعديل جمالات ليكون ديناميك
+ 
+
+
 function fxrInitProviderInfo() {
   // Get provider ID from URL
   const urlParams = new URLSearchParams(window.location.search);

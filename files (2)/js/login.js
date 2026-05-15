@@ -99,6 +99,61 @@ function validateInputs(username, password) {
 /**
  * معالجة تسجيل الدخول
  */
+// function handleLogin(event) {
+//   event.preventDefault();
+  
+//   const username = usernameInput.value.trim();
+//   const password = passwordInput.value;
+  
+//   if (!validateInputs(username, password)) {
+//     return;
+//   }
+  
+//   const user = findUser(username);
+  
+//   if (user && user.password === password) {
+//     // تسجيل الدخول ناجح
+//     if (rememberMeCheckbox.checked) {
+//       localStorage.setItem('fixora_remembered_user', username);
+//       localStorage.setItem('fixora_remembered_pass', btoa(password)); // تشفير بسيط
+//     } else {
+//       localStorage.removeItem('fixora_remembered_user');
+//       localStorage.removeItem('fixora_remembered_pass');
+//     }
+    
+//     sessionStorage.setItem('fixora_current_user', JSON.stringify({
+//       id: user.id,
+//       name: user.name,
+//       role: user.role,
+//       username: user.username
+//     }));
+    
+//     showToast(`مرحباً ${user.name}! جاري تحويلك إلى لوحة التحكم... ✅`, 'success');
+    
+//     // محاكاة التحويل
+//     setTimeout(() => {
+//       if (user.role === 'provider') {
+//         window.location.href = '/dashboard/provider';
+//         showToast('سيتم توجيهك إلى لوحة تحكم الحرفي', 'success');
+//       } else {
+//         window.location.href = '/dashboard/user';
+//         showToast('سيتم توجيهك إلى لوحة تحكم المستخدم', 'success');
+//       }
+//     }, 1500);
+//   } else {
+//     showToast('❌ خطأ في رقم الجوال/البريد أو كلمة المرور', 'error');
+//     passwordError.textContent = 'بيانات الدخول غير صحيحة';
+//     passwordInput.classList.add('error');
+//     setTimeout(() => passwordInput.classList.remove('error'), 2000);
+//   }
+// }
+
+/**
+ * معالجة تسجيل الدخول - النسخة المعدلة لربط الحجز جمالات
+ */
+/**
+ * معالجة تسجيل الدخول - النسخة المعدلة لربط الحجز جمالات
+ */
 function handleLogin(event) {
   event.preventDefault();
   
@@ -112,41 +167,29 @@ function handleLogin(event) {
   const user = findUser(username);
   
   if (user && user.password === password) {
-    // تسجيل الدخول ناجح
+    // 1. تخزين بيانات "تذكرني" إذا كان الخيار مفعلاً
     if (rememberMeCheckbox.checked) {
       localStorage.setItem('fixora_remembered_user', username);
-      localStorage.setItem('fixora_remembered_pass', btoa(password)); // تشفير بسيط
+      localStorage.setItem('fixora_remembered_pass', btoa(password)); 
     } else {
       localStorage.removeItem('fixora_remembered_user');
       localStorage.removeItem('fixora_remembered_pass');
     }
     
+    // --- اضيفي الأسطر هنا يا جمالات 👇 ---
+    localStorage.setItem('token', 'demo-token-12345'); 
+    localStorage.setItem('userId', user.id); 
+    // -----------------------------------
+
+    // 3. تخزين بيانات الجلسة الحالية
     sessionStorage.setItem('fixora_current_user', JSON.stringify({
       id: user.id,
       name: user.name,
       role: user.role,
       username: user.username
     }));
-    
-    showToast(`مرحباً ${user.name}! جاري تحويلك إلى لوحة التحكم... ✅`, 'success');
-    
-    // محاكاة التحويل
-    setTimeout(() => {
-      if (user.role === 'provider') {
-        window.location.href = '/dashboard/provider';
-        showToast('سيتم توجيهك إلى لوحة تحكم الحرفي', 'success');
-      } else {
-        window.location.href = '/dashboard/user';
-        showToast('سيتم توجيهك إلى لوحة تحكم المستخدم', 'success');
-      }
-    }, 1500);
-  } else {
-    showToast('❌ خطأ في رقم الجوال/البريد أو كلمة المرور', 'error');
-    passwordError.textContent = 'بيانات الدخول غير صحيحة';
-    passwordInput.classList.add('error');
-    setTimeout(() => passwordInput.classList.remove('error'), 2000);
-  }
-}
+  }}
+    // ... باقي الكود كما هو
 
 /**
  * إظهار/إخفاء كلمة المرور

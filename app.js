@@ -98,13 +98,11 @@
 // app.listen(PORT, () => {
 //     console.log(`Server is running on port ${PORT} 🚀`);
 // });import express from 'express';
-//////////////////////////////////////////////////
 import express from 'express';
 import dotenv from 'dotenv';
 import pool from './config/db.js'; 
 import userRoutes from './routes/userRoutes.js';
 import cors from 'cors';
-
 // 1. الإعدادات (Config)
 dotenv.config();
 const app = express();

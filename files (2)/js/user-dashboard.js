@@ -66,13 +66,38 @@ function getStatusIcon(status) {
 }
 
 // ========== تحديث البادجات ==========
+// function updateBadges() {
+//     const activeCount = ordersData.filter(o => o.status === 'progress' || o.status === 'accepted').length;
+//     document.getElementById('ordersBadge').textContent = activeCount;
+//     document.getElementById('favBadge').textContent = favoritesData.length;
+//     document.getElementById('msgBadge').textContent = messagesData.filter(m => m.unread).length;
+//     const unreadCount = notificationsData.filter(n => !n.read).length;
+//     document.getElementById('notifBadge').textContent = unreadCount;
+// }
+// دالة تحديث الأرقام بشكل آمن لمنع انهيار التصميم
 function updateBadges() {
-    const activeCount = ordersData.filter(o => o.status === 'progress' || o.status === 'accepted').length;
-    document.getElementById('ordersBadge').textContent = activeCount;
-    document.getElementById('favBadge').textContent = favoritesData.length;
-    document.getElementById('msgBadge').textContent = messagesData.filter(m => m.unread).length;
-    const unreadCount = notificationsData.filter(n => !n.read).length;
-    document.getElementById('notifBadge').textContent = unreadCount;
+    // التأكد من وجود مصفوفة الطلبات أولاً
+    const activeCount = (typeof ordersData !== 'undefined') ? 
+        ordersData.filter(o => o.status === 'progress' || o.status === 'accepted').length : 0;
+    
+    // تحديث رقم الطلبات فقط إذا كان العنصر موجوداً في الـ HTML
+    const ordersBadge = document.getElementById('ordersBadge');
+    if (ordersBadge) {
+        ordersBadge.textContent = activeCount;
+    }
+
+    // تحديث رقم المفضلة فقط إذا كان العنصر موجوداً
+    const favBadge = document.getElementById('favBadge');
+    if (favBadge) {
+        favBadge.textContent = (typeof favoritesData !== 'undefined') ? favoritesData.length : 0;
+    }
+
+    // تحديث رقم الرسائل فقط إذا كان العنصر موجوداً
+    const msgBadge = document.getElementById('msgBadge');
+    if (msgBadge) {
+        const unreadMsg = (typeof messagesData !== 'undefined') ? messagesData.filter(m => m.unread).length : 0;
+        msgBadge.textContent = unreadMsg;
+    }
 }
 
 // ========== عرض نافذة الإشعار المحسّن ==========
@@ -103,54 +128,169 @@ function closeNotificationPopup() {
     const popup = document.getElementById('notificationPopup');
     if (popup) popup.classList.remove('show');
 }
+// هاد السطر لازم يشتغل أول ما الصفحة تفتح
+document.addEventListener('DOMContentLoaded', async () => {
+    const userId = localStorage.getItem('userId') || 1; // بجيب الـ ID
+    const nameDisplay = document.getElementById('userNameDisplay');
 
-// ========== عرض الطلبات (صفحة طلباتي) ==========
-function renderOrdersList() {
-    let filtered = ordersData;
-    if (currentOrderFilter === 'progress') {
-        filtered = ordersData.filter(o => o.status === 'progress');
-    } else if (currentOrderFilter === 'accepted') {
-        filtered = ordersData.filter(o => o.status === 'accepted');
-    } else if (currentOrderFilter === 'completed') {
-        filtered = ordersData.filter(o => o.status === 'completed');
-    } else if (currentOrderFilter === 'rejected') {
-        filtered = ordersData.filter(o => o.status === 'rejected');
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/user/${userId}`);
+        const result = await response.json();
+
+        if (result.success && result.user) {
+            // هون بمسك الـ ID اللي بالـ HTML وبغير النص اللي جواته
+            nameDisplay.textContent = `مرحباً ${result.user.first_name} 👋`;
+        }
+    } catch (error) {
+        console.error("مشكلة في جلب الاسم:", error);
     }
+});
+
+
+// 1. الدالة الديناميكية لجلب البيانات
+async function fetchUserOrders() {
+    // بناخد الـ ID من المتصفح (ولو مش موجود بنفترض 1 للتجربة)
+    const userId = localStorage.getItem('userId') || 1; 
+    const nameDisplay = document.getElementById('userNameDisplay');
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/user/${userId}`);
+        const result = await response.json();
+
+       if (result.success && result.user) {
+    if (nameDisplay) nameDisplay.textContent = `مرحباً ${result.user.first_name} 👋`;
     
-    const container = document.getElementById('ordersListFull');
-    if (!container) return;
+    // سطر جمالات الجديد:
+    fillProfileInputs(result.user); 
     
-    container.innerHTML = filtered.map(order => `
-        <div class="order-full-item status-${order.status}">
-            <div class="order-full-icon">${order.icon}</div>
-            <div class="order-full-details">
-                <div class="order-full-title">${order.title}</div>
-                <div class="order-full-meta">${order.provider} · ${order.location} · ${order.date}</div>
-            </div>
-            <div class="order-full-status">
-                <span class="status-badge status-${order.status}">${getStatusIcon(order.status)} ${getStatusText(order.status)}</span>
-            </div>
-            <div class="order-full-actions">
-                ${order.status === 'completed' ? '<button class="btn-small btn-rate" data-order="' + order.id + '">⭐ قيّم</button>' : ''}
-                <button class="btn-small btn-detail" data-order="' + order.id + '">تفاصيل</button>
-            </div>
-        </div>
-    `).join('');
-    
-    // إضافة مستمعي الأحداث للأزرار
-    document.querySelectorAll('.btn-rate').forEach(btn => {
-        btn.addEventListener('click', () => {
-            switchTab('notifications');
-            showNotificationPopup('⭐ شكراً لتقييمك!', 'تم تسجيل تقييمك بنجاح. آرائك تساعدنا في تحسين الخدمة.');
-        });
-    });
-    document.querySelectorAll('.btn-detail').forEach(btn => {
-        btn.addEventListener('click', () => {
-            showNotificationPopup('📋 تفاصيل الطلب', 'سيتم عرض معلومات أكثر تفصيلاً قريباً.');
-        });
-    });
+    renderOrdersFromDB(result.bookings || []);
+    updateBadgesFromDB(result.bookings || []);
+}
+    } catch (error) {
+        console.error("خطأ في جلب البيانات:", error);
+    }
 }
 
+// 2. تشغيل الكود بمجرد ما تفتح الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    fetchUserOrders();
+});
+
+// =========================================
+// تشغيل الدالة فور تحميل الصفحة
+// =========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // تشغيل جلب البيانات
+    fetchUserOrders();
+});
+// ========== عرض الطلبات (صفحة طلباتي) ==========
+// function renderOrdersList() {
+//     let filtered = ordersData;
+//     if (currentOrderFilter === 'progress') {
+//         filtered = ordersData.filter(o => o.status === 'progress');
+//     } else if (currentOrderFilter === 'accepted') {
+//         filtered = ordersData.filter(o => o.status === 'accepted');
+//     } else if (currentOrderFilter === 'completed') {
+//         filtered = ordersData.filter(o => o.status === 'completed');
+//     } else if (currentOrderFilter === 'rejected') {
+//         filtered = ordersData.filter(o => o.status === 'rejected');
+//     }
+    
+//     const container = document.getElementById('ordersListFull');
+//     if (!container) return;
+    
+//     container.innerHTML = filtered.map(order => `
+//         <div class="order-full-item status-${order.status}">
+//             <div class="order-full-icon">${order.icon}</div>
+//             <div class="order-full-details">
+//                 <div class="order-full-title">${order.title}</div>
+//                 <div class="order-full-meta">${order.provider} · ${order.location} · ${order.date}</div>
+//             </div>
+//             <div class="order-full-status">
+//                 <span class="status-badge status-${order.status}">${getStatusIcon(order.status)} ${getStatusText(order.status)}</span>
+//             </div>
+//             <div class="order-full-actions">
+//                 ${order.status === 'completed' ? '<button class="btn-small btn-rate" data-order="' + order.id + '">⭐ قيّم</button>' : ''}
+//                 <button class="btn-small btn-detail" data-order="' + order.id + '">تفاصيل</button>
+//             </div>
+//         </div>
+//     `).join('');
+    
+//     // إضافة مستمعي الأحداث للأزرار
+//     document.querySelectorAll('.btn-rate').forEach(btn => {
+//         btn.addEventListener('click', () => {
+//             switchTab('notifications');
+//             showNotificationPopup('⭐ شكراً لتقييمك!', 'تم تسجيل تقييمك بنجاح. آرائك تساعدنا في تحسين الخدمة.');
+//         });
+//     });
+//     document.querySelectorAll('.btn-detail').forEach(btn => {
+//         btn.addEventListener('click', () => {
+//             showNotificationPopup('📋 تفاصيل الطلب', 'سيتم عرض معلومات أكثر تفصيلاً قريباً.');
+//         });
+//     });
+// }
+
+// ========== جلب الطلبات الحقيقية من السيرفر (بديل renderOrdersList القديمة) ==========
+// دالة جلب بيانات الحجوزات من الباك إند
+fetchUserOrders();
+
+// دالة العرض التي ترسم البيانات الحقيقية في الصفحة
+// function renderOrdersFromDB(orders) {
+//     const container = document.getElementById('ordersListFull');
+//     if (!container) return;
+
+//     if (!orders || orders.length === 0) {
+//         container.innerHTML = '<p class="no-data">قائمة الطلبات فارغة</p>';
+//         return;
+//     }
+
+//     container.innerHTML = orders.map(order => `
+//         <div class="order-full-item status-${order.status || 'pending'}">
+//             <div class="order-full-icon">🛠️</div>
+//             <div class="order-full-details">
+//                 <div class="order-full-title">${order.service_title || 'خدمة غير محددة'}</div>
+//                 <div class="order-full-meta">
+//                     <span>الفني: ${order.provider_name || 'قيد التعيين'}</span> • 
+//                     <span>التاريخ: ${order.scheduled_at ? new Date(order.scheduled_at).toLocaleDateString('ar-JO') : 'غير محدد'}</span>
+//                 </div>
+//                 ${order.notes ? `<div class="order-full-notes">ملاحظاتك: ${order.notes}</div>` : ''}
+//             </div>
+//             <div class="order-full-status">
+//                 <span class="status-badge status-${order.status || 'pending'}">
+//                     ${order.status === 'pending' ? '⏳ قيد الانتظار' : order.status}
+//                 </span>
+//             </div>
+//         </div>
+//     `).join('');
+// }
+// كود جمالات 
+function renderOrdersFromDB(bookings) {
+    const container = document.getElementById('ordersListFull');
+    if (!container) return;
+
+    if (bookings.length === 0) {
+        container.innerHTML = '<p class="no-data">لا توجد طلبات بعد.</p>';
+        return;
+    }
+
+    container.innerHTML = bookings.map(order => `
+        <div class="order-card">
+            <div class="order-header">
+                <h4>طلب رقم #${order.id}</h4>
+                <span class="status-badge status-${order.status}">${order.status}</span>
+            </div>
+            <p>التاريخ: ${new Date(order.scheduled_at).toLocaleDateString('ar-EG')}</p>
+            <p>الوقت: ${order.scheduled_time}</p>
+            <p>ملاحظات: ${order.notes || 'لا يوجد'}</p>
+        </div>
+    `).join('');
+}
+// دالة لتحديث أرقام الإشعارات والطلبات بناءً على بيانات الداتابيز
+function updateBadgesFromDB(orders) {
+    const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress').length;
+    const ordersBadge = document.getElementById('ordersBadge');
+    if (ordersBadge) ordersBadge.textContent = activeOrders;
+}
 // ========== عرض الإشعارات (صفحة الإشعارات) ==========
 function renderNotifications() {
     const container = document.getElementById('notificationsList');
@@ -223,7 +363,8 @@ function switchTab(tabId) {
     
     // تحديث المحتوى الديناميكي حسب التبويب
     if (tabId === 'orders') {
-        renderOrdersList();
+        // renderOrdersList();
+          fetchUserOrders();
     } else if (tabId === 'favorites') {
         renderFavorites();
     } else if (tabId === 'messages') {
@@ -240,7 +381,8 @@ function initOrderFilters() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentOrderFilter = this.getAttribute('data-filter');
-            renderOrdersList();
+            // renderOrdersList();
+              fetchUserOrders();
         });
     });
 }
@@ -408,10 +550,73 @@ document.addEventListener('DOMContentLoaded', function() {
     // تهيئة زر حذف الحساب
     const deleteBtn = document.getElementById('deleteAccountBtn');
     if (deleteBtn) deleteBtn.addEventListener('click', deleteAccount);
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const nameDisplay = document.getElementById('userNameDisplay');
+    
+    // 1. تغيير فوري من الـ localStorage (عشان ما ينتظر السيرفر)
+    const storedName = localStorage.getItem('userName');
+    if (storedName && nameDisplay) {
+        nameDisplay.textContent = `مرحباً ${storedName} 👋`;
+    }
+
+    // 2. تحديث من السيرفر (للتأكيد والدقة)
+    fetchUserOrders(); 
+});
     
     // عرض البيانات الافتراضية
-    renderOrdersList();
+    // renderOrdersList();
+    fetchUserOrders();// كود جمالات
     renderFavorites();
     renderMessages();
     renderNotifications();
+});
+
+// =========================================
+// 6. شغل جمالات - إدارة الملف الشخصي (Edit Profile)
+// =========================================
+
+// دالة لتعبئة بيانات الحقول من قاعدة البيانات
+function fillProfileInputs(user) {
+    const editName = document.getElementById('editName');
+    const editEmail = document.getElementById('editEmail');
+    const editPhone = document.getElementById('editPhone');
+
+    if (user) {
+        if (editName) editName.value = `${user.first_name} ${user.last_name}`;
+        if (editEmail) editEmail.value = user.email || '';
+        if (editPhone) editPhone.value = user.phone || '';
+        console.log("تم تعبئة حقول الملف الشخصي بنجاح");
+    }
+}
+
+// دالة التحقق من البيانات (Validation) قبل الحفظ
+function validateAndSaveProfile() {
+    const nameValue = document.getElementById('editName').value.trim();
+    const phoneValue = document.getElementById('editPhone').value.trim();
+
+    // 1. التحقق من الاسم
+    if (nameValue.length < 3) {
+        alert("الرجاء إدخال اسم صحيح (3 حروف على الأقل)");
+        return;
+    }
+
+    // 2. التحقق من رقم الهاتف (أردني)
+    const phoneRegex = /^(079|078|077)\d{7}$/;
+    if (!phoneRegex.test(phoneValue)) {
+        alert("الرجاء إدخال رقم هاتف أردني صحيح (مثلاً: 079xxxxxxx)");
+        return;
+    }
+
+    // هنا سيتم وضع كود الـ Fetch لإرسال البيانات للسيرفر لاحقاً
+    alert("شغل رائع! البيانات صحيحة وجاهزة للإرسال للسيرفر.");
+    console.log("البيانات الجاهزة للحفظ:", { nameValue, phoneValue });
+}
+
+// ربط الأزرار عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    const saveBtn = document.getElementById('saveProfileBtn'); // تأكدي أن هذا الـ ID موجود في زر الحفظ بملف الـ HTML
+    if (saveBtn) {
+        saveBtn.addEventListener('click', validateAndSaveProfile);
+    }
 });

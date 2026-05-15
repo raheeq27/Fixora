@@ -16,27 +16,26 @@
 // // ... الراوتس القديمة ... جمالات// مسار الحجوزات الجديد
 // router.post('/bookings', createBooking); 
 
-// export default router; // إضافة هذا السطر
-
-import express from 'express';
-// استيراد جميع الدوال من الـ Controller بما فيها دالة الحجوزات الخاصة بكِ
+// export default router; // إضافة هذا السطرimport express from 'express';import express from 'express'; // تأكدي أن هذا السطر غير معلق
+import express from 'express'; // السطر الناقص الذي يسبب توقف السيرفر
 import { 
     registerUser, 
     loginUser, 
     getAllUsers, 
-    createBooking 
+    createBooking,
+    getUserBookings 
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// 1. مسارات الحسابات (شغل مشترك)
+// 1. مسارات الحسابات (شغل البنات)
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/', protect, getAllUsers);
 
-// 2. مسار الحجوزات (شغل جمالات - مدمج ومنظم)
-router.post('/bookings', createBooking); 
+// 2. مسارات الحجوزات (شغل جمالات)
+router.post('/bookings', createBooking); // لإضافة حجز جديد
+router.get('/user/:userId', getUserBookings); // لجلب حجوزات مستخدم معين لعرضها في لوحة التحكم
 
-// تصدير الراوتر مرة واحدة فقط في نهاية الملف
 export default router;
