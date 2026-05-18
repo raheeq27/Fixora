@@ -2,12 +2,13 @@ import pool from '../config/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-// 1. دالة التسجيل (تم تعديل الرسالة لتكون بسيطة ورسمية)
+// 1. دالة التسجيل (تم تصحيحها لترتجع الـ profileId الحقيقي)
 export const register = async (req, res) => {
   try {
     const { first_name, last_name, email, password, role, phone, governorate } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // إدخال المستخدم في جدول users
     const newUser = await pool.query(
       'INSERT INTO users (first_name, last_name, email, password_hash, role, phone, governorate) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       [first_name, last_name, email, hashedPassword, role, phone, governorate]
@@ -16,18 +17,40 @@ export const register = async (req, res) => {
     const userData = newUser.rows[0];
     const userId = userData.id || userData.user_id || Object.values(userData)[0];
 
+    // متغير لتخزين الـ profileId الحقيقي لترجيعه في النهاية
+    let profileId = null;
+
     if (role === 'client') {
-      await pool.query('INSERT INTO client_profiles (user_id) VALUES ($1)', [userId]);
+      // إدخال سجل في جدول بروفايل العميل وجلب الـ id الخاص بالبروفايل فوراً
+      const newClient = await pool.query(
+        'INSERT INTO client_profiles (user_id) VALUES ($1) RETURNING id', 
+        [userId]
+      );
+      profileId = newClient.rows[0].id;
+
     } else if (role === 'provider') {
-      const newProvider = await pool.query('INSERT INTO provider_profiles (user_id) VALUES ($1) RETURNING *', [userId]);
-      const providerData = newProvider.rows[0];
-      const providerId = providerData.id || providerData.provider_id || Object.values(providerData)[0];
+      // إدخال سجل في جدول بروفايل الفني وجلب الـ id الخاص بالبروفايل فوراً
+      const newProvider = await pool.query(
+        'INSERT INTO provider_profiles (user_id) VALUES ($1) RETURNING id', 
+        [userId]
+      );
+      profileId = newProvider.rows[0].id;
       
-      await pool.query('INSERT INTO provider_documents (provider_id, document_url) VALUES ($1, $2)', [providerId, 'pending_upload']);
+      // تم استخدام file_url بدلاً من document_url لتطابق السيكوال تماماً
+      await pool.query(
+        'INSERT INTO provider_documents (provider_id, file_url) VALUES ($1, $2)', 
+        [profileId, 'pending_upload']
+      );
     }
 
-    // هون التعديل اللي طلبتيه:
-    res.status(201).json({ message: 'تم التسجيل بنجاح', userId: userId });
+    // إرجاع رد نجاح يحتوي على الـ userId والـ profileId السحري للاختبار في بوستمان
+    res.status(201).json({ 
+      success: true,
+      message: 'تم التسجيل بنجاح ✅', 
+      userId: userId,
+      profileId: profileId 
+    });
+
   } catch (err) {
     console.error("Register Error:", err.message);
     res.status(500).send('خطأ في السيرفر: ' + err.message);
@@ -47,7 +70,7 @@ export const login = async (req, res) => {
 
     const currentUserId = user.id || user.user_id || Object.values(user)[0];
 
-    const token = jwt.sign({ userId: currentUserId, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: currentUserId, role: user.role }, process.env.JWT_SECRET || 'fixora_secret_2026', { expiresIn: '1h' });
     res.status(200).json({ token, user: { id: currentUserId, name: user.first_name, role: user.role } });
   } catch (err) {
     res.status(500).send('خطأ في السيرفر');
