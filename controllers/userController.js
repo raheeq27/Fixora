@@ -1,13 +1,13 @@
 import pool from '../config/db.js';
-<<<<<<< HEAD
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 // =========================================
-// 1. دالة مساعدة للتحقق من التوافر
+// 1. دالة مساعدة للتحقق من التوافر (Availability Checker)
 // =========================================
 const checkAvailability = async (provider_id, date, time) => {
-    const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    // تحويل التاريخ لاسم اليوم باللغة الإنجليزية وبصيغة مصغرة لتطابق الـ Enum (sat, sun, mon...)
+    const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+    
     const query = `
         SELECT * FROM provider_availability 
         WHERE provider_id = $1 AND day_of_week = $2 
@@ -18,67 +18,50 @@ const checkAvailability = async (provider_id, date, time) => {
 };
 
 // =========================================
-// 2. إنشاء حجز جديد (شغل جمالات)
-// =========================================
-// export const createBooking = async (req, res, next) => {
-//     const { client_id, provider_id, category_id, scheduled_at, scheduled_time, notes } = req.body;
-//     try {
-//         const isAvailable = await checkAvailability(provider_id, scheduled_at, scheduled_time);
-//         if (!isAvailable) {
-//             const error = new Error("الفني غير متاح في هذا الوقت");
-//             error.statusCode = 400;
-//             throw error;
-//         }
-
-//         const insertQuery = `
-//             INSERT INTO bookings (client_id, provider_id, category_id, scheduled_at, notes, status)
-//             VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *;
-//         `;
-//         const result = await pool.query(insertQuery, [client_id, provider_id, category_id, scheduled_at, notes]);
-        
-//         res.status(201).json({ success: true, data: result.rows[0] });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-// =========================================
-// مهمة جمالات: إنشاء حجز مع فحص التضارب الديناميكي
-// =========================================
-// =========================================
-// 2. إنشاء حجز جديد (شغل جمالات المطور - المهمة 3)
+// 2. إنشاء حجز جديد (createBooking)
 // =========================================
 export const createBooking = async (req, res, next) => {
-    const { client_id, provider_id, service_id, booking_date, start_time, end_time, notes } = req.body;
+    const { provider_id, service_id, booking_date, start_time, end_time, notes } = req.body;
+    // نأخذ الـ client_id بأمان من الـ token المفكوك في authMiddleware
+    const userId = req.user.userId; 
 
     try {
-        // 1. فحص التضارب الديناميكي (OVERLAPS)
+        // أولاً: جلب الـ client_profile id المرتبط بهذا المستخدم
+        const clientRes = await pool.query('SELECT id FROM client_profiles WHERE user_id = $1', [userId]);
+        if (clientRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "لم يتم العثور على بروفايل عميل لهذا الحساب." });
+        }
+        const client_id = clientRes.rows[0].id;
+
+        // ثانياً: فحص التضارب الديناميكي للمواعيد بناءً على حقل scheduled_at الفعلي في الداتابيز
+        // نقوم بجمع التاريخ والوقت وتحويلهم إلى TIMESTAMP ومقارنتهم مباشرة
         const overlapQuery = `
             SELECT id FROM bookings 
             WHERE provider_id = $1 
-              AND booking_date = $2 
-              AND status NOT IN ('cancelled', 'rejected')
-              AND (start_time, end_time) OVERLAPS ($3::TIME, $4::TIME);
+            AND status NOT IN ('cancelled', 'rejected')
+            AND scheduled_at = ($2::DATE + $3::TIME)::TIMESTAMP;
         `;
-        const conflictRes = await pool.query(overlapQuery, [provider_id, booking_date, start_time, end_time]);
+        const conflictRes = await pool.query(overlapQuery, [provider_id, booking_date, start_time]);
 
         if (conflictRes.rows.length > 0) {
             return res.status(400).json({ 
                 success: false, 
-                message: "عذراً، هذا الوقت محجوز مسبقاً للفني." 
+                message: "عذراً، هذا الوقت محجوز مسبقاً للفني أو يتعارض مع حجز آخر." 
             });
         }
 
-        // 2. إدخال الحجز الفعلي
+        // ثالثاً: إدخال الحجز الفعلي في قاعدة البيانات
+        // تم تصحيح ترتيب المتغيرات ودمج التاريخ والوقت في حقل scheduled_at
         const insertQuery = `
-            INSERT INTO bookings (client_id, provider_id, service_id, booking_date, start_time, end_time, notes, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+            INSERT INTO bookings (client_id, provider_id, category_id, scheduled_at, notes, status)
+            VALUES ($1, $2, $3, ($4::DATE + $5::TIME)::TIMESTAMP, $6, 'pending')
             RETURNING *;
         `;
-        const result = await pool.query(insertQuery, [client_id, provider_id, service_id, booking_date, start_time, end_time, notes]);
+        const result = await pool.query(insertQuery, [client_id, provider_id, service_id, booking_date, start_time, notes]);
 
         res.status(201).json({
             success: true,
-            message: "تم إرسال طلب الحجز بنجاح بانتظار موافقة الفني.",
+            message: "تم إرسال طلب الحجز بنجاح وهو بانتظار موافقة الفني.",
             booking: result.rows[0]
         });
 
@@ -89,61 +72,40 @@ export const createBooking = async (req, res, next) => {
 };
 
 // =========================================
-// 3. جلب حجوزات مستخدم معين (شغل جمالات - نسخة نهائية)
+// 3. جلب حجوزات المستخدم الحالي (getUserBookings)
 // =========================================
-// export const getUserBookings = async (req, res, next) => {
-//     const { userId } = req.params;
-
-//     try {
-//         // استعلام واحد شامل يجلب كل التفاصيل اللي بنحتاجها في الداشبورد
-//         const query = `
-//             SELECT 
-//                 b.id, 
-//                 b.scheduled_at as date, 
-//                 b.status, 
-//                 b.notes,
-//                 p.first_name || ' ' || p.last_name as provider_name,
-//                 c.name as service_title
-//             FROM bookings b
-//             JOIN users p ON b.provider_id = p.id
-//             JOIN categories c ON b.category_id = c.id
-//             WHERE b.client_id = $1
-//             ORDER BY b.created_at DESC;
-//         `;
-        
-//         const result = await pool.query(query, [userId]);
-        
-//         res.status(200).json({
-//             success: true,
-//             count: result.rowCount,
-//             data: result.rows
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-
 export const getUserBookings = async (req, res, next) => {
-    const { userId } = req.params;
+    const userId = req.user.userId; 
+    const role = req.user.role;
 
     try {
-        // استعلام واحد شامل يجلب كل التفاصيل اللي بنحتاجها في الداشبورد
-        const query = `
-            SELECT 
-                b.id, 
-                b.scheduled_at as date, 
-                b.status, 
-                b.notes,
-                p.first_name || ' ' || p.last_name as provider_name,
-                c.name as service_title
-            FROM bookings b
-            JOIN users p ON b.provider_id = p.id
-            JOIN categories c ON b.category_id = c.id
-            WHERE b.client_id = $1
-            ORDER BY b.created_at DESC;
-        `;
-        
-        const result = await pool.query(query, [userId]);
+        let query = '';
+        let queryParams = [userId];
+        if (role === 'client') {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name as provider_name
+                FROM bookings b
+                JOIN provider_profiles pp ON b.provider_id = pp.id
+                JOIN users u ON pp.user_id = u.id
+                WHERE b.client_id = (SELECT id FROM client_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        } else if (role === 'provider') {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name as client_name
+                FROM bookings b
+                JOIN client_profiles cp ON b.client_id = cp.id
+                JOIN users u ON cp.user_id = u.id
+                WHERE b.provider_id = (SELECT id FROM provider_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        } else {
+            // للأدمن: جلب كل الحجوزات في النظام
+            query = `SELECT * FROM bookings ORDER BY created_at DESC;`;
+            queryParams = [];
+        }
+
+        const result = await pool.query(query, queryParams);
         
         res.status(200).json({
             success: true,
@@ -156,72 +118,67 @@ export const getUserBookings = async (req, res, next) => {
 };
 
 // =========================================
-// 4. منطق التسجيل (Register)
+// 4. الحصول على جميع المستخدمين (getAllUsers - للأدمن فقط)
 // =========================================
-export const registerUser = async (req, res, next) => {
-    const { first_name, last_name, email, password, role, phone, governorate } = req.body;
-=======
->>>>>>> afe07df5f52a3177e99b813f3f9a426a01763634
-
-// دالة لجلب كل المستخدمين
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res, next) => {
     try {
-        const result = await pool.query('SELECT * FROM users'); 
-        res.status(200).json(result.rows);
+        const users = await pool.query('SELECT id, first_name, last_name, email, role, phone, governorate, created_at FROM users');
+        res.status(200).json({ success: true, data: users.rows });
     } catch (err) {
-<<<<<<< HEAD
         next(err);
     }
 };
 
 // =========================================
-// 5. منطق تسجيل الدخول (Login)
+// 5. جلب التنبيهات للمستخدم الحالي (getUserNotifications)
 // =========================================
-export const loginUser = async (req, res, next) => {
-    const { email, password } = req.body;
+export const getUserNotifications = async (req, res, next) => {
     try {
-        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userResult.rows.length === 0) {
-            const error = new Error('الإيميل أو كلمة المرور غير صحيحة');
-            error.statusCode = 401;
-            throw error;
-        }
+        const result = await pool.query(
+            'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.userId]
+        );
+        res.status(200).json({ success: true, data: result.rows });
+    } catch (err) {
+        next(err);
+    }
+};
 
-        const user = userResult.rows[0];
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) {
-            const error = new Error('الإيميل أو كلمة المرور غير صحيحة');
-            error.statusCode = 401;
-            throw error;
-        }
-
-        const token = jwt.sign(
-            { userId: user.id, role: user.role },
-            process.env.JWT_SECRET || 'fixora_secret_2026',
-            { expiresIn: '7d' }
+// =========================================
+// 6. تحديث حالة التنبيه ليكون مقروءاً (markNotificationAsRead)
+// =========================================
+export const markNotificationAsRead = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.userId]
         );
 
-        res.status(200).json({
-            success: true,
-            token,
-            data: { id: user.id, first_name: user.first_name, role: user.role }
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "التنبيه غير موجود أو لا تملك صلاحية لتعديله." });
+        }
+
+        res.status(200).json({ success: true, message: "تم تحديد التنبيه كمقروء بنجاح." });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================
+// 7. دالة استقبال ورفع ملفات الفنيين (uploadDocsController)
+// =========================================
+export const uploadDocsController = async (req, res, next) => {
+    try {
+        res.status(200).json({ 
+            success: true, 
+            message: "بنية السيرفر جاهزة لاستقبال مستندات التحقق للفنيين." 
         });
     } catch (err) {
         next(err);
     }
 };
 
-// =========================================
-// 6. الحصول على جميع المستخدمين (لأدمن مثلاً)
-// =========================================
-export const getAllUsers = async (req, res, next) => {
-    try {
-        const users = await pool.query('SELECT id, first_name, email, role FROM users');
-        res.status(200).json({ success: true, data: users.rows });
-    } catch (err) {
-        next(err);
-=======
-        res.status(500).json({ error: err.message });
->>>>>>> afe07df5f52a3177e99b813f3f9a426a01763634
-    }
-};
+// دوال فارغة مؤقتاً لعدم حدوث خطأ عند الاستدعاء في الـ Routes
+export const registerUser = (req, res) => res.status(400).json({ message: "يرجى استخدام مسار /api/auth/register" });
+export const loginUser = (req, res) => res.status(400).json({ message: "يرجى استخدام مسار /api/auth/login" });
