@@ -7,6 +7,7 @@ import pool from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js'; 
+import errorMiddleware from './middleware/errorMiddleware.js';
 
 // =========================================
 // الإعدادات والميدل وير (CONFIG & MIDDLEWARES)
@@ -88,3 +89,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT} 🚀`);
 });
+app.use(errorMiddleware);
