@@ -5,151 +5,138 @@
 
 'use strict';
 
-/* بيانات الحرفيين (Mock Data) */
-const fxrTopProviders = [
-  {
-    id: 1,
-    name: 'أحمد المصري',
-    specialty: 'تكييف وأجهزة منزلية',
-    rating: 4.9,
-    reviewCount: 112,
-    governorate: 'عمّان',
-    areas: ['الشميساني', 'عبدون', 'الجبيهة'],
-    priceMin: 15,
-    priceMax: 30,
-    available: true,
-    avatar: '👨‍🔧',
-    avatarClass: 'fxr-avatar-orange',
-    category: 'تكييف'
-  },
-  {
-    id: 2,
-    name: 'محمد العزام',
-    specialty: 'كهرباء منزلية',
-    rating: 4.7,
-    reviewCount: 88,
-    governorate: 'الزرقاء',
-    areas: ['الزرقاء الجديدة', 'الرصيفة'],
-    priceMin: 10,
-    priceMax: 25,
-    available: true,
-    avatar: '👨‍🔧',
-    avatarClass: 'fxr-avatar-blue',
-    category: 'كهرباء'
-  },
-  {
-    id: 3,
-    name: 'خالد الحجايا',
-    specialty: 'سباكة',
-    rating: 4.6,
-    reviewCount: 73,
-    governorate: 'إربد',
-    areas: ['وسط إربد', 'الحواره'],
-    priceMin: 12,
-    priceMax: 35,
-    available: false,
-    avatar: '👷',
-    avatarClass: 'fxr-avatar-green',
-    category: 'سباكة'
-  }
-];
+// قاموس بسيط لتحويل رموز المحافظات للعربي عند العرض فقط
+const govTranslate = {
+   'Amman': 'عمّان',
+    'Irbid': 'إربد',
+    'Zarqa': 'الزرقاء',
+    'Balqa': 'البلقاء',
+    'Mafraq': 'المفرق',
+    'Jerash': 'جرش',
+    'Ajloun': 'عجلون',
+    'Madaba': 'مأدبا',
+    'Karak': 'الكرك',
+    'Tafilah': 'الطفيلة',
+    'Ma\'an': 'معان',
+    'Aqaba': 'العقبة'
+};
 
-/* بناء النجوم */
 function fxrBuildStars(rating) {
-  const full = Math.floor(rating);
-  const empty = 5 - full;
-  return '★'.repeat(full) + '☆'.repeat(empty);
+    const full = Math.floor(rating);
+    return '★'.repeat(full) + '☆'.repeat(5 - full);
 }
 
-/* بناء بطاقة الحرفي */
 function fxrBuildProviderCard(p) {
-  const stars = fxrBuildStars(p.rating);
-  const availLabel = p.available
-    ? '<span class="fxr-status fxr-status-available">متاح ✅</span>'
-    : '<span class="fxr-status fxr-status-busy">مشغول</span>';
+    const stars = fxrBuildStars(p.avg_rating); 
+    const availLabel = p.available
+        ? '<span class="fxr-status fxr-status-available">متاح ✅</span>'
+        : '<span class="fxr-status fxr-status-busy">مشغول</span>';
 
-  const tagsHtml = [p.governorate, ...p.areas.slice(0, 2)]
-    .map(t => `<span class="fxr-tag">${t}</span>`)
-    .join('');
+    const fullName = `${p.first_name} ${p.last_name}`;
+    const govArabic = govTranslate[p.governorate] || p.governorate;
 
-  return `
-    <div class="fxr-provider-card">
-      <div class="fxr-provider-card-head">
-        <div class="fxr-avatar ${p.avatarClass}">${p.avatar}</div>
-        <div>
-          <div class="fxr-provider-name">${p.name}</div>
-          <div class="fxr-provider-specialty">${p.specialty}</div>
+    const tagsHtml = [govArabic, ...p.areas.slice(0, 1)]
+        .map(t => `<span class="fxr-tag">${t}</span>`)
+        .join('');
+
+    return `
+        <div class="fxr-provider-card">
+            <div class="fxr-provider-card-head">
+                <div class="fxr-avatar ${p.avatarClass}">${p.avatar}</div>
+                <div>
+                    <div class="fxr-provider-name">${fullName}</div>
+                    <div class="fxr-provider-specialty">${p.specialty}</div>
+                </div>
+            </div>
+            <div class="fxr-provider-rating">
+                ${stars}
+                <span>${p.avg_rating} <span>(${p.reviewCount} تقييم)</span></span>
+                &nbsp; ${availLabel}
+            </div>
+            <div class="fxr-provider-tags">
+                ${tagsHtml}
+            </div>
+            <a href="provider.html?id=${p.id}" class="fxr-btn fxr-btn-outline" style="flex:1; text-align:center;">
+                عرض البروفايل
+            </a>
         </div>
-      </div>
-      <div class="fxr-provider-rating">
-        ${stars}
-        <span>${p.rating} <span>(${p.reviewCount} تقييم)</span></span>
-        &nbsp; ${availLabel}
-      </div>
-      <div class="fxr-provider-tags">
-        ${tagsHtml}
-      </div>
-      <a href="privider.html?id=${p.id}" class="fxr-btn fxr-btn-outline" style="flex:1; text-align:center;">
-        عرض البروفايل
-      </a>
-    </div>
-  `;
+    `;
 }
 
-/* رسم قسم أفضل الحرفيين */
-function fxrRenderTopProviders() {
-  const grid = document.getElementById('fxrTopProviders');
-  if (!grid) return;
-  grid.innerHTML = fxrTopProviders.map(fxrBuildProviderCard).join('');
+// دالة جلب الحرفيين الموثوقين من السيرفر
+async function fxrRenderTopProviders() {
+    const grid = document.getElementById('fxrTopProviders');
+    if (!grid) return;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/providers');
+        if (!response.ok) throw new Error('خطأ في الاتصال بالسيرفر');
+        
+        const providers = await response.json();
+        grid.innerHTML = providers.map(fxrBuildProviderCard).join('');
+        
+    } catch (error) {
+        console.error("خطأ:", error);
+        grid.innerHTML = '<p class="text-white text-center w-100">تأكدي من تشغيل السيرفر (node app.js)</p>';
+    }
 }
 
-/* الانتقال لصفحة البحث */
+// دالة الفحص والتحويل الداينمك للـ Header
+function checkDynamicHeader() {
+    const headerBtns = document.querySelector('.fxr-header-btns');
+    const userData = sessionStorage.getItem('fixora_current_user');
+
+    if (userData && headerBtns) {
+        const user = JSON.parse(userData);
+
+        headerBtns.innerHTML = `
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-bold" style="color: #3f4a4f;">أهلاً، ${user.name} 👋</span>
+                <button onclick="logout()" class="fxr-btn fxr-btn-outline" style="padding: 5px 15px;">خروج</button>
+            </div>
+        `;
+    }
+}
+
+// دالة البحث من الصفحة الرئيسية
 function fxrGoSearch() {
-  const q = document.getElementById('fxrMainSearchInput').value.trim();
-  const url = 'search.html' + (q ? '?q=' + encodeURIComponent(q) : '');
-  window.location.href = url;
+    const q = document.getElementById('fxrMainSearchInput')?.value.trim();
+    if (q) {
+        window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+    } else {
+        window.location.href = 'search.html';
+    }
 }
 
-/* الضغط على فئة الخدمة */
-function fxrCatClick(el) {
-  document.querySelectorAll('.fxr-cat-item').forEach(function (c) {
-    c.classList.remove('fxr-cat-active');
-  });
-  el.classList.add('fxr-cat-active');
+// ربط دالة البحث بـ window لتكون متاحة في الـ HTML
+window.fxrGoSearch = fxrGoSearch;
 
-  const cat = el.getAttribute('data-cat');
-  window.location.href = 'search.html?cat=' + encodeURIComponent(cat);
-}
+// دالة تسجيل الخروج الداينمك
+window.logout = () => {
+    sessionStorage.removeItem('fixora_current_user');
+    window.location.reload(); 
+};
 
-/* Toast الإشعارات */
-function fxrShowToast(msg, duration) {
-  duration = duration || 2800;
-  var t = document.getElementById('fxrToast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('fxr-toast-show');
-  setTimeout(function () {
-    t.classList.remove('fxr-toast-show');
-  }, duration);
-}
-
-/* DOM Ready */
-document.addEventListener('DOMContentLoaded', function () {
-  const inp = document.getElementById('fxrMainSearchInput');
-  if (inp) {
-    inp.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') fxrGoSearch();
-    });
-  }
-  fxrRenderTopProviders();
+// تشغيل كل الوظائف عند تحميل الصفحة مرة واحدة وبكفاءة
+document.addEventListener('DOMContentLoaded', () => {
+    checkDynamicHeader();      // تشغيل الهيدر الداينمك فوراً
+    fxrRenderTopProviders();   // جلب الحرفيين الأعلى تقييماً
 });
+function fxrCatClick(element) {
+  const specialty = element.getAttribute('data-cat');
+  if (specialty) {
+    window.location.href = `search.html?specialty=${encodeURIComponent(specialty)}`;
+  }
+}
 
-/* إظهار وإخفاء الشريط الجانبي في الصفحة الرئيسية */
-function fxrToggleSidebar() {
-  const sidebar = document.getElementById('fxrMainSidebar');
-  const overlay = document.getElementById('fxrSidebarOverlay');
-  if (sidebar && overlay) {
-    sidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
+function fxrGoSearch() {
+  const searchInput = document.getElementById('fxrMainSearchInput');
+  if (searchInput) {
+    const keyword = searchInput.value.trim();
+    if (keyword) {
+      window.location.href = `search.html?query=${encodeURIComponent(keyword)}`;
+    } else {
+      window.location.href = 'search.html';
+    }
   }
 }
