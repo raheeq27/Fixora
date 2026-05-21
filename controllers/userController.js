@@ -153,5 +153,4 @@ export const getAllUsers = async (req, res, next) => {
     } catch (err) {
         console.error("🚨 خطأ في جلب المستخدمين:", err);
         next(err);
-    }
-};
+    }}
