@@ -2,6 +2,21 @@
  * FIXORA — booking.js
  * JavaScript الخاص بصفحة حجز الخدمة
  */
+// في بداية ملف booking.js توقيف موقت 
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    
+    // إضافة سطر للتصحيح (Debugging)
+    console.log("Token value found in storage:", token); 
+    console.log("Storage location:", window.location.origin);
+
+    if (!token) {
+        alert("يرجى تسجيل الدخول أولاً");
+        window.location.href = 'login.html';
+    } else {
+        console.log("تم التعرف على التوكن بنجاح!");
+    }
+});
 
 'use strict';
 
@@ -274,6 +289,33 @@ function fxrUpdateAddress() {
 // ========================================
 // STEP 3 FUNCTIONS
 // ========================================
+// دالة جلب الخدمات (ديناميكية)
+async function loadDynamicServices() {
+    const icons = {
+        'تصليح تكييف سبليت': '❄️', 'تصليح تكييف مركزي': '🌀',
+        'شحن فريون': '🧊', 'صيانة دورية': '🔧',
+        'تنظيف مكيفات': '🧹', 'تصليح غسالة': '👕',
+        'تصليح ثلاجة': '🧊', 'تصليح سخان مياه': '💧'
+    };
+
+    try {
+        // الرابط هنا يجب أن يكون '/api/categories' فقط ليطابق app.js
+const response = await fetch('http://localhost:3000/api/categories');
+        const data = await response.json();
+        const serviceSelect = document.getElementById('serviceType');
+        
+        if (serviceSelect && data.success) {
+            serviceSelect.innerHTML = '<option value="">اختر نوع الخدمة</option>';
+            data.categories.forEach(cat => {
+                const icon = icons[cat.name_ar] || '🛠️';
+                const option = document.createElement('option');
+                option.value = cat.id; 
+                option.textContent = `${icon} ${cat.name_ar}`;
+                serviceSelect.appendChild(option);
+            });
+        }
+    } catch (err) { console.error("خطأ:", err); }
+}
 function fxrUpdateOrderSummary() {
   const summaryEl = document.getElementById('orderSummary');
   if (!summaryEl) return;
@@ -332,145 +374,131 @@ function fxrToggleConfirmBtn() {
     confirmBtn.disabled = !agreeCheckbox.checked;
   }
 }
-// كود جمالات ليكون ديناميك
-// استبدلي دالة fxrConfirmBooking القديمة بهذا الكود بالكامل
-
-// async function fxrConfirmBooking() {
-//     // 1. التأكد من وجود البيانات في الذاكرة
-//     const token = localStorage.getItem('token');
-//     const userId = localStorage.getItem('userId');
-
-//     if (!token || !userId) {
-//         alert("يرجى تسجيل الدخول أولاً لتتمكن من الحجز");
-//         window.location.href = 'login.html';
-//         return;
-//     }
-
-//     // 2. المترجم الديناميكي (عشان الداتابيز تقبل الأيام)
-//     const dayMapping = {
-//         'السبت': 'sat', 'الأحد': 'sun', 'الإثنين': 'mon',
-//         'الثلاثاء': 'tue', 'الأربعاء': 'wed', 'الخميس': 'thu', 'الجمعة': 'fri'
-//     };
-
-//     // 3. تجهيز الـ Payload المطابق لجدول bookings في DBeaver
-//     const payload = {
-//         client_id: userId, // UUID
-//         provider_id: "c82c9688-296d-415a-8d30-0fd6dc74f6b4", // تأكدي من الـ ID في DBeaver
-//         category_id: 1, // رقم صحيح (Integer) كما يظهر في صورتك
-//         scheduled_at: new Date().toISOString(), // تاريخ كامل متوافق مع timestamptz
-//         day_of_week: dayMapping[fxrBookingState.selectedDay] || 'mon', // Enum
-//         notes: document.getElementById('problemDescription')?.value || "لا يوجد ملاحظات"
-//     };
-
-//     try {
-//         const res = await fetch('http://localhost:3000/api/users/bookings', {
-//             method: 'POST',
-//             headers: { 
-//                 'Content-Type': 'application/json', 
-//                 'Authorization': `Bearer ${token}` 
-//             },
-//             body: JSON.stringify(payload)
-//         });
-
-//         const result = await res.json();
-
-//         if (res.ok && result.success) {
-//             alert("✅ تم الحجز بنجاح! السطر الآن في DBeaver.");
-//             window.location.href = 'user-dashboard.html'; // الانتقال
-//         } else {
-//             alert("❌ خطأ من الداتابيز: " + result.message);
-//         }
-//     } catch (err) {
-//         alert("❌ تأكدي من تشغيل السيرفر (node app.js)");
-//     }
-// }
 // 4. إرسال البيانات (Confirm) - نسخة جمالات المطورة
+// =========================================================================
 async function fxrConfirmBooking() {
     const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
+    const selectedCategory = document.getElementById('serviceType').value;
 
-    if (!token || !userId) {
-        alert("يرجى تسجيل الدخول.");
+    // 1. التحقق من التوكن والخدمة
+    if (!token) { 
+        alert("يرجى تسجيل الدخول أولاً."); 
         window.location.href = 'login.html';
-        return;
+        return; 
+    }
+    if (!selectedCategory) { 
+        alert("❌ الرجاء اختيار نوع الخدمة من القائمة!"); 
+        return; 
     }
 
+    // 2. تجهيز البيانات
     const payload = {
-        client_id: userId,
-        provider_id: "c0a8011c-992a-4f5b-802c-56905589985c", // مثال UUID
-        service_id: "772f884a-9351-4f1b-802c-56905589985c",  // مثال UUID
-        booking_date: fxrBookingState.selectedDate,
-        start_time: fxrBookingState.selectedTime, // الوقت المختار ديناميكياً
-        end_time: "12:00:00", // يمكنكِ تعديلها لتكون +ساعة من البداية
-        notes: fxrBookingState.problemDescription
+        provider_id: "c0a8011c-992a-4f5b-802c-56905589985c", 
+        category_id: selectedCategory, 
+        scheduled_at: new Date().toISOString().split('T')[0], // التاريخ اليوم
+        start_time: "09:00:00",
+        end_time: "10:00:00",
+        notes: fxrBookingState.problemDescription || "طلب صيانة"
     };
 
+    // 3. إرسال الطلب للسيرفر
     try {
-        const res = await fetch('http://localhost:3000/api/bookings', {
+       const response = await fetch('http://localhost:3000/api/bookings/create-booking', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token.trim()}` 
             },
             body: JSON.stringify(payload)
         });
 
-        const result = await res.json();
-        if (result.success) {
-            alert(result.message);
-            window.location.href = 'user-dashboard.html';
+        const result = await response.json();
+
+        // 4. التعامل مع النتيجة
+        if (response.ok && result.success) {
+            alert("تم إرسال طلب الحجز بنجاح! ✅");
+            window.location.href = 'user-dashboard.html'; // الانتقال المطلوب
         } else {
-            alert("فشل الحجز: " + result.message);
+            // عرض رسالة الخطأ القادمة من السيرفر
+            alert("عذراً: " + (result.message || "فشل تأكيد الحجز."));
         }
     } catch (error) {
-        alert("خطأ في الاتصال بالسيرفر.");
+        console.error("خطأ في الاتصال:", error);
+        alert("حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.");
     }
 }
-// function fxrConfirmBooking() {
-//   fxrUpdateCustomerInfo();
-//   fxrUpdatePaymentMethod();
-  
-//   // Validate customer info
-//   if (!fxrBookingState.customerName) {
-//     fxrShowToast('❌ الرجاء إدخال الاسم الكامل');
-//     return;
-//   }
-//   if (!fxrBookingState.customerPhone) {
-//     fxrShowToast('❌ الرجاء إدخال رقم الجوال');
-//     return;
-//   }
-//   if (!fxrBookingState.customerPhone.match(/07[0-9]{8}/)) {
-//     fxrShowToast('❌ الرجاء إدخال رقم جوال أردني صحيح (07xxxxxxxx)');
-//     return;
-//   }
-  
-//   // Save booking to localStorage (simulate)
-//   const booking = {
-//     id: Date.now(),
-//     provider: fxrProvider,
-//     ...fxrBookingState,
-//     bookingDate: new Date().toISOString(),
-//     status: 'pending'
-//   };
-  
-//   const bookings = JSON.parse(localStorage.getItem('fxrBookings') || '[]');
-//   bookings.push(booking);
-//   localStorage.setItem('fxrBookings', JSON.stringify(bookings));
-  
-//   fxrShowToast('✅ تم تأكيد حجزك بنجاح! سيتم إشعارك قريباً');
-  
-//   // Redirect to user dashboard after 2 seconds
-//   setTimeout(() => {
-//     window.location.href = 'user-dashboard.html';
-//   }, 2000);
+// async function fxrConfirmBooking() {
+//     const token = localStorage.getItem('token');
+//     const userId = localStorage.getItem('userId');
+
+//     // 1. تنظيف التوكن (إزالة أي مسافات زائدة قد تسبب خطأ Bearer)
+//     const cleanToken = token ? token.trim() : null;
+
+//     if (!cleanToken || !userId) {
+//         alert("يرجى تسجيل الدخول أولاً.");
+//         // window.location.href = 'login.html';
+//         return;
+//     }
+
+//     // 2. تحويل التاريخ (كما هو بدون تغيير)
+//     const getFormattedDate = (dayName) => {
+//         const today = new Date();
+//         const dayMap = { 'الأحد': 0, 'الإثنين': 1, 'الثلاثاء': 2, 'الأربعاء': 3, 'الخميس': 4, 'الجمعة': 5, 'السبت': 6 };
+//         const targetDay = dayMap[dayName];
+//         if (targetDay === undefined) return today.toISOString().split('T')[0];
+//         const currentDay = today.getDay();
+//         const distance = (targetDay - currentDay + 7) % 7;
+//         const targetDate = new Date(today);
+//         targetDate.setDate(today.getDate() + distance);
+//         return targetDate.toISOString().split('T')[0];
+//     };
+
+//     const dateToUse = fxrBookingState.selectedDate || 'الأحد'; 
+//     const formattedDate = getFormattedDate(dateToUse);
+// const payload = {
+//     // احذفي client_id من هنا لأن السيرفر (الذي عدلناه قبل قليل) 
+//     // سيستخرجه من التوكن (req.user.userId) تلقائياً، 
+//     // وهذا يمنع حدوث تضارب.
+//     provider_id: "c0a8011c-992a-4f5b-802c-56905589985c", 
+//     category_id: 1, 
+//     scheduled_at: formattedDate,
+//     start_time: "09:00:00",
+//     end_time: "10:00:00",
+//     notes: fxrBookingState.problemDescription || "طلب صيانة"
+// };
+
+//     try {
+//         // خطوة حاسمة: التأكد أن التوكن يرسل بصيغة صحيحة تماماً                    
+//         const res = await fetch('http://localhost:3000/api/bookings/create-booking', {
+//             method: 'POST',
+//             headers: { 
+//                 'Content-Type': 'application/json', 
+//                 'Authorization': `Bearer ${cleanToken}` // استخدام التوكن المنظف
+//             },
+//             body: JSON.stringify(payload)
+//         });
+
+//         // إذا كان هناك خطأ في الاتصال (401 أو 403) سنعرفه هنا
+//         if (res.status === 401) {
+//             console.error("❌ السيرفر رفض التوكن (401 Unauthorized)");
+//             alert("جلسة العمل انتهت، يرجى تسجيل الدخول مجدداً.");
+//             window.location.href = 'login.html';
+//             return;
+//         }
+
+//         const result = await res.json();
+
+//         if (res.ok && result.success) {
+//             alert("تم إرسال طلب الحجز بنجاح. ✅");
+//             window.location.href = 'user-dashboard.html';
+//         } else {
+//             alert("عذراً: " + (result.message || "فشل تأكيد الحجز."));
+//         }
+//     } catch (error) {
+//         console.error("🚨 خطأ اتصال:", error);
+//         alert("حدث خطأ في الاتصال بالسيرفر.");
+//     }
 // }
-
-// ========================================
-// INITIALIZE PROVIDER INFO
-// ========================================
-
-
-
 // تعديل جمالات ليكون ديناميك
  
 
@@ -547,7 +575,10 @@ function fxrSetupEventListeners() {
 // ========================================
 // INITIALIZE
 // ========================================
+
+
 function fxrInit() {
+ loadDynamicServices(); // <-- إضافة هذا السطر
   fxrInitProviderInfo();
   fxrGenerateDates();
   fxrSetupEventListeners();

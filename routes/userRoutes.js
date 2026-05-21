@@ -1,44 +1,58 @@
-// import express from 'express';
-// import { registerUser, getAllUsers, loginUser } from '../controllers/userController.js';
-// import { protect } from '../middleware/authMiddleware.js';
 
-// // داخل routes/userRoutes.js شغل جمالات
-// import { registerUser, loginUser, getAllUsers, createBooking } from '../controllers/userController.js';
+// import express from 'express';
+// import { 
+//     registerUser, 
+//     loginUser, 
+//     getAllUsers, 
+//     createBooking,
+//     getUserBookings 
+// } from '../controllers/userController.js';
+
 // const router = express.Router();
 
+// router.get('/test', (req, res) => {
+//     res.send("السيرفر يعمل والمسار مربوط بنجاح!");
+// });
+// router.post('/register', (req, res) => {
+//     console.log("✅ وصلت البيانات للمسار الصحيح!");
+//     res.status(200).json({ message: "تم الوصول بنجاح!" });
+// });
+// // مسارات الحسابات
 // router.post('/register', registerUser);
 // router.post('/login', loginUser);
 
-// router.get('/', protect, getAllUsers);
+// // مسارات الحجوزات (شغل جمالات)
+// router.post('/bookings', createBooking);
+// router.get('/user/:userId', getUserBookings);
+
 // export default router;
 
 
-// // ... الراوتس القديمة ... جمالات// مسار الحجوزات الجديد
-// router.post('/bookings', createBooking); 
+import express from 'express';
 
-// export default router; // إضافة هذا السطرimport express from 'express';import express from 'express'; // تأكدي أن هذا السطر غير معلق
-import express from 'express'; // السطر الناقص الذي يسبب توقف السيرفر
+// استيراد دوال المستخدمين من الملف القديم
 import { 
     registerUser, 
     loginUser, 
-    getAllUsers, 
-    createBooking,
-    getUserBookings 
+    getAllUsers 
 } from '../controllers/userController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import express from 'express';
-import { getAllUsers } from '../controllers/userController.js';
+
+// استيراد دوال الحجز من الملف الجديد
+import { 
+    createBooking, 
+    getUserBookings 
+} from '../controllers/bookingController.js'; // تأكدي أن الملف موجود فعلاً في مجلد controllers
 
 const router = express.Router();
 
-// 1. مسارات الحسابات (شغل البنات)
+// ... باقي الكود ...
+// مسارات الحسابات
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.get('/', protect, getAllUsers);
-router.get('/', getAllUsers);
+router.get('/all', getAllUsers);
 
-// 2. مسارات الحجوزات (شغل جمالات)
-router.post('/bookings', createBooking); // لإضافة حجز جديد
-router.get('/user/:userId', getUserBookings); // لجلب حجوزات مستخدم معين لعرضها في لوحة التحكم
+// مسارات الحجوزات (تأكدي من استخدام الدوال المستوردة من bookingController)
+router.post('/bookings', createBooking);
+router.get('/user/:userId', getUserBookings);
 
 export default router;
