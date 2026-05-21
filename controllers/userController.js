@@ -152,3 +152,48 @@ export const getAllUsers = async (req, res, next) => {
         next(err);
     }
 };
+//========================================
+// 7. للبحث والفلترة
+//========================================
+export const searchProviders = async (req, res, next) => {
+    const { governorate, category_id } = req.query;
+    try {
+        let queryStr = `
+            SELECT u.id, u.first_name, u.last_name, u.phone, u.governorate, p.bio, p.avg_rating
+            FROM users u
+            JOIN provider_profiles p ON u.id = p.user_id
+            WHERE u.role = 'provider' AND p.is_verified = true
+        `;
+        const params = [];
+
+        if (governorate) {
+            params.push(governorate);
+            queryStr += ` AND u.governorate = $${params.length}`;
+        }
+        if (category_id) {
+            params.push(category_id);
+            queryStr += ` AND p.category_id = $${params.length}`;
+        }
+
+        const result = await pool.query(queryStr, params);
+        res.status(200).json({ success: true, data: result.rows });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// دالة لتحديث حالة الحجز (قبول / رفض / إتمام الخدمة)
+export const updateBookingStatus = async (req, res, next) => {
+    const { bookingId } = req.params;
+    const { status } = req.body; // pending, confirmed, completed, rejected...
+    try {
+        const result = await pool.query(
+            `UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *`,
+            [status, bookingId]
+        );
+        if(result.rows.length === 0) return res.status(404).json({ message: "الحجز غير موجود" });
+        res.status(200).json({ success: true, booking: result.rows[0] });
+    } catch (err) {
+        next(err);
+    }
+};
