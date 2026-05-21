@@ -221,21 +221,19 @@
       </div>
 
       <!-- Reset Button -->
-      <button class="fxr-filter-reset" onclick="fxrResetFilters()">إعادة تعيين الفلاتر</button>
+      <div class="fxr-results-topbar">
+        <!-- تحت قسم اختيار الاتاحة -->
+      <div class="fxr-filter-reset-wrapper mt-3">
+          <button type="button" class="btn btn-outline-secondary w-100" onclick="fxrResetFilters()">
+        إعادة تعيين الفلترة
+          </button>
+      </div>
     </aside>
 
     <!-- RESULTS AREA -->
     <main class="fxr-results-area">
-      <div class="fxr-results-topbar">
-        <div class="fxr-results-count">
-          <strong id="resultsCount">0</strong> نتيجة في الأردن
-        </div>
-        <select class="fxr-sort-select" id="sortSelect" onchange="fxrSortResults()">
-          <option value="rating">الأعلى تقييماً</option>
-          <option value="reviews">الأكثر تقييماً</option>
-        </select>
-      </div>
-
+      
+       
       <div class="fxr-results-grid" id="resultsGrid">
         <!-- Results will be rendered here -->
       </div>
@@ -262,9 +260,12 @@
   <div class="fxr-toast" id="toast"></div>
 
   <!-- JS Files -->
+  <!-- JS Files -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- استدعاء الملفات كـ سكربت عادي ورا بعض بالترتيب الصحيح -->
+  <script src="js/search-api.js"></script>
   <script src="js/search.js"></script>
-
 </body>
 
 </html>
