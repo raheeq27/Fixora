@@ -1,5 +1,5 @@
 /**
- * FIXORA - مسارات المستخدمين، الحجوزات، والتنبيهات (User & Booking Routes)
+ * FIXORA - مسارات المستخدمين، الحجوزات، والمفضلة، والشات
  */
 import express from 'express';
 import { 
@@ -10,7 +10,12 @@ import {
     getUserBookings,
     getUserNotifications,    
     markNotificationAsRead,  
-    uploadDocsController    
+    uploadDocsController,
+    loginUser,        // حل مشكلة اللوجن
+    registerUser,     // حل مشكلة الـ register
+    getUserFavorites, // حل مشكلة تلوين زر القلب
+    toggleFavorite,
+    getBookingMessages // حل مشكلة الشات السياقي
 } from '../controllers/userController.js';
 
 import authMiddleware from '../middleware/authMiddleware.js'; 
@@ -19,12 +24,12 @@ import { restrictTo } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
 // =========================================================
-// 1. مسارات الحسابات والهوية (إدارة عامة / بروفايل لوحة التحكم)
+// 1. مسارات الحسابات والهوية (Auth & Profiles)
 // =========================================================
+router.post('/login', loginUser);       
+router.post('/register', registerUser); 
 router.get('/user/:id', authMiddleware, getUserProfile);
 router.put('/update-profile', authMiddleware, updateUserProfile);
-
-// مسار رؤية جميع المستخدمين (للأدمن فقط)
 router.get('/all', authMiddleware, restrictTo('admin'), getAllUsers);
 
 // =========================================================
@@ -41,7 +46,18 @@ router.get('/my-bookings', authMiddleware, getUserBookings);
 router.get('/user/:userId', authMiddleware, getUserBookings);
 
 // =========================================================
-// 4. مسارات مقدمي الخدمة / الفنيين (Service Providers)
+// 4. مسارات الشات السياقي المرتبط بالحجز (Contextual Chat)
+// =========================================================
+router.get('/bookings/:bookingId/messages', authMiddleware, getBookingMessages);
+
+// =========================================================
+// 5. نظام قائمة المفضلة وحفظ حالة الزر (Favorites)
+// =========================================================
+router.get('/favorites', authMiddleware, restrictTo('client'), getUserFavorites);
+router.post('/favorites/toggle', authMiddleware, restrictTo('client'), toggleFavorite);
+
+// =========================================================
+// 6. مسارات مقدمي الخدمة / الفنيين (Documents)
 // =========================================================
 router.post('/upload-docs', authMiddleware, restrictTo('provider'), uploadDocsController);
 

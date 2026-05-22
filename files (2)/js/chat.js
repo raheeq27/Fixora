@@ -128,7 +128,35 @@ function sendMessage() {
     simulateProviderReply(text);
   }, 700);
 }
+<script src="http://localhost:5000/socket.io/socket.io.js"></script>
+const socket = io('http://localhost:5000');
 
+// 1. بمجرد فتح صفحة الشات، نأخذ معرف الحجز ونخبر السيرفر ليدخلنا لغرفته السياقية الخاصة
+const currentBookingId = "معرف_الحجز_المستخرج_من_الرابط";
+socket.emit('join_booking_chat', currentBookingId);
+
+// 2. كود إرسال الرسالة فور الضغط على زر الإرسال
+function onSendButtonClick() {
+    const text = document.getElementById('message-input').value;
+    
+    const messageData = {
+        bookingId: currentBookingId,
+        message_text: text,
+        sender_name: "تسنيم" // اسم المرسل الحالي
+    };
+
+    // إرسالها حياً للسيرفر عبر السوكت
+    socket.emit('send_new_message', messageData);
+    
+    // وعرضها فوراً في شاشتي أنا أيضاً
+    appendMessageToUI(messageData); 
+}
+
+// 3. الاستماع المستمر للرسائل القادمة حياً من الطرف الآخر بدون أي تحديث أو Refresh للمتصفح!
+socket.on('receive_message', (data) => {
+    console.log("وصلت رسالة جديدة حية الآن 💬:", data);
+    appendMessageToUI(data); // دالة تعرض الرسالة فوراً في الـ DOM للمستخدم
+});
 /**
  * معالجة الضغط على Enter
  */

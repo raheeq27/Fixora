@@ -12,15 +12,34 @@
 // });
 // export default pool;
 import pg from 'pg';
+import dotenv from 'dotenv';
+
+// تفعيل قراءة متغيرات البيئة من ملف .env
+dotenv.config();
+
 const { Pool } = pg;
 
-// 1. البيانات مخزنة هنا مباشرة لتسهيل التعديل
+// إعداد الاتصال باستخدام متغيرات البيئة لضمان السرية التامة
 const pool = new Pool({
-    user: 'postgres',           // اسم المستخدم
-    host: 'localhost',          // المستضيف
-    database: 'fixora_db',      // اسم قاعدة البيانات
-    password: 'postgres123',    // عدلي كلمة المرور هنا واجعليها بين ''
-    port: 5432,                 // المنفذ
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
+    
+    // إعدادات أداء حوض الاتصالات (Pool Configuration)
+    max: 20,                  // الحد الأقصى للاتصالات المتزامنة
+    idleTimeoutMillis: 30000, // إغلاق الاتصال تلقائياً إذا ظل خاملاً لـ 30 ثانية
+    connectionTimeoutMillis: 2000, // وقت الانتظار قبل فشل الاتصال الجديد
+});
+
+// اختبار الاتصال الأولي للتأكد من أن البيانات تعمل بنجاح
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('❌ فشل الاتصال بقاعدة بيانات Fixora:', err.stack);
+    }
+    console.log('✅ Connected to Fixora database successfully');
+    release(); // تحرير الاتصال وإعادته للحوض
 });
 
 export default pool;

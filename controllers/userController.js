@@ -295,3 +295,150 @@ export const uploadDocsController = async (req, res, next) => {
         next(err);
     }
 };
+
+// =========================================================
+// 10. دالة تسجيل الدخول (حل مشكلة Login الحالية)
+// =========================================================
+export const loginUser = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userRes.rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+        }
+
+        const user = userRes.rows[0];
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+        }
+
+        const token = jwt.sign(
+            { userId: user.id, role: user.role },
+            process.env.JWT_SECRET || 'fixora_secret_key',
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'تم تسجيل الدخول بنجاح.',
+            token,
+            user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 11. دالة تسجيل حساب جديد (Register)
+// =========================================================
+export const registerUser = async (req, res, next) => {
+    try {
+        const { email, phone, role, password, governorate, first_name, last_name } = req.body;
+
+        const checkUser = await pool.query('SELECT id FROM users WHERE email = $1 OR phone = $2', [email, phone]);
+        if (checkUser.rows.length > 0) {
+            return res.status(400).json({ success: false, message: 'البريد الإلكتروني أو رقم الهاتف مستخدم بالفعل.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        const userResult = await pool.query(
+            `INSERT INTO users (email, phone, role, password_hash, governorate, first_name, last_name) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role;`,
+            [email, phone, role, passwordHash, governorate, first_name, last_name]
+        );
+
+        const newUser = userResult.rows[0];
+
+        if (role === 'client') {
+            await pool.query('INSERT INTO client_profiles (user_id) VALUES ($1)', [newUser.id]);
+        } else if (role === 'provider') {
+            await pool.query('INSERT INTO provider_profiles (user_id) VALUES ($1)', [newUser.id]);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'تم إنشاء الحساب بنجاح.'
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 12. جلب رسائل الشات السياقي المرتبطة برقم حجز معين
+// =========================================================
+export const getBookingMessages = async (req, res, next) => {
+    try {
+        const { bookingId } = req.params;
+        const result = await pool.query(
+            `SELECT m.*, u.first_name || ' ' || u.last_name AS sender_name 
+             FROM messages m
+             JOIN users u ON m.sender_id = u.id
+             WHERE m.booking_id = $1 
+             ORDER BY m.created_at ASC`,
+            [bookingId]
+        );
+
+        res.status(200).json({
+            success: true,
+            data: result.rows
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 13. جلب قائمة مفضلة العميل الحالي لتلوين زر القلب ❤️
+// =========================================================
+export const getUserFavorites = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const result = await pool.query(
+            `SELECT provider_id FROM favorites 
+             WHERE client_id = (SELECT id FROM client_profiles WHERE user_id = $1)`,
+            [userId]
+        );
+
+        const favoriteIds = result.rows.map(row => row.provider_id);
+        res.status(200).json({
+            success: true,
+            favorites: favoriteIds
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 14. إضافة أو إزالة الفني من قائمة المفضلة (Toggle)
+// =========================================================
+export const toggleFavorite = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const { provider_id } = req.body;
+
+        const clientRes = await pool.query('SELECT id FROM client_profiles WHERE user_id = $1', [userId]);
+        const client_id = clientRes.rows[0].id;
+
+        const favCheck = await pool.query(
+            'SELECT id FROM favorites WHERE client_id = $1 AND provider_id = $2',
+            [client_id, provider_id]
+        );
+
+        if (favCheck.rows.length > 0) {
+            await pool.query('DELETE FROM favorites WHERE client_id = $1 AND provider_id = $2', [client_id, provider_id]);
+            return res.status(200).json({ success: true, attached: false, message: 'تمت الإزالة من المفضلة.' });
+        } else {
+            await pool.query('INSERT INTO favorites (client_id, provider_id) VALUES ($1, $2)', [client_id, provider_id]);
+            return res.status(200).json({ success: true, attached: true, message: 'تمت الإضافة إلى المفضلة.' });
+        }
+    } catch (err) {
+        next(err);
+    }
+};
