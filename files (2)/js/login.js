@@ -1,10 +1,7 @@
 /**
  * FIXORA Login Page - تسجيل الدخول
- * ملف JavaScript منفصل
+ * ملف JavaScript منفصل مرتبط بالباك إند الحقيقي
  */
-
-// بيانات المستخدمين التجريبية (محاكاة)
-const DEMO_USERS = [];
 
 // عناصر DOM
 const loginForm = document.getElementById('loginForm');
@@ -59,17 +56,7 @@ function isValidEmail(email) {
 }
 
 /**
- * البحث عن المستخدم
- */
-function findUser(identifier) {
-  return DEMO_USERS.find(user => 
-    user.username === identifier || 
-    user.email === identifier
-  );
-}
-
-/**
- * التحقق من صحة المدخلات
+ * التحقق من صحة المدخلات قبل الإرسال
  */
 function validateInputs(username, password) {
   let isValid = true;
@@ -97,99 +84,81 @@ function validateInputs(username, password) {
 }
 
 /**
- * معالجة تسجيل الدخول
+ * 🔥 دالة معالجة تسجيل الدخول والربط مع السيرفر الحقيقي
  */
-// function handleLogin(event) {
-//   event.preventDefault();
-  
-//   const username = usernameInput.value.trim();
-//   const password = passwordInput.value;
-  
-//   if (!validateInputs(username, password)) {
-//     return;
-//   }
-  
-//   const user = findUser(username);
-  
-//   if (user && user.password === password) {
-//     // تسجيل الدخول ناجح
-//     if (rememberMeCheckbox.checked) {
-//       localStorage.setItem('fixora_remembered_user', username);
-//       localStorage.setItem('fixora_remembered_pass', btoa(password)); // تشفير بسيط
-//     } else {
-//       localStorage.removeItem('fixora_remembered_user');
-//       localStorage.removeItem('fixora_remembered_pass');
-//     }
-    
-//     sessionStorage.setItem('fixora_current_user', JSON.stringify({
-//       id: user.id,
-//       name: user.name,
-//       role: user.role,
-//       username: user.username
-//     }));
-    
-//     showToast(`مرحباً ${user.name}! جاري تحويلك إلى لوحة التحكم... ✅`, 'success');
-    
-//     // محاكاة التحويل
-//     setTimeout(() => {
-//       if (user.role === 'provider') {
-//         window.location.href = '/dashboard/provider';
-//         showToast('سيتم توجيهك إلى لوحة تحكم الحرفي', 'success');
-//       } else {
-//         window.location.href = '/dashboard/user';
-//         showToast('سيتم توجيهك إلى لوحة تحكم المستخدم', 'success');
-//       }
-//     }, 1500);
-//   } else {
-//     showToast('❌ خطأ في رقم الجوال/البريد أو كلمة المرور', 'error');
-//     passwordError.textContent = 'بيانات الدخول غير صحيحة';
-//     passwordInput.classList.add('error');
-//     setTimeout(() => passwordInput.classList.remove('error'), 2000);
-//   }
-// }
-
-/**
- * معالجة تسجيل الدخول - النسخة المعدلة لربط الحجز جمالات
- */
-/**
- * معالجة تسجيل الدخول - النسخة المعدلة لربط الحجز جمالات
- */
-function handleLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
   
-  const username = usernameInput.value.trim();
+  const username = usernameInput.value.trim(); // قد يكون إيميل أو هاتف حسب إدخال المستخدم
   const password = passwordInput.value;
   
+  // التحقق من المدخلات في الفرونت إند أولاً
   if (!validateInputs(username, password)) {
     return;
   }
   
-  const user = findUser(username);
+  // تعطيل الزر وإظهار مؤشر تحميل لمنع الضغط المتكرر
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'جاري تسجيل الدخول...';
   
-  if (user && user.password === password) {
-    // 1. تخزين بيانات "تذكرني" إذا كان الخيار مفعلاً
-    if (rememberMeCheckbox.checked) {
-      localStorage.setItem('fixora_remembered_user', username);
-      localStorage.setItem('fixora_remembered_pass', btoa(password)); 
-    } else {
-      localStorage.removeItem('fixora_remembered_user');
-      localStorage.removeItem('fixora_remembered_pass');
-    }
-    
-    // --- اضيفي الأسطر هنا يا جمالات 👇 ---
-    localStorage.setItem('token', 'demo-token-12345'); 
-    localStorage.setItem('userId', user.id); 
-    // -----------------------------------
+  try {
+    // 📨 إرسال الطلب الفعلي إلى سيرفر Express الباك إند
+    const response = await fetch('http://localhost:3000/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        email: username, 
+        password: password 
+      })
+    });
 
-    // 3. تخزين بيانات الجلسة الحالية
-    sessionStorage.setItem('fixora_current_user', JSON.stringify({
-      id: user.id,
-      name: user.name,
-      role: user.role,
-      username: user.username
-    }));
-  }}
-    // ... باقي الكود كما هو
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      showToast('تم تسجيل الدخول بنجاح!', 'success');
+
+      // 1. معالجة نظام "تذكرني" المحلي
+      if (rememberMeCheckbox.checked) {
+        localStorage.setItem('fixora_remembered_user', username);
+        localStorage.setItem('fixora_remembered_pass', btoa(password)); 
+      } else {
+        localStorage.removeItem('fixora_remembered_user');
+        localStorage.removeItem('fixora_remembered_pass');
+      }
+      
+      // 2. تخرين بيانات التوكن والـ User الحقيقية القادمة من الباك إند
+      localStorage.setItem('token', result.token); 
+      
+      // حفظ بيانات المستخدم الحالي في الـ Session
+      sessionStorage.setItem('fixora_current_user', JSON.stringify(result.user));
+
+      // 3. التوجيه الديناميكي الذكي حسب صلاحية (Role) المستخدم القادم من الداتابيز
+      setTimeout(() => {
+        if (result.user.role === 'client') {
+          window.location.href = 'user-dashboard.html'; // صفحة العميل
+        } else if (result.user.role === 'provider') {
+          window.location.href = 'provider-dashboard.html'; // صفحة الفني
+        } else if (result.user.role === 'admin') {
+          window.location.href = 'admin-dashboard.html'; // صفحة الأدمن
+        }
+      }, 1000);
+
+    } else {
+      // عرض رسالة الخطأ القادمة من السيرفر مباشرة (مثل: كلمة المرور خاطئة أو الحساب غير موجود)
+      showToast(result.message || 'فشل تسجيل الدخول، تأكد من البيانات.', 'error');
+    }
+
+  } catch (error) {
+    console.error('حدث خطأ أثناء الاتصال بالسيرفر:', error);
+    showToast('❌ تعذر الاتصال بالسيرفر حالياً. تأكدي أن سيرفر Node.js شغال!', 'error');
+  } finally {
+    // إعادة الزر لحالته الطبيعية بعد انتهاء العملية
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'تسجيل الدخول';
+  }
+}
 
 /**
  * إظهار/إخفاء كلمة المرور
@@ -231,7 +200,7 @@ function closeModal() {
 }
 
 /**
- * إرسال رابط استعادة كلمة المرور
+ * إرسال رابط استعادة كلمة المرور (يمكن ربطها بـ API لاحقاً)
  */
 function sendResetLink() {
   const emailOrPhone = resetEmailInput.value.trim();
@@ -246,14 +215,9 @@ function sendResetLink() {
     return;
   }
   
-  const user = findUser(emailOrPhone);
-  
-  if (user) {
-    showToast(`📧 تم إرسال رابط استعادة كلمة المرور إلى ${emailOrPhone}`, 'success');
-    closeModal();
-  } else {
-    showToast('❌ لا يوجد حساب مرتبط بهذا البريد أو رقم الجوال', 'error');
-  }
+  // محاكاة مؤقتة للاستعادة لحين بناء الـ Route الخاص بها
+  showToast(`📧 إذا كان الحساب مسجلاً، فسيتم إرسال رابط الاستعادة إلى ${emailOrPhone}`, 'success');
+  closeModal();
 }
 
 /**
@@ -283,7 +247,7 @@ function handleModalClick(e) {
 }
 
 /**
- * ربط الأحداث
+ * ربط الأحداث وتشغيلها
  */
 function init() {
   loginForm.addEventListener('submit', handleLogin);

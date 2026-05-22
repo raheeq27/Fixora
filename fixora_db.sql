@@ -84,7 +84,7 @@ CREATE TABLE users (
 
     password_hash TEXT NOT NULL,
 
-    governorate jordan_governorates,
+    governorate jordan_governorates ,
 
     first_name TEXT,
     last_name TEXT,

@@ -22,7 +22,7 @@ const checkAvailability = async (provider_id, date, time) => {
 // =========================================
 export const createBooking = async (req, res, next) => {
     const { provider_id, service_id, booking_date, start_time, end_time, notes } = req.body;
-    // نأخذ الـ client_id بأمان من الـ token المفكوك في authMiddleware
+    // nأخذ الـ client_id بأمان من الـ token المفكوك في authMiddleware
     const userId = req.user.userId; 
 
     try {
@@ -175,6 +175,72 @@ export const uploadDocsController = async (req, res, next) => {
             message: "بنية السيرفر جاهزة لاستقبال مستندات التحقق للفنيين." 
         });
     } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================
+// 8. جلب بيانات البروفايل لمستخدم معين (getUserProfile)
+// =========================================
+export const getUserProfile = async (req, res, next) => {
+    const { id } = req.params;
+
+    try {
+        const query = `
+            SELECT id, first_name, last_name, email, role, phone, governorate, created_at 
+            FROM users 
+            WHERE id = $1;
+        `;
+        const result = await pool.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "عذراً، لم يتم العثور على هذا المستخدم." 
+            });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            user: result.rows[0] 
+        });
+
+    } catch (err) {
+        console.error("خطأ في جلب بيانات مستخدم معين:", err);
+        next(err);
+    }
+};
+// =========================================
+// 9. تحديث بيانات البروفايل للمستخدم الحالي (updateUserProfile)
+// =========================================
+export const updateUserProfile = async (req, res, next) => {
+    // نأخذ الـ id بأمان من التوكن المفكوك عبر الـ authMiddleware لحماية البيانات
+    const userId = req.user.userId; 
+    const { first_name, last_name, phone, governorate } = req.body;
+
+    try {
+        // تحديث جدول المستخدمين بناءً على الحقول القادمة من الفرونت إند
+        const query = `
+            UPDATE users 
+            SET first_name = $1, last_name = $2, phone = $3, governorate = $4
+            WHERE id = $5
+            RETURNING id, first_name, last_name, email, role, phone, governorate;
+        `;
+        const result = await pool.query(query, [first_name, last_name, phone, governorate, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "عذراً، المستخدم غير موجود." });
+        }
+
+        // إرجاع البيانات المحدثة بنجاح
+        res.status(200).json({
+            success: true,
+            message: "تم تحديث بيانات حسابك بنجاح مئة بالمئة ✨",
+            user: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error("خطأ في تحديث بيانات البروفايل:", err);
         next(err);
     }
 };

@@ -3,6 +3,8 @@ import {
     registerUser, 
     loginUser, 
     getAllUsers, 
+    getUserProfile,
+    updateUserProfile,
     createBooking,
     getUserBookings,
     getUserNotifications,    
@@ -18,7 +20,8 @@ const router = express.Router();
 // --- 1. مسارات الحسابات والهوية ---
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-
+router.get('/user/:id', authMiddleware, getUserProfile);
+router.put('/update-profile', authMiddleware, updateUserProfile);
 // مسار رؤية جميع المستخدمين (للأدمن فقط)
 router.get('/all', authMiddleware, restrictTo('admin'), getAllUsers);
 
