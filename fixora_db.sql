@@ -307,6 +307,8 @@ CREATE TABLE notifications (
     type notification_type NOT NULL,
 
     message TEXT NOT NULL,
+    
+    title VARCHAR(100) NOT NULL,
 
     is_read BOOLEAN DEFAULT FALSE,
 

@@ -1,15 +1,28 @@
 import pool from '../config/db.js';
 
-export const sendNotification = async (userId, message, type = 'system_alert') => {
+/**
+ * دالة مركزية لإرسال التنبيهات
+ * @param {string} userId - معرف المستخدم الذي سيتلقى التنبيه
+ * @param {string} title - عنوان التنبيه (مثلاً: "حجز جديد!")
+ * @param {string} message - نص التنبيه التفصيلي
+ * @param {string} type - نوع التنبيه (يجب أن يتطابق مع الـ Enum في الداتابيز)
+ */
+export const sendNotification = async (userId, title, message, type = 'system_alert') => {
     try {
         const query = `
-            INSERT INTO notifications (user_id, message, type)
-            VALUES ($1, $2, $3) RETURNING *;
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES ($1, $2, $3, $4) 
+            RETURNING *;
         `;
-        const result = await pool.query(query, [userId, message, type]);
+        
+        const result = await pool.query(query, [userId, title, message, type]);
+        
+        // إرجاع التنبيه الذي تم إنشاؤه للتأكد من نجاح العملية
         return result.rows[0];
+        
     } catch (err) {
-        console.error("Error in notification helper:", err.message);
-        return null;
+        // بدلاً من إرجاع null، نقوم بطباعة الخطأ وتمريره لنعرف أين المشكلة
+        console.error("🚨 خطأ في الـ Notification Helper:", err.message);
+        throw err; 
     }
 };
