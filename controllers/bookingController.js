@@ -1,65 +1,44 @@
 import pool from '../config/db.js';
 
-// =========================================================
-// 2. إنشاء حجز جديد مع فحص التضارب الديناميكي
-// =========================================================
-// export const createBooking = async (req, res, next) => {
-//     const { client_id, provider_id, service_id, booking_date, start_time, end_time, notes } = req.body;
-    
-//     try {
-//         const overlapQuery = `
-//             SELECT id FROM bookings 
-//             WHERE provider_id = $1 
-//               AND booking_date = $2 
-//               AND status NOT IN ('cancelled', 'rejected')
-//               AND (start_time, end_time) OVERLAPS ($3::TIME, $4::TIME);
-//         `;
-//         const conflictRes = await pool.query(overlapQuery, [provider_id, booking_date, start_time, end_time]);
+// دالة مساعدة للتحقق من توافر الفني
+const checkAvailability = async (provider_id, date, time) => {
+    const dayName = new Date(date)
+        .toLocaleDateString('en-US', { weekday: 'short' })
+        .toLowerCase();
 
-//         if (conflictRes.rows.length > 0) {
-//             return res.status(400).json({ success: false, message: "عذراً، هذا الوقت محجوز مسبقاً للفني." });
-//         }
-
-//         const insertQuery = `
-//             INSERT INTO bookings (client_id, provider_id, service_id, booking_date, start_time, end_time, notes, status)
-//             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') RETURNING *;
-//         `;
-//         const result = await pool.query(insertQuery, [client_id, provider_id, service_id, booking_date, start_time, end_time, notes]);
-
-//         res.status(201).json({ success: true, message: "تم إرسال طلب الحجز بنجاح بانتظار موافقة الفني.", booking: result.rows[0] });
-//     } catch (err) {
-//         console.error("🚨 خطأ في إنشاء الحجز:", err);
-//         next(err);
-//     }
-// };import pool from '../config/db.js';
+    const query = `
+        SELECT id FROM provider_availability
+        WHERE provider_id = $1 AND day_of_week = $2
+        AND $3::TIME BETWEEN start_time AND end_time
+        AND is_available = TRUE;
+    `;
+    const result = await pool.query(query, [provider_id, dayName, time]);
+    return result.rows.length > 0;
+};
 
 // =========================================================
-// 2. إنشاء حجز جديد (الكود المصحح)
+// إنشاء حجز جديد
 // =========================================================
 export const createBooking = async (req, res, next) => {
-    const { provider_id, category_id, scheduled_at, start_time, end_time, notes } = req.body;
-    console.log("هل وصل الـ req.user للسيرفر؟", req.user);
-    const userId = req.user?.userId;
+    try {
+        const { provider_id, category_id, scheduled_at, start_time, end_time, notes } = req.body;
+        const userId = req.user.userId;
 
-    // --- أضيفي هذا السطر فوراً ---
-    console.log("الـ User ID المستخرج من التوكن هو:", userId);
+        // 1. جلب الـ ID الخاص ببروفايل العميل
+        const profileRes = await pool.query("SELECT id FROM client_profiles WHERE user_id = $1", [userId]);
+        
+        if (profileRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "بروفايل العميل غير موجود." });
+        }
+        const client_profile_id = profileRes.rows[0].id;
 
- try {
-    // استخدمي TRIM لإزالة أي مسافات قد تكون موجودة في الـ ID
-    const query = "SELECT id FROM client_profiles WHERE user_id = $1::uuid";
-    const profileRes = await pool.query(query, [userId.trim()]); 
+        // 2. التحقق من التوافر
+        const isAvailable = await checkAvailability(provider_id, scheduled_at, start_time);
+        if (!isAvailable) {
+            return res.status(400).json({ success: false, message: 'الفني غير متاح في هذا الوقت.' });
+        }
 
-    console.log("نتائج البحث في البروفايلات:", profileRes.rows);
-
-    if (profileRes.rows.length === 0) {
-        // إذا لم يجد شيئاً، فهذا هو سبب الخطأ 500
-        return res.status(404).json({ success: false, message: "لم يتم العثور على بروفايل لهذا المستخدم في قاعدة البيانات." });
-    }
-    
-    const client_profile_id = profileRes.rows[0].id;
-    // ... باقي الكود كما هو
-
-        // تنفيذ الحجز باستخدام الـ ID الحقيقي
+        // 3. إضافة الحجز
         const insertQuery = `
             INSERT INTO bookings (client_id, provider_id, category_id, scheduled_at, start_time, end_time, notes, status)
             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') 
@@ -70,32 +49,49 @@ export const createBooking = async (req, res, next) => {
             client_profile_id, provider_id, category_id, scheduled_at, start_time, end_time, notes
         ]);
 
+        // ملاحظة: هنا يمكنك استدعاء دالة إرسال الإشعار بعد نجاح الحجز
+        // await sendNotification(provider_id, 'حجز جديد', 'لديك طلب حجز جديد بانتظار الموافقة', 'booking_update');
+
         res.status(201).json({ success: true, booking: result.rows[0] });
     } catch (err) {
-        console.error("🚨 الخطأ:", err);
-        res.status(500).json({ success: false, message: "خطأ في قاعدة البيانات أثناء الحجز." });
+        next(err); 
     }
 };
 
 // =========================================================
-// 3. جلب حجوزات مستخدم معين (التأكد من التوافق)
+// جلب حجوزات المستخدم (عميل أو فني)
 // =========================================================
 export const getUserBookings = async (req, res, next) => {
-    const { userId } = req.params;
-    
+    const userId = req.user.userId;
+    const role = req.user.role; // نفترض أن الـ Middleware يضيف الـ role للـ req.user
+
     try {
-        const query = `
-            SELECT b.id, b.scheduled_at, b.status, b.notes, b.start_time, b.end_time,
-                   p.first_name || ' ' || p.last_name as provider_name, s.name as service_title
-            FROM bookings b
-            JOIN users p ON b.provider_id = p.id
-            JOIN services s ON b.category_id = s.id
-            WHERE b.client_id = $1 ORDER BY b.created_at DESC;
-        `;
-        const result = await pool.query(query, [userId]);
+        let query = "";
+        let params = [userId];
+
+        if (role === 'client') {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name AS provider_name
+                FROM bookings b
+                JOIN provider_profiles pp ON b.provider_id = pp.id
+                JOIN users u ON pp.user_id = u.id
+                WHERE b.client_id = (SELECT id FROM client_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        } else {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name AS client_name
+                FROM bookings b
+                JOIN client_profiles cp ON b.client_id = cp.id
+                JOIN users u ON cp.user_id = u.id
+                WHERE b.provider_id = (SELECT id FROM provider_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        }
+
+        const result = await pool.query(query, params);
         res.status(200).json({ success: true, count: result.rowCount, data: result.rows });
     } catch (err) {
-        console.error("🚨 خطأ في جلب الحجوزات:", err);
         next(err);
     }
 };

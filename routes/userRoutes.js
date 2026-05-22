@@ -1,30 +1,18 @@
-/**
- * FIXORA - مسارات المستخدمين، الحجوزات، والتنبيهات (User & Booking Routes)
- */
 import express from 'express';
-import { 
-    getAllUsers, 
-    getUserProfile,
-    updateUserProfile,
-    createBooking,
-    getUserBookings,
-    getUserNotifications,    
-    markNotificationAsRead,  
-    uploadDocsController    
-} from '../controllers/userController.js';
-
 import authMiddleware from '../middleware/authMiddleware.js'; 
 import { restrictTo } from '../middleware/roleMiddleware.js';
+import { getAllUsers, getUserProfile, updateUserProfile } from '../controllers/userController.js';
+import { createBooking, getUserBookings } from '../controllers/bookingController.js';
+import { getUserNotifications, markNotificationAsRead } from '../controllers/notificationController.js';
+import { uploadDocsController } from '../controllers/documentController.js'; 
 
 const router = express.Router();
 
 // =========================================================
-// 1. مسارات الحسابات والهوية (إدارة عامة / بروفايل لوحة التحكم)
+// 1. مسارات الحسابات والهوية
 // =========================================================
 router.get('/user/:id', authMiddleware, getUserProfile);
 router.put('/update-profile', authMiddleware, updateUserProfile);
-
-// مسار رؤية جميع المستخدمين (للأدمن فقط)
 router.get('/all', authMiddleware, restrictTo('admin'), getAllUsers);
 
 // =========================================================
@@ -38,10 +26,10 @@ router.patch('/notifications/:id/read', authMiddleware, markNotificationAsRead);
 // =========================================================
 router.post('/bookings', authMiddleware, restrictTo('client'), createBooking); 
 router.get('/my-bookings', authMiddleware, getUserBookings); 
-router.get('/user/:userId', authMiddleware, getUserBookings);
+router.get('/bookings/:userId', authMiddleware, getUserBookings); // تم تغيير المسار ليكون أوضح
 
 // =========================================================
-// 4. مسارات مقدمي الخدمة / الفنيين (Service Providers)
+// 4. مسارات مقدمي الخدمة / الفنيين
 // =========================================================
 router.post('/upload-docs', authMiddleware, restrictTo('provider'), uploadDocsController);
 

@@ -1,26 +1,27 @@
-import pool from '../config/db.js'; 
-import { createBooking, getUserBookings } from '../controllers/bookingController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 import express from 'express';
+import { createBooking, getUserBookings } from '../controllers/bookingController.js';
+import { getUserNotifications, markNotificationAsRead } from '../controllers/notificationController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+import pool from '../config/db.js';
 
 const router = express.Router();
 
-// 1. المسار الصحيح لجلب الخدمات (بدون تكرار api)
+// --- مسارات الخدمات (عامة) ---
 router.get('/categories', async (req, res) => {
     try {
-        // نستخدم pool.query بدلاً من Category.findAll
         const result = await pool.query('SELECT id, name_ar FROM service_categories');
         res.json({ success: true, categories: result.rows });
     } catch (err) {
-        console.error("خطأ في جلب الخدمات:", err);
         res.status(500).json({ success: false, message: "فشل في جلب الخدمات" });
     }
 });
 
-// 2. مسار الحجز (يجب أن يكون POST)
-router.post('/create-booking', authMiddleware, createBooking);
+// --- مسارات الحجوزات (محمية) ---
+router.post('/', authMiddleware, createBooking);
+router.get('/my-bookings', authMiddleware, getUserBookings);
 
-// 3. مسار حجوزات المستخدم
-router.get('/my-bookings', authMiddleware, getUserBookings); 
+// --- مسارات الإشعارات (محمية) ---
+router.get('/notifications', authMiddleware, getUserNotifications);
+router.put('/notifications/:id/read', authMiddleware, markNotificationAsRead);
 
 export default router;
