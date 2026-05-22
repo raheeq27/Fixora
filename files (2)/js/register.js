@@ -194,65 +194,144 @@ const FXR = (() => {
   /* ══════════════════════════════════════
      إرسال — مستخدم عادي
   ══════════════════════════════════════ */
-  function submitUser() {
-    const fname = document.getElementById('u-fname').value.trim();
-    const lname = document.getElementById('u-lname').value.trim();
-    const phone = document.getElementById('u-phone').value.trim();
-    const gov   = document.getElementById('u-gov').value;
-    const email = document.getElementById('u-email').value.trim();
-    const pass  = document.getElementById('u-pass').value;
-    const pass2 = document.getElementById('u-pass2').value;
-    const terms = document.getElementById('u-terms').checked;
+  // function submitUser() {
+  //   const fname = document.getElementById('u-fname').value.trim();
+  //   const lname = document.getElementById('u-lname').value.trim();
+  //   const phone = document.getElementById('u-phone').value.trim();
+  //   const gov   = document.getElementById('u-gov').value;
+  //   const email = document.getElementById('u-email').value.trim();
+  //   const pass  = document.getElementById('u-pass').value;
+  //   const pass2 = document.getElementById('u-pass2').value;
+  //   const terms = document.getElementById('u-terms').checked;
+
+  //   let valid = true;
+
+  //   const fErr = !fname;
+  //   _markInput('u-fname', fErr); _showErr('err-fname', fErr);
+  //   if (fErr) valid = false;
+
+  //   const lErr = !lname;
+  //   _markInput('u-lname', lErr); _showErr('err-lname', lErr);
+  //   if (lErr) valid = false;
+
+  //   const phoneOk = /^07\d{8}$/.test(phone);
+  //   _markInput('u-phone', !phoneOk); _showErr('err-phone', !phoneOk);
+  //   if (!phoneOk) valid = false;
+
+  //   const govErr = !gov;
+  //   _markInput('u-gov', govErr); _showErr('err-gov', govErr);
+  //   if (govErr) valid = false;
+
+  //   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  //   _markInput('u-email', !emailOk); _showErr('err-email', !emailOk);
+  //   if (!emailOk) valid = false;
+
+  //   const passErr = pass.length < 8;
+  //   _markInput('u-pass', passErr); _showErr('err-pass', passErr);
+  //   if (passErr) valid = false;
+
+  //   const p2Err = pass !== pass2 || pass2 === '';
+  //   _markInput('u-pass2', p2Err); _showErr('err-pass2', p2Err);
+  //   if (p2Err) valid = false;
+
+  //   if (!terms) {
+  //     alert('يجب الموافقة على شروط الاستخدام للمتابعة');
+  //     valid = false;
+  //   }
+
+  //   if (!valid) return;
+
+  //   /* ← fetch('/api/register/user', { method:'POST', ... }) */
+
+  //   const formBody = document.getElementById('user-form-body');
+  //   const success  = document.getElementById('user-success');
+  //   if (formBody) formBody.style.display = 'none';
+  //   if (success) {
+  //     success.classList.add('fxr-visible');
+  //     success.style.display = 'block';
+  //   }
+  // }
+
+async function submitUser() {
+    // 1. جلب العناصر من الـ HTML
+    const fnameEl = document.getElementById('u-fname');
+    const lnameEl = document.getElementById('u-lname');
+    const phoneEl = document.getElementById('u-phone');
+    const govEl   = document.getElementById('u-gov');
+    const emailEl = document.getElementById('u-email');
+    const passEl  = document.getElementById('u-pass');
+    const pass2El = document.getElementById('u-pass2');
+    const termsEl = document.getElementById('u-terms');
+
+    // تأكد من وجود العناصر (لمنع الـ TypeError)
+    if (!fnameEl || !lnameEl || !phoneEl || !emailEl) {
+        alert("خطأ: تأكدي أن جميع حقول التسجيل موجودة في الصفحة!");
+        return;
+    }
+
+    const fname = fnameEl.value.trim();
+    const lname = lnameEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const gov   = govEl ? govEl.value : '';
+    const email = emailEl.value.trim();
+    const pass  = passEl.value;
+    const pass2 = pass2El.value;
+    const terms = termsEl ? termsEl.checked : false;
 
     let valid = true;
 
-    const fErr = !fname;
-    _markInput('u-fname', fErr); _showErr('err-fname', fErr);
-    if (fErr) valid = false;
-
-    const lErr = !lname;
-    _markInput('u-lname', lErr); _showErr('err-lname', lErr);
-    if (lErr) valid = false;
-
+    // 2. التحقق من البيانات
+    if (!fname) { _markInput('u-fname', true); valid = false; }
+    if (!lname) { _markInput('u-lname', true); valid = false; }
+    
+    // التحقق من رقم الهاتف (يجب أن يكون 10 أرقام ويبدأ بـ 07)
     const phoneOk = /^07\d{8}$/.test(phone);
-    _markInput('u-phone', !phoneOk); _showErr('err-phone', !phoneOk);
-    if (!phoneOk) valid = false;
+    _markInput('u-phone', !phoneOk);
+    if (!phoneOk) { alert("رقم الهاتف غير صحيح"); valid = false; }
 
-    const govErr = !gov;
-    _markInput('u-gov', govErr); _showErr('err-gov', govErr);
-    if (govErr) valid = false;
-
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    _markInput('u-email', !emailOk); _showErr('err-email', !emailOk);
-    if (!emailOk) valid = false;
-
-    const passErr = pass.length < 8;
-    _markInput('u-pass', passErr); _showErr('err-pass', passErr);
-    if (passErr) valid = false;
-
-    const p2Err = pass !== pass2 || pass2 === '';
-    _markInput('u-pass2', p2Err); _showErr('err-pass2', p2Err);
-    if (p2Err) valid = false;
-
-    if (!terms) {
-      alert('يجب الموافقة على شروط الاستخدام للمتابعة');
-      valid = false;
-    }
+    if (!gov) { valid = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { valid = false; }
+    if (pass.length < 8) { alert("كلمة السر قصيرة جداً"); valid = false; }
+    if (pass !== pass2) { alert("كلمات السر غير متطابقة"); valid = false; }
+    if (!terms) { alert('يجب الموافقة على الشروط'); valid = false; }
 
     if (!valid) return;
 
-    /* ← fetch('/api/register/user', { method:'POST', ... }) */
+    // 3. الإرسال للسيرفر
+    try {
+        const response = await fetch('http://localhost:3000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                first_name: fname,
+                last_name: lname,
+                phone: phone,
+                governorate: gov,
+                email: email,
+                password: pass,
+                role: 'client'
+            })
+        });
 
-    const formBody = document.getElementById('user-form-body');
-    const success  = document.getElementById('user-success');
-    if (formBody) formBody.style.display = 'none';
-    if (success) {
-      success.classList.add('fxr-visible');
-      success.style.display = 'block';
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(result.message || "حدث خطأ أثناء التسجيل");
+        }
+
+        // 4. في حال النجاح
+        const formBody = document.getElementById('user-form-body');
+        const success  = document.getElementById('user-success');
+        if (formBody) formBody.style.display = 'none';
+        if (success) {
+            success.classList.add('fxr-visible');
+            success.style.display = 'block';
+        }
+    } catch (error) {
+        alert("خطأ: " + error.message);
     }
-  }
+}
 
- 
   /* ══════════════════════════════════════
      إرسال — حرفي
   ══════════════════════════════════════ */
@@ -302,3 +381,19 @@ const FXR = (() => {
   };
 
 })();
+
+// 🌟 أسطر إنقاذ لتعريف دالات التلوين والخطأ المفقودة
+function _markInput(id, isError) {
+    const el = document.getElementById(id);
+    if (el) {
+        if (isError) el.style.borderColor = 'red';
+        else el.style.borderColor = '';
+    }
+}
+
+function _showErr(id, isShow) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.style.display = isShow ? 'block' : 'none';
+    }
+}

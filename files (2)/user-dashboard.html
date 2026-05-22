@@ -70,6 +70,7 @@
     <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
     
     <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+    
   </div>
   
   <style>
@@ -99,41 +100,47 @@
 <div class="dashboard-shell">
   
   <!-- القائمة الجانبية -->
-  <div class="dashboard-sidebar">
-    <div class="sidebar-item active" data-tab="dashboard">
-      <span class="icon">📊</span>
-      <span>الرئيسية</span>
-    </div>
-    <div class="sidebar-item" data-tab="orders">
-      <span class="icon">📋</span>
-      <span>طلباتي</span>
-      <span class="badge" id="ordersBadge">3</span>
-    </div>
-    <div class="sidebar-item" data-tab="favorites">
-      <span class="icon">❤️</span>
-      <span>المفضلة</span>
-      <span class="badge" id="favBadge">4</span>
-    </div>
-    <div class="sidebar-item" data-tab="messages">
-      <span class="icon">💬</span>
-      <span>الرسائل</span>
-      <span class="badge" id="msgBadge">2</span>
-    </div>
-    <div class="sidebar-item" data-tab="notifications">
-      <span class="icon">🔔</span>
-      <span>الإشعارات</span>
-      <span class="badge" id="notifBadge">3</span>
-    </div>
-    <div class="sidebar-item" data-tab="profile">
-      <span class="icon">👤</span>
-      <span>حسابي</span>
-    </div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-item" data-tab="settings">
-      <span class="icon">⚙️</span>
-      <span>الإعدادات</span>
-    </div>
+<div class="dashboard-sidebar">
+  <div class="sidebar-item active" data-tab="tab-dashboard">
+    <span class="icon">📊</span>
+    <span>الرئيسية</span>
   </div>
+  <div class="sidebar-item" data-tab="tab-orders">
+    <span class="icon">📋</span>
+    <span>طلباتي</span>
+    <span class="badge" id="ordersBadge">3</span>
+  </div>
+  <div class="sidebar-item" data-tab="tab-favorites">
+    <span class="icon">❤️</span>
+    <span>المفضلة</span>
+    <span class="badge" id="favBadge">4</span>
+  </div>
+  <div class="sidebar-item" data-tab="tab-messages">
+    <span class="icon">💬</span>
+    <span>الرسائل</span>
+    <span class="badge" id="msgBadge">2</span>
+  </div>
+  <div class="sidebar-item" data-tab="tab-notifications">
+    <span class="icon">🔔</span>
+    <span>الإشعارات</span>
+    <span class="badge" id="notifBadge">3</span>
+  </div>
+  <div class="sidebar-item" data-tab="tab-profile">
+    <span class="icon">👤</span>
+    <span>حسابي</span>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-item" data-tab="tab-settings">
+    <span class="icon">⚙️</span>
+    <span>الإعدادات</span>
+  </div>
+  <div class="sidebar-item" id="logoutBtn" style="margin-top: auto; color: #ff4d4d; cursor: pointer;">
+    <span class="icon">🚪</span>
+    <span>تسجيل الخروج</span>
+  </div>
+</div>
+
+  
 
   <!-- المحتوى الرئيسي -->
   <div class="dashboard-content" id="dashboardContent">

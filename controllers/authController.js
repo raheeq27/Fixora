@@ -8,45 +8,126 @@ import ErrorResponse from '../utils/errorHandler.js';
 // =========================================
 export const register = async (req, res, next) => {
   try {
-    const { first_name, last_name, email, password, role, phone, governorate } = req.body;
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      role,
+      phone,
+      governorate
+    } = req.body;
 
-    // فحص إذا كان الإيميل مسجلاً مسبقاً لحماية قاعدة البيانات من تكرار المفاتيح
-    const userExist = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    // 1. التحقق من الحقول الأساسية أولاً وقبل أي استعلام لقاعدة البيانات
+    if (!email || !phone || !role || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'الحقول الأساسية مطلوبة: البريد الإلكتروني، الهاتف، الدور، وكلمة المرور'
+      });
+    }
+
+    // 2. التحقق من البريد الإلكتروني بعد التأكد من وجوده
+    const userExist = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
     if (userExist.rows.length > 0) {
-      return next(new ErrorResponse('هذا البريد الإلكتروني مستخدم بالفعل', 400));
+      return next(
+        new ErrorResponse('هذا البريد الإلكتروني مستخدم بالفعل', 400)
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // إدخال المستخدم في جدول users العام
-    const newUser = await pool.query(
-      'INSERT INTO users (first_name, last_name, email, password_hash, role, phone, governorate) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [first_name, last_name, email, hashedPassword, role, phone, governorate]
+
+    // إدخال المستخدم (تجنب إرجاع الهش الخاص بكلمة المرور)
+    const newUserResult = await pool.query(
+      `
+      INSERT INTO users
+      (
+        first_name,
+        last_name,
+        email,
+        password_hash,
+        role,
+        phone,
+        governorate
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id, first_name, last_name, email, role, phone, governorate;
+      `,
+      [
+        first_name,
+        last_name,
+        email,
+        hashedPassword,
+        role,
+        phone,
+        governorate
+      ]
     );
 
-    const userData = newUser.rows[0];
-    const userId = userData.id;
+    const newUser = newUserResult.rows[0];
+    const userId = newUser.id;
 
-    // بناء البروفايلات الفرعية تماشياً مع الـ Schema المعتمد لـ Fixora
+    // إنشاء بروفايل العميل
     if (role === 'client') {
-      await pool.query('INSERT INTO client_profiles (user_id) VALUES ($1)', [userId]);
-    } else if (role === 'provider') {
-      const newProvider = await pool.query('INSERT INTO provider_profiles (user_id) VALUES ($1) RETURNING *', [userId]);
-      const providerId = newProvider.rows[0].id;
-      
-      // إدخال سجل مبدئي للمستندات ليقوم الفني برفع ملفاته لاحقاً
-      await pool.query('INSERT INTO provider_documents (provider_id, file_url) VALUES ($1, $2)', [providerId, 'pending_upload']);
+      const clientRes = await pool.query(
+        `
+        INSERT INTO client_profiles (id, user_id)
+        VALUES (gen_random_uuid(), $1)
+        RETURNING id;
+        `,
+        [userId]
+      );
+      newUser.client_profile_id = clientRes.rows[0].id;
+    }
+    // إنشاء بروفايل الفني
+    else if (role === 'provider') {
+      const providerRes = await pool.query(
+        `
+        INSERT INTO provider_profiles (id, user_id)
+        VALUES (gen_random_uuid(), $1)
+        RETURNING id;
+        `,
+        [userId]
+      );
+
+      const providerId = providerRes.rows[0].id;
+      newUser.provider_profile_id = providerId;
+
+      // إنشاء مستند مبدئي للفني
+      await pool.query(
+        `
+        INSERT INTO provider_documents (provider_id, file_url)
+        VALUES ($1, $2);
+        `,
+        [providerId, 'pending_upload']
+      );
     }
 
-    res.status(201).json({ 
+    res.status(201).json({
       success: true,
-      message: 'تم التسجيل بنجاح', 
-      userId: userId 
+      message: 'تم التسجيل بنجاح',
+      userId: userId,
+      user: {
+        id: newUser.id,
+        first_name: newUser.first_name,
+        email: newUser.email,
+        role: newUser.role
+      }
     });
 
   } catch (err) {
     console.error("Register Error:", err.message);
-    next(err); // تمرير الخطأ لمعالج الأخطاء العالمي
+
+    if (err.code === '23505') {
+      return res.status(400).json({
+        success: false,
+        message: 'البريد الإلكتروني أو رقم الهاتف مسجل بالفعل.'
+      });
+    }
+    next(err);
   }
 };
 
@@ -57,35 +138,53 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // جلب المستخدم والتحقق من وجوده
-    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'الرجاء إدخال البريد وكلمة السر'
+      });
+    }
+
+    // البحث عن المستخدم
+    const userResult = await pool.query(
+      'SELECT id, first_name, password_hash, role FROM users WHERE email = $1',
+      [email]
+    );
+
     if (userResult.rows.length === 0) {
-      return next(new ErrorResponse('بيانات الاعتماد غير صحيحة، المستخدم غير موجود', 404));
+      return res.status(404).json({
+        success: false,
+        message: 'المستخدم غير موجود'
+      });
     }
 
     const user = userResult.rows[0];
 
-    // التحقق من صحة كلمة المرور المشفرة
+    // التحقق من كلمة المرور
     const isMatch = await bcrypt.compare(password, user.password_hash);
+
     if (!isMatch) {
-      return next(new ErrorResponse('كلمة المرور غير صحيحة', 401));
+      return res.status(401).json({
+        success: false,
+        message: 'كلمة المرور غير صحيحة'
+      });
     }
 
-    // توليد التوكن بإضافة الـ userId والـ role
+    // إنشاء التوكن
     const token = jwt.sign(
-      { userId: user.id, role: user.role }, 
-      process.env.JWT_SECRET || 'fixora_secret_2026', 
-      { expiresIn: '7d' } // تمديد الصلاحية لـ 7 أيام لراحة مستخدمي الـ Web
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET || 'fixora_secret_2026',
+      { expiresIn: '7d' }
     );
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      token, 
-      user: { 
-        id: user.id, 
-        name: user.first_name, 
-        role: user.role 
-      } 
+      token,
+      user: {
+        id: user.id,
+        name: user.first_name,
+        role: user.role
+      }
     });
 
   } catch (err) {
@@ -95,36 +194,193 @@ export const login = async (req, res, next) => {
 };
 
 // =========================================
-// 3. دالة تحديث بيانات الملف الشخصي (للعميل)
+// 3. تحديث بروفايل العميل
 // =========================================
 export const updateClientProfile = async (req, res, next) => {
   try {
-    const userId = req.user.userId; // قادمة بأمان من الـ Auth Middleware
+    const userId = req.user.userId;
     const { phone, address, profile_pic_url } = req.body;
 
-    // تحديث رقم الهاتف في جدول المستخدمين العام إذا تم إرساله
+    // تحديث رقم الهاتف في جدول المستخدمين الأساسي
     if (phone) {
-      await pool.query('UPDATE users SET phone = $1 WHERE id = $2', [phone, userId]);
+      await pool.query(
+        'UPDATE users SET phone = $1 WHERE id = $2',
+        [phone, userId]
+      );
     }
 
-    // تحديث تفاصيل العنوان والصورة في جدول بروفايل العميل الفرعي
+    // تحديث بيانات البروفايل
     const updatedProfile = await pool.query(
-      'UPDATE client_profiles SET address = $1, profile_pic_url = $2 WHERE user_id = $3 RETURNING *', 
+      `
+      UPDATE client_profiles
+      SET address = $1,
+          profile_pic_url = $2
+      WHERE user_id = $3
+      RETURNING *;
+      `,
       [address, profile_pic_url, userId]
     );
 
     if (updatedProfile.rows.length === 0) {
-      return next(new ErrorResponse('لم يتم العثور على بروفايل العميل لتحديثه', 404));
+      return next(
+        new ErrorResponse('لم يتم العثور على بروفايل العميل', 404)
+      );
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      message: 'تم التحديث بنجاح! ✅', 
-      profile: updatedProfile.rows[0] 
+      message: 'تم التحديث بنجاح ✅',
+      profile: updatedProfile.rows[0]
     });
 
   } catch (err) {
-    console.error("Update Profile Error:", err.message);
+    console.error("Update Client Error:", err.message);
+    next(err);
+  }
+};
+
+// =========================================
+// 4. تحديث بروفايل الفني
+// =========================================
+export const updateProviderProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { phone, specialty, bio, experience_years, profile_pic_url } = req.body;
+
+    if (phone) {
+      await pool.query(
+        'UPDATE users SET phone = $1 WHERE id = $2',
+        [phone, userId]
+      );
+    }
+
+    // تحديث بيانات الفني
+    const updatedProfile = await pool.query(
+      `
+      UPDATE provider_profiles
+      SET specialty = $1,
+          bio = $2,
+          experience_years = $3,
+          profile_pic_url = $4
+      WHERE user_id = $5
+      RETURNING *;
+      `,
+      [
+        specialty,
+        bio,
+        experience_years ? parseInt(experience_years) : 0,
+        profile_pic_url,
+        userId
+      ]
+    );
+
+    if (updatedProfile.rows.length === 0) {
+      return next(
+        new ErrorResponse('لم يتم العثور على بروفايل الفني', 404)
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'تم تحديث بروفايل الفني بنجاح ✅',
+      profile: updatedProfile.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Provider Update Error:", err.message);
+    next(err);
+  }
+};
+
+// =========================================
+// 5. جلب بروفايل العميل
+// =========================================
+export const getClientProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const profileResult = await pool.query(
+      `
+      SELECT
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.phone,
+        u.governorate,
+        u.role,
+        cp.address,
+        cp.profile_pic_url
+      FROM users u
+      JOIN client_profiles cp ON u.id = cp.user_id
+      WHERE u.id = $1;
+      `,
+      [userId]
+    );
+
+    if (profileResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'البروفايل غير موجود'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      profile: profileResult.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Get Client Profile Error:", err.message);
+    next(err);
+  }
+};
+
+// =========================================
+// 6. جلب بروفايل الفني
+// =========================================
+export const getProviderProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const profileResult = await pool.query(
+      `
+      SELECT
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.phone,
+        u.governorate,
+        u.role,
+        pp.id AS provider_profile_id,
+        pp.specialty,
+        pp.bio,
+        pp.experience_years,
+        pp.profile_pic_url,
+        pp.is_verified,
+        pp.avg_rating
+      FROM users u
+      JOIN provider_profiles pp ON u.id = pp.user_id
+      WHERE u.id = $1;
+      `,
+      [userId]
+    );
+
+    if (profileResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'البروفايل غير موجود'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      profile: profileResult.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Get Provider Profile Error:", err.message);
     next(err);
   }
 };

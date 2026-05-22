@@ -44,7 +44,8 @@ CREATE TYPE jordan_governorates AS ENUM (
     'Tafileh',
     'Ma''an',
     'Ajloun',
-    'Jerash'
+    'Jerash',
+    'Salat'
 );
 
 CREATE TYPE day_of_week_enum AS ENUM (

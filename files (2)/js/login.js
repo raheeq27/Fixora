@@ -1,282 +1,332 @@
 /**
- * FIXORA Login Page - تسجيل الدخول
- * ملف JavaScript منفصل مرتبط بالباك إند الحقيقي
+ * FIXORA Login Page
+ * تسجيل الدخول وربطه مع الباك إند الحقيقي
  */
 
-// عناصر DOM
-const loginForm = document.getElementById('loginForm');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const usernameError = document.getElementById('usernameError');
-const passwordError = document.getElementById('passwordError');
-const togglePasswordBtn = document.getElementById('togglePassword');
-const rememberMeCheckbox = document.getElementById('rememberMe');
-const loginBtn = document.getElementById('loginBtn');
-const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
-const registerLink = document.getElementById('registerLink');
-const goHomeBtn = document.getElementById('goHomeBtn');
-const goRegisterBtn = document.getElementById('goRegisterBtn');
-const forgotModal = document.getElementById('forgotModal');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const sendResetBtn = document.getElementById('sendResetBtn');
-const resetEmailInput = document.getElementById('resetEmail');
+document.addEventListener('DOMContentLoaded', () => {
 
-/**
- * عرض رسالة تنبيه عائمة
- */
-function showToast(message, type = 'success') {
-  const existingToast = document.querySelector('.toast-message');
-  if (existingToast) existingToast.remove();
-  
-  const toast = document.createElement('div');
-  toast.className = `toast-message ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
+    // =========================================
+    // عناصر الصفحة
+    // =========================================
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
 
-/**
- * التحقق من صحة رقم جوال أردني
- */
-function isValidJordanianPhone(phone) {
-  const phoneRegex = /^07[0-9]{8}$/;
-  return phoneRegex.test(phone);
-}
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
 
-/**
- * التحقق من صحة البريد الإلكتروني
- */
-function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const rememberMeCheckbox = document.getElementById('rememberMe');
 
-/**
- * التحقق من صحة المدخلات قبل الإرسال
- */
-function validateInputs(username, password) {
-  let isValid = true;
-  
-  usernameError.textContent = '';
-  passwordError.textContent = '';
-  
-  if (!username.trim()) {
-    usernameError.textContent = 'الرجاء إدخال رقم الجوال أو البريد الإلكتروني';
-    isValid = false;
-  } else if (!isValidJordanianPhone(username) && !isValidEmail(username)) {
-    usernameError.textContent = 'صيغة غير صحيحة. استخدم 07xxxxxxxx أو بريد إلكتروني صحيح';
-    isValid = false;
-  }
-  
-  if (!password.trim()) {
-    passwordError.textContent = 'الرجاء إدخال كلمة المرور';
-    isValid = false;
-  } else if (password.length < 6) {
-    passwordError.textContent = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-    isValid = false;
-  }
-  
-  return isValid;
-}
+    const loginBtn = document.getElementById('loginBtn');
 
-/**
- * 🔥 دالة معالجة تسجيل الدخول والربط مع السيرفر الحقيقي
- */
-async function handleLogin(event) {
-  event.preventDefault();
-  
-  const username = usernameInput.value.trim(); // قد يكون إيميل أو هاتف حسب إدخال المستخدم
-  const password = passwordInput.value;
-  
-  // التحقق من المدخلات في الفرونت إند أولاً
-  if (!validateInputs(username, password)) {
-    return;
-  }
-  
-  // تعطيل الزر وإظهار مؤشر تحميل لمنع الضغط المتكرر
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'جاري تسجيل الدخول...';
-  
-  try {
-    // 📨 إرسال الطلب الفعلي إلى سيرفر Express الباك إند
-    const response = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        email: username, 
-        password: password 
-      })
-    });
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+    const registerLink = document.getElementById('registerLink');
+    const forgotModal = document.getElementById('forgotModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const sendResetBtn = document.getElementById('sendResetBtn');
+    const resetEmailInput = document.getElementById('resetEmail');
 
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      showToast('تم تسجيل الدخول بنجاح!', 'success');
-
-      // 1. معالجة نظام "تذكرني" المحلي
-      if (rememberMeCheckbox.checked) {
-        localStorage.setItem('fixora_remembered_user', username);
-        localStorage.setItem('fixora_remembered_pass', btoa(password)); 
-      } else {
-        localStorage.removeItem('fixora_remembered_user');
-        localStorage.removeItem('fixora_remembered_pass');
-      }
-      
-      // 2. تخرين بيانات التوكن والـ User الحقيقية القادمة من الباك إند
-      localStorage.setItem('token', result.token); 
-      
-      // حفظ بيانات المستخدم الحالي في الـ Session
-      sessionStorage.setItem('fixora_current_user', JSON.stringify(result.user));
-
-      // 3. التوجيه الديناميكي الذكي حسب صلاحية (Role) المستخدم القادم من الداتابيز
-      setTimeout(() => {
-        if (result.user.role === 'client') {
-          window.location.href = 'user-dashboard.html'; // صفحة العميل
-        } else if (result.user.role === 'provider') {
-          window.location.href = 'provider-dashboard.html'; // صفحة الفني
-        } else if (result.user.role === 'admin') {
-          window.location.href = 'admin-dashboard.html'; // صفحة الأدمن
+    // =========================================
+    // Toast Message
+    // =========================================
+    function showToast(message, type = 'success') {
+        const existingToast = document.querySelector('.toast-message');
+        if (existingToast) {
+            existingToast.remove();
         }
-      }, 1000);
 
-    } else {
-      // عرض رسالة الخطأ القادمة من السيرفر مباشرة (مثل: كلمة المرور خاطئة أو الحساب غير موجود)
-      showToast(result.message || 'فشل تسجيل الدخول، تأكد من البيانات.', 'error');
+        const toast = document.createElement('div');
+        toast.className = `toast-message ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
     }
 
-  } catch (error) {
-    console.error('حدث خطأ أثناء الاتصال بالسيرفر:', error);
-    showToast('❌ تعذر الاتصال بالسيرفر حالياً. تأكدي أن سيرفر Node.js شغال!', 'error');
-  } finally {
-    // إعادة الزر لحالته الطبيعية بعد انتهاء العملية
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'تسجيل الدخول';
-  }
-}
+    // =========================================
+    // Validation Helpers
+    // =========================================
+    function isValidJordanianPhone(phone) {
+        const regex = /^07[0-9]{8}$/;
+        return regex.test(phone);
+    }
 
-/**
- * إظهار/إخفاء كلمة المرور
- */
-function togglePasswordVisibility() {
-  const type = passwordInput.type === 'password' ? 'text' : 'password';
-  passwordInput.type = type;
-  togglePasswordBtn.textContent = type === 'password' ? '👁️' : '🙈';
-}
+    function isValidEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
 
-/**
- * تحميل البيانات المحفوظة (تذكرني)
- */
-function loadRememberedCredentials() {
-  const rememberedUser = localStorage.getItem('fixora_remembered_user');
-  const rememberedPass = localStorage.getItem('fixora_remembered_pass');
-  
-  if (rememberedUser && rememberedPass) {
-    usernameInput.value = rememberedUser;
-    passwordInput.value = atob(rememberedPass);
-    rememberMeCheckbox.checked = true;
-    showToast('تم تحميل بيانات الدخول المحفوظة', 'success');
-  }
-}
+    // =========================================
+    // Validate Inputs
+    // =========================================
+    function validateInputs(username, password) {
+        let isValid = true;
 
-/**
- * فتح مودال نسيت كلمة المرور
- */
-function openForgotModal() {
-  forgotModal.classList.add('show');
-}
+        if (usernameError) usernameError.textContent = '';
+        if (passwordError) passwordError.textContent = '';
 
-/**
- * إغلاق المودال
- */
-function closeModal() {
-  forgotModal.classList.remove('show');
-  resetEmailInput.value = '';
-}
+        // username validation
+        if (!username.trim()) {
+            if (usernameError) {
+                usernameError.textContent = 'الرجاء إدخال البريد أو رقم الهاتف';
+            }
+            isValid = false;
+        } else if (!isValidJordanianPhone(username) && !isValidEmail(username)) {
+            if (usernameError) {
+                usernameError.textContent = 'صيغة البريد الإلكتروني أو رقم الهاتف غير صحيحة';
+            }
+            isValid = false;
+        }
 
-/**
- * إرسال رابط استعادة كلمة المرور (يمكن ربطها بـ API لاحقاً)
- */
-function sendResetLink() {
-  const emailOrPhone = resetEmailInput.value.trim();
-  
-  if (!emailOrPhone) {
-    showToast('الرجاء إدخال بريدك الإلكتروني أو رقم جوالك', 'error');
-    return;
-  }
-  
-  if (!isValidJordanianPhone(emailOrPhone) && !isValidEmail(emailOrPhone)) {
-    showToast('صيغة غير صحيحة', 'error');
-    return;
-  }
-  
-  // محاكاة مؤقتة للاستعادة لحين بناء الـ Route الخاص بها
-  showToast(`📧 إذا كان الحساب مسجلاً، فسيتم إرسال رابط الاستعادة إلى ${emailOrPhone}`, 'success');
-  closeModal();
-}
+        // password validation
+        if (!password.trim()) {
+            if (passwordError) {
+                passwordError.textContent = 'الرجاء إدخال كلمة المرور';
+            }
+            isValid = false;
+        } else if (password.length < 6) {
+            if (passwordError) {
+                passwordError.textContent = 'كلمة المرور قصيرة جداً (6 أحرف على الأقل)';
+            }
+            isValid = false;
+        }
 
-/**
- * التوجه إلى صفحة التسجيل
- */
-function goToRegister() {
-  showToast('جاري التوجه إلى صفحة إنشاء الحساب...', 'success');
-  setTimeout(() => {
-    window.location.href = 'index.html';
-  }, 500);
-}
+        return isValid;
+    }
 
-/**
- * التوجه إلى الصفحة الرئيسية
- */
-function goToHome() {
-  window.location.href = 'index.html';
-}
+    // =========================================
+    // Toggle Password
+    // =========================================
+    function togglePasswordVisibility() {
+        if (!passwordInput) return;
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+    }
 
-/**
- * إغلاق المودال عند الضغط خارج المحتوى
- */
-function handleModalClick(e) {
-  if (e.target === forgotModal) {
-    closeModal();
-  }
-}
+    // =========================================
+    // Forgot Password Modal
+    // =========================================
+    function openForgotModal() {
+        if (forgotModal) forgotModal.style.display = 'flex';
+    }
 
-/**
- * ربط الأحداث وتشغيلها
- */
-function init() {
-  loginForm.addEventListener('submit', handleLogin);
-  togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
-  forgotPasswordBtn.addEventListener('click', openForgotModal);
-  closeModalBtn.addEventListener('click', closeModal);
-  sendResetBtn.addEventListener('click', sendResetLink);
-  registerLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    goToRegister();
-  });
-  if(goRegisterBtn) goRegisterBtn.addEventListener('click', goToRegister);
-  if(goHomeBtn) goHomeBtn.addEventListener('click', goToHome);
-  window.addEventListener('click', handleModalClick);
-  
-  // الضغط على Enter في حقل إعادة التعيين
-  resetEmailInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendResetLink();
-  });
-  
-  loadRememberedCredentials();
-  
-  // إضافة تأثيرات بصرية للحقول
-  usernameInput.addEventListener('focus', () => usernameError.textContent = '');
-  passwordInput.addEventListener('focus', () => {
-    passwordError.textContent = '';
-    passwordInput.classList.remove('error');
-  });
-}
+    // إصلاح مشكلة قفل الـ modal بتصفير القيم
+    function closeModal() {
+        if (forgotModal) {
+            forgotModal.style.display = 'none';
+            if (resetEmailInput) resetEmailInput.value = '';
+        }
+    }
 
-// بدء التطبيق عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', init);
+    // =========================================
+    // Load Remembered Data
+    // =========================================
+    function loadRememberedCredentials() {
+        const rememberedUser = localStorage.getItem('fixora_remembered_user');
+        const rememberedPass = localStorage.getItem('fixora_remembered_pass');
+
+        if (rememberedUser && rememberedPass) {
+            if (usernameInput) usernameInput.value = rememberedUser;
+            if (passwordInput) {
+                try {
+                    passwordInput.value = atob(rememberedPass);
+                } catch (e) {
+                    passwordInput.value = '';
+                }
+            }
+            if (rememberMeCheckbox) rememberMeCheckbox.checked = true;
+        }
+    }
+
+    // =========================================
+    // Login Handler
+    // =========================================
+    async function handleLogin(event) {
+        event.preventDefault();
+
+        const username = usernameInput ? usernameInput.value.trim() : '';
+        const password = passwordInput ? passwordInput.value : '';
+
+        if (!validateInputs(username, password)) {
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'جاري تسجيل الدخول...';
+
+        try {
+            // [إصلاح منطقي]: تحديد ما إذا كان المدخل إيميل أم هاتف لإرساله للباك إند بشكل صحيح
+            const requestBody = {};
+            if (isValidEmail(username)) {
+                requestBody.email = username;
+            } else {
+                requestBody.phone = username;
+            }
+            requestBody.password = password;
+
+            const response = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const rawResponse = await response.text();
+            let data = {};
+
+            try {
+                data = JSON.parse(rawResponse);
+            } catch (jsonError) {
+                data = { success: false, message: rawResponse };
+            }
+
+            console.log('LOGIN RESPONSE:', data);
+
+            // =========================================
+            // Success
+            // =========================================
+            if (response.ok && data.success) {
+                showToast('تم تسجيل الدخول بنجاح 🎉', 'success');
+
+                // Remember Me Logic
+                if (rememberMeCheckbox && rememberMeCheckbox.checked) {
+                    localStorage.setItem('fixora_remembered_user', username);
+                    localStorage.setItem('fixora_remembered_pass', btoa(password));
+                } else {
+                    localStorage.removeItem('fixora_remembered_user');
+                    localStorage.removeItem('fixora_remembered_pass');
+                }
+
+                // حفظ التوكن وبيانات المستخدم المسترجعة من الباك إند
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+
+                const currentUser = data.user || data.data || {};
+                sessionStorage.setItem('fixora_current_user', JSON.stringify(currentUser));
+
+                if (currentUser.id) {
+                    localStorage.setItem('userId', currentUser.id);
+                }
+
+                // التوجيه التلقائي حسب الصلاحيات والـ Role المرجعة من السيرفر
+                setTimeout(() => {
+                    const role = currentUser.role || 'client';
+                    const redirect = localStorage.getItem('redirectAfterLogin');
+
+                    if (redirect) {
+                        localStorage.removeItem('redirectAfterLogin');
+                        window.location.href = redirect;
+                        return;
+                    }
+
+                    if (role === 'provider') {
+                        window.location.href = 'provider-dashboard.html';
+                    } else if (role === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        window.location.href = 'user-dashboard.html';
+                    }
+                }, 1000);
+
+            } else {
+                showToast(data.message || 'بيانات الدخول غير صحيحة', 'error');
+            }
+
+        } catch (error) {
+            console.error('Login Error:', error);
+            showToast('فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً', 'error');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'تسجيل الدخول';
+        }
+    }
+
+    // =========================================
+    // Reset Password
+    // =========================================
+    function sendResetLink() {
+        const value = resetEmailInput ? resetEmailInput.value.trim() : '';
+
+        if (!value) {
+            showToast('أدخل البريد أو رقم الهاتف', 'error');
+            return;
+        }
+
+        if (!isValidJordanianPhone(value) && !isValidEmail(value)) {
+            showToast('صيغة غير صحيحة', 'error');
+            return;
+        }
+
+        showToast(`📧 تم إرسال رابط الاستعادة إلى ${value}`, 'success');
+        closeModal();
+    }
+
+    // =========================================
+    // Events
+    // =========================================
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+    }
+
+    if (forgotPasswordBtn) {
+        forgotPasswordBtn.addEventListener('click', openForgotModal);
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+
+    if (sendResetBtn) {
+        sendResetBtn.addEventListener('click', sendResetLink);
+    }
+
+    if (registerLink) {
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'register.html';
+        });
+    }
+
+    if (resetEmailInput) {
+        resetEmailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendResetLink();
+            }
+        });
+    }
+
+    // تنظيف رسائل الأخطاء فوراً عند بدء الكتابة من جديد لتجربة مستخدم أفضل
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => {
+            if (usernameError) usernameError.textContent = '';
+        });
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', () => {
+            if (passwordError) passwordError.textContent = '';
+        });
+    }
+
+    // إغلاق الـ Modal عند الضغط خارجه
+    window.addEventListener('click', (e) => {
+        if (e.target === forgotModal) {
+            closeModal();
+        }
+    });
+
+    // تحميل البيانات المحفوظة إن وجدت
+    loadRememberedCredentials();
+});
