@@ -10,9 +10,9 @@ export const getUserNotifications = async (req, res, next) => {
         // جلب الإشعارات مرتبة من الأحدث للأقدم
         const result = await pool.query(
             `SELECT id, user_id, type, title, message, is_read, created_at 
-             FROM notifications 
-             WHERE user_id = $1 
-             ORDER BY created_at DESC`,
+            FROM notifications 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC`,
             [userId]
         );
 
