@@ -551,3 +551,24 @@ CREATE TRIGGER after_review_insert_or_update
 AFTER INSERT OR UPDATE ON reviews
 FOR EACH ROW
 EXECUTE FUNCTION update_provider_rating();
+
+-- function calculate_years_of_experience
+ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS key_start_date DATE;
+ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS years_of_experience INTEGER;
+
+CREATE OR REPLACE FUNCTION calculate_years_of_experience()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.key_start_date IS NOT NULL THEN
+        NEW.years_of_experience := EXTRACT(YEAR FROM AGE(CURRENT_DATE, NEW.key_start_date))::INTEGER;
+    ELSE
+        NEW.years_of_experience := 0;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_calculate_experience
+BEFORE INSERT OR UPDATE ON provider_profiles
+FOR EACH ROW
+EXECUTE FUNCTION calculate_years_of_experience();
