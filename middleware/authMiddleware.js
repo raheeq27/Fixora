@@ -48,6 +48,18 @@ const authMiddleware = (req, res, next) => {
     } catch (err) {
         return res.status(401).json({ message: 'التوكن غير صالح!' });
     }
-}
+
+// middlewares/authMiddleware.js
+const isAdmin = (req, res, next) => {
+    // نفترض أن بيانات المستخدم تم فك تشفيرها مسبقاً وضُبطت في req.user
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ 
+            error: 'صلاحية مرفوضة. هذا الإجراء متاح للمسؤولين فقط.' 
+        });
+    }
+    next();
+};
+
+module.exports = { isAdmin }};
 
 export default authMiddleware;

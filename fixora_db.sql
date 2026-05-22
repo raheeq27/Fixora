@@ -323,6 +323,20 @@ CREATE TABLE notifications (
 -- =========================================
 -- MESSAGES
 -- =========================================
+CREATE OR REPLACE FUNCTION update_provider_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE profiles
+    SET average_rating = (
+        SELECT COALESCE(AVG(rating), 0)
+        FROM reviews
+        WHERE provider_id = NEW.provider_id
+    )
+    WHERE id = NEW.provider_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -355,7 +369,8 @@ CREATE TABLE messages (
         REFERENCES bookings(id)
         ON DELETE SET NULL
 );
-
+CREATE UNIQUE INDEX unique_user_provider_favorite 
+ON favorites (client_id, provider_id);
 -- =========================================
 -- PROVIDER AREAS
 -- =========================================
@@ -529,5 +544,10 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_update_provider_rating
 AFTER INSERT OR UPDATE OR DELETE
 ON reviews
+FOR EACH ROW
+EXECUTE FUNCTION update_provider_rating();
+
+CREATE TRIGGER after_review_insert_or_update
+AFTER INSERT OR UPDATE ON reviews
 FOR EACH ROW
 EXECUTE FUNCTION update_provider_rating();

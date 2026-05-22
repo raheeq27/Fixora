@@ -36,9 +36,9 @@ export const markNotificationAsRead = async (req, res, next) => {
     try {
         const result = await pool.query(
             `UPDATE notifications 
-             SET is_read = TRUE 
-             WHERE id = $1 AND user_id = $2 
-             RETURNING id;`,
+            SET is_read = TRUE 
+            WHERE id = $1 AND user_id = $2 
+            RETURNING id;`,
             [id, userId]
         );
 

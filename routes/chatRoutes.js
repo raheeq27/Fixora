@@ -1,0 +1,1 @@
+router.get('/chat/:chatId', validateUuid('chatId'), getChatMessages);
