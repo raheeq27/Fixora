@@ -9,59 +9,60 @@ import jwt from 'jsonwebtoken';
 export const register = async (req, res) => {
   try {
     const { first_name, last_name, email, password, role, phone, governorate } = req.body;
-    console.log("رقم الهاتف الذي استقبله السيرفر:", phone);// للتحقق
-    
+    console.log("رقم الهاتف الذي استقبله السيرفر:", phone); // للتحقق
+
     if (!email || !phone || !role || !password) {
-        return res.status(400).json({ message: "الحقول الأساسية مطلوبة: البريد الإلكتروني، الهاتف، الدور، وكلمة المرور" });
+        return res.status(400).json({ success: false, message: "الحقول الأساسية مطلوبة: البريد الإلكتروني، الهاتف، الدور، وكلمة المرور" });
     }
+   const hashedPassword = await bcrypt.hash(password, 10);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    // إدخال البيانات في جدول المستخدمين الرئيسي
     const queryText = `
-        INSERT INTO users (email, phone, role, password_hash, governorate, first_name, last_name) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
+        INSERT INTO users (first_name, last_name, email, password_hash, role, phone, governorate) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, first_name, email, role;
     `;
-    const values = [email, phone, role, hashedPassword, governorate, first_name, last_name];
-    const newUser = await pool.query(queryText, values);
-    
-    const newUser = await pool.query(
-      'INSERT INTO users (first_name, last_name, email, password_hash, role, phone, governorate) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      [first_name, last_name, email, hashedPassword, role, phone, governorate]
-    );
+    const values = [first_name, last_name, email, hashedPassword, role, phone, governorate];
+    const userResult = await pool.query(queryText, values);
+    const newUser = userResult.rows[0];
 
-    const userId = newUser.rows[0].id;
+    const userId = newUser.id;
 
+   // التحقق من الدور وإنشاء الملف الشخصي المناسب لربط الحجوزات بنجاح
     if (role === 'client') {
-      await pool.query('INSERT INTO client_profiles (user_id) VALUES ($1)', [userId]);
-    } else if (role === 'provider') {
-      const newProvider = await pool.query(
-        'INSERT INTO provider_profiles (user_id) VALUES ($1) RETURNING id', 
+      const clientRes = await pool.query(
+        'INSERT INTO client_profiles (id, user_id) VALUES (gen_random_uuid(), $1) RETURNING id', 
         [userId]
       );
-      
-      const providerId = newProvider.rows[0].id;
+      newUser.client_profile_id = clientRes.rows[0].id; // إرساله لبوستمان
+
+    } else if (role === 'provider') {
+      const providerRes = await pool.query(
+        'INSERT INTO provider_profiles (id, user_id) VALUES (gen_random_uuid(), $1) RETURNING id', 
+        [userId]
+      );
+      const providerId = providerRes.rows[0].id;
+      newUser.provider_profile_id = providerId; // إرساله لبوستمان
       
       await pool.query('INSERT INTO provider_documents (provider_id, document_url) VALUES ($1, $2)', [providerId, 'pending_upload']);
     }
 
     // ✅ تم التعديل هنا: استخدام .json()
-    res.status(201).json({ success: true, message: 'تم التسجيل بنجاح', userId: userId });
-      await pool.query(
-        'INSERT INTO provider_documents (provider_id, doc_type, file_url) VALUES ($1, $2, $3)', 
-        [providerId, 'ID_or_Certificate', 'pending_upload']
-      );
-    }
+    res.status(201).json({ success: true, 
+      message: 'تم التسجيل بنجاح', 
+      userId: userId });
 
-    res.status(201).json({ message: 'تم التسجيل بنجاح', userId: userId });
-  } catch (err) {
+ } catch (err) {
     console.error("Register Error:", err.message);
     // ✅ تم التعديل هنا: استخدام .json()
-    res.status(500).json({ success: false, message: 'خطأ في السيرفر: ' + err.message });
+
     if (err.code === '23505') {
-        return res.status(400).json({ message: 'البريد الإلكتروني أو رقم الهاتف مسجل بالفعل' });
-    }
-    res.status(500).send('خطأ في السيرفر: ' + err.message);
-  }
+       return res.status(400).json({ 
+         success: false, 
+         message: 'البريد الإلكتروني أو رقم الهاتف مسجل بالفعل.' });    }
+      return res.status(500).json({ 
+        success: false, 
+        message: 'خطأ في السيرفر: ' + 
+        err.message });  }
 };
 
 // 2. دالة تسجيل الدخول
@@ -105,8 +106,8 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userResult.rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود' });
+    if (userResult.rows.length === 0) 
+      return res.status(404).json({ message: 'المستخدم غير موجود' });
 
         const user = userResult.rows[0];
 
@@ -145,14 +146,22 @@ const token = jwt.sign({ userId: user.id }, 'fixora_secret_2026', { expiresIn: '
         // إرسال رسالة توضح الخطأ الحقيقي للمساعدة في التصحيح
         res.status(500).json({ success: false, message: 'خطأ داخلي: ' + err.message });
     }
-    const user = userResult.rows[0];
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) return res.status(400).json({ message: 'كلمة المرور غير صحيحة' });
+
+
 
     const currentUserId = user.id;
 
-    const token = jwt.sign({ userId: currentUserId, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token, user: { id: currentUserId, name: user.first_name, role: user.role } });
+    const token = jwt.sign({ 
+      userId: currentUserId, 
+      role: user.role }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '1h' });
+
+    res.status(200).json({ 
+      token, user: 
+      { id: currentUserId, 
+        name: user.first_name, 
+        role: user.role } });
   } catch (err) {
     console.error("Login Error:", err.message);
     res.status(500).send('خطأ في السيرفر');
@@ -164,12 +173,9 @@ export const updateClientProfile = async (req, res) => {
   try {
     const userId = req.user.userId; 
     const { phone, address, profile_pic_url } = req.body;
-    if (phone) await pool.query('UPDATE users SET phone = $1 WHERE id = $2 OR user_id = $2', [phone, userId]);
-    const updatedProfile = await pool.query('UPDATE client_profiles SET address = $1, profile_pic_url = $2 WHERE user_id = $3 RETURNING *', [address, profile_pic_url, userId]);
+
     
-    // ✅ تم التعديل هنا: استخدام .json()
-    res.status(200).json({ success: true, message: 'تم التحديث بنجاح! ✅', profile: updatedProfile.rows[0] });
-    
+    // ✅ تم التعديل هنا: استخدام .json()    
     if (phone) {
         await pool.query('UPDATE users SET phone = $1 WHERE id = $2', [phone, userId]);
     }
@@ -182,9 +188,9 @@ export const updateClientProfile = async (req, res) => {
     res.status(200).json({ message: 'تم التحديث بنجاح! ✅', profile: updatedProfile.rows[0] });
   } catch (err) {
     // ✅ تم التعديل هنا: استخدام .json()
-    res.status(500).json({ success: false, message: 'فشل التحديث' });
     console.error("Update Error:", err.message);
-    res.status(500).send('فشل التحديث');
+    return res.status(500).json({ success: false, 
+      message: 'فشل التحديث: ' + err.message });
   }
 };
 

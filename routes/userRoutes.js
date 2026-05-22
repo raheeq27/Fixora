@@ -42,8 +42,6 @@ import {
     createBooking, 
     getUserBookings 
 } from '../controllers/bookingController.js'; // تأكدي أن الملف موجود فعلاً في مجلد controllers
-import express from 'express';
-import { getAllUsers } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -56,6 +54,5 @@ router.get('/all', getAllUsers);
 // مسارات الحجوزات (تأكدي من استخدام الدوال المستوردة من bookingController)
 router.post('/bookings', createBooking);
 router.get('/user/:userId', getUserBookings);
-router.get('/', getAllUsers);
 
 export default router;
