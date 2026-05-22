@@ -1,156 +1,297 @@
 import pool from '../config/db.js';
-import bcrypt from 'bcrypt'; 
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 // =========================================================
-// 1. دالة مساعدة للتحقق من التوافر
+// 1. دالة التحقق من التوافر
 // =========================================================
 const checkAvailability = async (provider_id, date, time) => {
-    const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dayName = new Date(date)
+        .toLocaleDateString('en-US', { weekday: 'short' })
+        .toLowerCase();
+
     const query = `
-        SELECT * FROM provider_availability 
-        WHERE provider_id = $1 AND day_of_week = $2 
-        AND $3 BETWEEN start_time AND end_time AND is_available = TRUE;
+        SELECT id
+        FROM provider_availability
+        WHERE provider_id = $1
+        AND day_of_week = $2
+        AND $3 BETWEEN start_time AND end_time
+        AND is_available = TRUE;
     `;
+
     const result = await pool.query(query, [provider_id, dayName, time]);
     return result.rows.length > 0;
 };
 
 // =========================================================
-// 4. دالة إنشاء الحساب الذكية والمحمية من اختلاف أسماء المتغيرات
+// 2. إنشاء حجز جديد
 // =========================================================
-export const registerUser = async (req, res, next) => {
-    console.log("بيانات التسجيل الواصلة من الموقع:", req.body);
-    // جلب البيانات من الطلب
-    const first_name = req.body.first_name || req.body.firstName;
-    const last_name = req.body.last_name || req.body.lastName;
-    const email = req.body.email;
-    const password = req.body.password;
-    const phone = req.body.phone;
-    const governorate = req.body.governorate || req.body.city || 'Amman';
-    const role = req.body.role || 'client';
-
+export const createBooking = async (req, res, next) => {
     try {
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'البريد الإلكتروني وكلمة المرور مطلوبان.' });
-        }
+        const { provider_id, service_id, booking_date, start_time, notes } = req.body;
+        const userId = req.user.userId;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // الترتيب الصحيح الثابت (يجب أن يطابق ترتيب الأعمدة في DBeaver)
-        // لاحظي أننا نستخدم password_hash مباشرة لأن هذا هو اسم العمود في جدولك
-        const queryText = `
-            INSERT INTO users (email, phone, role, password_hash, governorate, first_name, last_name) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
-        `;
-
-        const userResult = await pool.query(queryText, [
-            email, 
-            phone, 
-            role, 
-            hashedPassword, 
-            governorate, 
-            first_name, 
-            last_name
-        ]);
-
-        const registeredUser = userResult.rows[0];
-        return res.status(201).json({ success: true, message: 'تم إنشاء الحساب بنجاح! 🎉', data: registeredUser });
-        
-    } catch (error) {
-        console.error('🚨 خطأ أثناء إنشاء الحساب بالتيرمينال:', error);
-        return res.status(500).json({ success: false, message: 'فشل التسجيل: ' + error.message });
-    }
-};
-
-// =========================================================
-// 5. دالة تسجيل الدخول الذكية المتوافقة مع الـ DBeaver مية بالمئة
-// =========================================================
-
-export const loginUser = async (req, res, next) => {
-    // لقط البيانات بأي اسم حقل ممكن يبعته الفرونت أند (أمان مطلق)
-    const email = req.body.email || req.body.username;
-    const password = req.body.password || req.body.passwordVal;
-
-    try {
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'الإيميل وكلمة المرور مطلوبان.' });
-        }
-
-        // البحث عن المستخدم بجدول قاعدة البيانات
-        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userResult.rows.length === 0) {
-            return res.status(401).json({ success: false, message: 'الإيميل أو كلمة المرور غير صحيحة' });
-        }
-
-        const user = userResult.rows[0];
-        
-        // جلب كلمة السر المخزنة بالـ DBeaver ديناميكياً مهما كان اسم العمود
-        const dbPassword = user.password_hash || user.password;
-
-        if (!dbPassword) {
-            return res.status(500).json({ success: false, message: 'خطأ في بنية كلمة السر بقاعدة البيانات.' });
-        }
-
-        // 🌟 استراتيجية المطابقة الفائقة الأبدية:
-        let isMatch = false;
-
-        // الطريقة الأولى: مقارنة الـ bcrypt (للحسابات المشفرة بشكل سليم)
-        try {
-            isMatch = await bcrypt.compare(password, dbPassword);
-        } catch (bcryptErr) {
-            isMatch = false;
-        }
-
-        // الطريقة الثانية (الإنقاذية): مقارنة النص الصريح أو التطابق الجزئي
-        // هادي تحميكِ مية بالمئة لو الداتابيز قصت الهاش لطول العمود VARCHAR القصير، أو الحساب مخزن قديم
-        if (!isMatch) {
-            if (password === dbPassword || dbPassword.startsWith(password)) {
-                isMatch = true;
-            }
-        }
-
-        // إذا فشلت كل الطرق (الباسورد غلط فعلياً)
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'الإيميل أو كلمة المرور غير صحيحة' });
-        }
-
-        // 🌟 حقن مكتبة JWT محلياً ومباشرة لكسر كاش نودمون والـ ReferenceError تماماً
-        const jwtSecure = (await import('jsonwebtoken')).default;
-
-        // إنشاء التوكن لتأمين الجلسة والانتقال للداش بورد
-        const token = jwtSecure.sign(
-            { userId: user.id, role: user.role },
-            process.env.JWT_SECRET || 'fixora_secret_2026',
-            { expiresIn: '7d' }
+        const clientRes = await pool.query(
+            `SELECT id FROM client_profiles WHERE user_id = $1`,
+            [userId]
         );
 
-        // إرجاع الاستجابة الناجحة للفرونت أند فوراً
-        return res.status(200).json({
+        if (clientRes.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على بروفايل عميل لهذا الحساب.'
+            });
+        }
+
+        const client_id = clientRes.rows[0].id;
+
+        const isAvailable = await checkAvailability(provider_id, booking_date, start_time);
+        if (!isAvailable) {
+            return res.status(400).json({
+                success: false,
+                message: 'الفني غير متاح في هذا الوقت.'
+            });
+        }
+
+        const overlapQuery = `
+            SELECT id
+            FROM bookings
+            WHERE provider_id = $1
+            AND status NOT IN ('cancelled', 'rejected')
+            AND scheduled_at = ($2::DATE + $3::TIME)::TIMESTAMP;
+        `;
+
+        const conflictRes = await pool.query(overlapQuery, [provider_id, booking_date, start_time]);
+        if (conflictRes.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'هذا الوقت محجوز مسبقاً.'
+            });
+        }
+
+        const insertQuery = `
+            INSERT INTO bookings (client_id, provider_id, category_id, scheduled_at, notes, status)
+            VALUES ($1, $2, $3, ($4::DATE + $5::TIME)::TIMESTAMP, $6, 'pending')
+            RETURNING *;
+        `;
+
+        const result = await pool.query(insertQuery, [
+            client_id,
+            provider_id,
+            service_id,
+            booking_date,
+            start_time,
+            notes
+        ]);
+
+        res.status(201).json({
             success: true,
-            token,
-            data: { 
-                id: user.id, 
-                first_name: user.first_name || 'User', 
-                role: user.role || 'client' 
-            }
+            message: 'تم إرسال طلب الحجز بنجاح.',
+            booking: result.rows[0]
         });
-        
+
     } catch (err) {
-        console.error("🚨 خطأ قاتل في تسجيل الدخول بالتيرمينال:", err);
+        console.error("🚨 خطأ أثناء إنشاء الحجز:", err);
         next(err);
     }
 };
 
 // =========================================================
-// 6. الحصول على جميع المستخدمين
+// 3. جلب حجوزات المستخدم
+// =========================================================
+export const getUserBookings = async (req, res, next) => {
+    const userId = req.user.userId;
+    const role = req.user.role;
+
+    try {
+        let query = '';
+        let queryParams = [userId];
+
+        if (role === 'client') {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name AS provider_name
+                FROM bookings b
+                JOIN provider_profiles pp ON b.provider_id = pp.id
+                JOIN users u ON pp.user_id = u.id
+                WHERE b.client_id = (SELECT id FROM client_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        } else if (role === 'provider') {
+            query = `
+                SELECT b.*, u.first_name || ' ' || u.last_name AS client_name
+                FROM bookings b
+                JOIN client_profiles cp ON b.client_id = cp.id
+                JOIN users u ON cp.user_id = u.id
+                WHERE b.provider_id = (SELECT id FROM provider_profiles WHERE user_id = $1)
+                ORDER BY b.created_at DESC;
+            `;
+        } else {
+            query = `SELECT * FROM bookings ORDER BY created_at DESC;`;
+            queryParams = [];
+        }
+
+        const result = await pool.query(query, queryParams);
+
+        res.status(200).json({
+            success: true,
+            count: result.rowCount,
+            data: result.rows
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 4. جلب جميع المستخدمين
 // =========================================================
 export const getAllUsers = async (req, res, next) => {
     try {
-        const queryText = 'SELECT id, first_name, last_name, email, role, phone, governorate FROM users;';
+        const queryText = `
+            SELECT id, first_name, last_name, email, role, phone, governorate
+            FROM users;
+        `;
         const result = await pool.query(queryText);
-        res.status(200).json({ success: true, data: result.rows });
+
+        res.status(200).json({
+            success: true,
+            data: result.rows
+        });
+
     } catch (err) {
         console.error("🚨 خطأ في جلب المستخدمين:", err);
         next(err);
-    }}
+    }
+};
+
+// =========================================================
+// 5. جلب بيانات مستخدم
+// =========================================================
+export const getUserProfile = async (req, res, next) => {
+    const { id } = req.params;
+
+    try {
+        const query = `
+            SELECT id, first_name, last_name, email, role, phone, governorate, created_at
+            FROM users
+            WHERE id = $1;
+        `;
+        const result = await pool.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على المستخدم.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error("خطأ في جلب المستخدم:", err);
+        next(err);
+    }
+};
+
+// =========================================================
+// 6. تحديث بيانات المستخدم
+// =========================================================
+export const updateUserProfile = async (req, res, next) => {
+    const userId = req.user.userId;
+    const { first_name, last_name, phone, governorate } = req.body;
+
+    try {
+        const query = `
+            UPDATE users
+            SET first_name = $1, last_name = $2, phone = $3, governorate = $4
+            WHERE id = $5
+            RETURNING id, first_name, last_name, email, role, phone, governorate;
+        `;
+
+        const result = await pool.query(query, [first_name, last_name, phone, governorate, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'المستخدم غير موجود.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'تم تحديث البيانات بنجاح ✨',
+            user: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error("خطأ في تحديث البروفايل:", err);
+        next(err);
+    }
+};
+
+// =========================================================
+// 7. جلب الإشعارات
+// =========================================================
+export const getUserNotifications = async (req, res, next) => {
+    try {
+        const result = await pool.query(
+            `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC`,
+            [req.user.userId]
+        );
+
+        res.status(200).json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 8. قراءة إشعار
+// =========================================================
+export const markNotificationAsRead = async (req, res, next) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2 RETURNING *;`,
+            [id, req.user.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'التنبيه غير موجود.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'تم تحديث التنبيه بنجاح.'
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+// =========================================================
+// 9. رفع مستندات الفني
+// =========================================================
+export const uploadDocsController = async (req, res, next) => {
+    try {
+        res.status(200).json({
+            success: true,
+            message: 'السيرفر جاهز لاستقبال الملفات.'
+        });
+    } catch (err) {
+        next(err);
+    }
+};

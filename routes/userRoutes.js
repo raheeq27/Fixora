@@ -1,58 +1,48 @@
-
-// import express from 'express';
-// import { 
-//     registerUser, 
-//     loginUser, 
-//     getAllUsers, 
-//     createBooking,
-//     getUserBookings 
-// } from '../controllers/userController.js';
-
-// const router = express.Router();
-
-// router.get('/test', (req, res) => {
-//     res.send("السيرفر يعمل والمسار مربوط بنجاح!");
-// });
-// router.post('/register', (req, res) => {
-//     console.log("✅ وصلت البيانات للمسار الصحيح!");
-//     res.status(200).json({ message: "تم الوصول بنجاح!" });
-// });
-// // مسارات الحسابات
-// router.post('/register', registerUser);
-// router.post('/login', loginUser);
-
-// // مسارات الحجوزات (شغل جمالات)
-// router.post('/bookings', createBooking);
-// router.get('/user/:userId', getUserBookings);
-
-// export default router;
-
-
+/**
+ * FIXORA - مسارات المستخدمين، الحجوزات، والتنبيهات (User & Booking Routes)
+ */
 import express from 'express';
-
-// استيراد دوال المستخدمين من الملف القديم
 import { 
-    registerUser, 
-    loginUser, 
-    getAllUsers 
+    getAllUsers, 
+    getUserProfile,
+    updateUserProfile,
+    createBooking,
+    getUserBookings,
+    getUserNotifications,    
+    markNotificationAsRead,  
+    uploadDocsController    
 } from '../controllers/userController.js';
 
-// استيراد دوال الحجز من الملف الجديد
-import { 
-    createBooking, 
-    getUserBookings 
-} from '../controllers/bookingController.js'; // تأكدي أن الملف موجود فعلاً في مجلد controllers
+import authMiddleware from '../middleware/authMiddleware.js'; 
+import { restrictTo } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-// ... باقي الكود ...
-// مسارات الحسابات
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/all', getAllUsers);
+// =========================================================
+// 1. مسارات الحسابات والهوية (إدارة عامة / بروفايل لوحة التحكم)
+// =========================================================
+router.get('/user/:id', authMiddleware, getUserProfile);
+router.put('/update-profile', authMiddleware, updateUserProfile);
 
-// مسارات الحجوزات (تأكدي من استخدام الدوال المستوردة من bookingController)
-router.post('/bookings', createBooking);
-router.get('/user/:userId', getUserBookings);
+// مسار رؤية جميع المستخدمين (للأدمن فقط)
+router.get('/all', authMiddleware, restrictTo('admin'), getAllUsers);
+
+// =========================================================
+// 2. نظام التنبيهات (Notifications)
+// =========================================================
+router.get('/notifications', authMiddleware, getUserNotifications);
+router.patch('/notifications/:id/read', authMiddleware, markNotificationAsRead);
+
+// =========================================================
+// 3. مسارات الحجوزات (Booking System)
+// =========================================================
+router.post('/bookings', authMiddleware, restrictTo('client'), createBooking); 
+router.get('/my-bookings', authMiddleware, getUserBookings); 
+router.get('/user/:userId', authMiddleware, getUserBookings);
+
+// =========================================================
+// 4. مسارات مقدمي الخدمة / الفنيين (Service Providers)
+// =========================================================
+router.post('/upload-docs', authMiddleware, restrictTo('provider'), uploadDocsController);
 
 export default router;

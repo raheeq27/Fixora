@@ -1,20 +1,32 @@
+/**
+ * FIXORA - لوحة تحكم المستخدم (User Dashboard)
+ * كود الإدارة الموحد والربط الحقيقي مع الباك إند وقاعدة البيانات
+ */
 
+// ==========================================
+// 1. التحقق من الهوية والحماية (Auth Check)
+// ==========================================
+const token = localStorage.getItem('token');
+
+if (!token) {
+    alert("غير مسموح بالدخول، يرجى تسجيل الدخول أولاً.");
+    window.location.href = 'login.html';
+}
 
 // ========== بيانات المستخدم الافتراضية للـ Fallback ==========
-const userData = {
-    name: 'أحمد محمد الكيلاني',
-    phone: '0791234567',
-    email: 'ahmad@example.com',
+const fallbackUserData = {
+    name: 'مستخدم فيكسورا',
+    phone: '0790000000',
+    email: 'user@fixora.com',
     city: 'عمّان',
-    area: 'الشميساني، العبدلي'
+    area: 'الشميساني'
 };
 
-// ========== بيانات الإشعارات والحرفيين والرسائل الثابتة ==========
+// ========== بيانات الإشعارات والحرفيين والرسائل الثابتة (الواجهة الجمالية) ==========
 let notificationsData = [
-    { id: 1, icon: '✅', title: 'تم قبول طلبك!', text: 'محمد أبو خالد قبل طلب تصليح التكييف · الموعد: 15 مارس 10:00 ص', time: 'منذ 5 دقائق', read: false },
-    { id: 2, icon: '💬', title: 'رسالة جديدة', text: 'محمد أبو خالد: "سأكون عندك الساعة 10 صباحاً إن شاء الله"', time: 'منذ 20 دقيقة', read: false },
-    { id: 3, icon: '⭐', title: 'قيّم تجربتك', text: 'كيف كانت خدمة خالد النابلسي؟ ساعد مستخدمي FIXORA الأردن', time: 'منذ ساعة', read: false },
-    { id: 4, icon: '🎉', title: 'مرحباً في FIXORA الأردن', text: 'حسابك جاهز! ابدأ بالبحث عن أفضل حرفي في منطقتك', time: 'أمس', read: true }
+    { id: 1, icon: '✅', title: 'تم قبول طلبك!', text: 'تم قبول طلب تصليح التكييف · الموعد المحدد قريباً', time: 'منذ 5 دقائق', read: false },
+    { id: 2, icon: '💬', title: 'رسالة جديدة', text: 'الفني: "سأكون عندك في الموعد المحدد إن شاء الله"', time: 'منذ 20 دقيقة', read: false },
+    { id: 3, icon: '🎉', title: 'مرحباً في FIXORA الأردن', text: 'حسابك جاهز! ابدأ بالبحث عن أفضل فني في منطقتك', time: 'أمس', read: true }
 ];
 
 const favoritesData = [
@@ -23,88 +35,194 @@ const favoritesData = [
 ];
 
 const messagesData = [
-    { id: 1, icon: '👨‍🔧', sender: 'محمد أبو خالد', preview: 'سأكون عندك الساعة 10 صباحاً إن شاء الله', time: '10:15 ص' },
+    { id: 1, icon: '👨‍🔧', sender: 'محمد أبو خالد', preview: 'سأكون عندك في الوقت المحدد إن شاء الله', time: '10:15 ص' },
     { id: 2, icon: '⚡', sender: 'مهندس خالد النابلسي', preview: 'تم إنهاء الفحص، يرجى مراجعة الفاتورة', time: 'أمس' }
 ];
 
-// =========================================================================
-// 1. الدالة المحدثة والمحميّة 100% لجلب الحجوزات والاسم ديناميكياً بدون دوامات
-// =========================================================================
-async function fetchUserOrders() {
-    console.log("🔄 [FIXORA] جاري الاتصال بالسيرفر وجلب البيانات من قاعدة البيانات حيّاً...");
+// ==========================================
+// 2. الانتظار حتى تحميل كامل عناصر الصفحة
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
 
-    const userId = localStorage.getItem('userId'); 
-    const localUserName = localStorage.getItem('userName') || localStorage.getItem('name') || localStorage.getItem('user_name') || 'مستخدم فيكسورا';
+    let currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user'));
+
+    // تهيئة محركات الواجهة الأساسية
+    initializeTabs();
+    initializeLogout();
+    renderNotifications();
+    renderFavorites();
+    renderMessages();
+
+    // التحقق من حالة الكاش قبل استدعاء السيرفر
+    if (currentUser && (currentUser.first_name || currentUser.firstName)) {
+        console.log("✅ [FIXORA] تم تحميل البيانات الكاملة من الكاش بنجاح.");
+        displayWelcomeMessage(currentUser);
+        populateProfileFields(currentUser);
+        
+        // جلب الحجوزات المرتبطة بالمستخدم حتى لو كانت البيانات الشخصية في الكاش
+        fetchUserDataFromServer();
+    } else {
+        console.log("ℹ️ [FIXORA] بيانات الاسم غير مكتملة في الكاش، جاري جلب الملف الكامل من السيرفر...");
+        fetchUserDataFromServer();
+    }
+
+    // تفعيل مستمع الأحداث لتعديل الملف الشخصي
+    initializeProfileUpdate();
+});
+
+// ==========================================
+// 3. نظام تبديل التبويبات (Tab Switching)
+// ==========================================
+function initializeTabs() {
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const tabPanels = document.querySelectorAll('.tab-panel, .dashboard-section');
+    const viewAllButtons = document.querySelectorAll('.view-all-btn');
+
+    function switchTab(tabId) {
+        // إزالة الفاعلية من السايد بار والأقسام
+        sidebarItems.forEach(item => item.classList.remove('active'));
+        tabPanels.forEach(panel => {
+            panel.classList.remove('active');
+            panel.style.display = 'none';
+        });
+
+        // تفعيل العنصر المختار في السايد بار
+        const targetSidebarItem = document.querySelector(`.sidebar-item[data-tab="${tabId}"]`);
+        if (targetSidebarItem) targetSidebarItem.classList.add('active');
+
+        // إظهار القسم المطابق للـ id
+        const cleanId = tabId.replace('-section', '');
+        const targetPanel = document.getElementById(`tab-${cleanId}`) || 
+                            document.getElementById(cleanId) || 
+                            document.getElementById(tabId);
+
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            targetPanel.style.display = 'block';
+            console.log(`🎯 [FIXORA] الانتقال إلى واجهة: [${tabId}]`);
+        } else {
+            console.warn(`⚠️ [FIXORA] لم يتم العثور في الـ HTML على عنصر بـ id يطابق: ${tabId}`);
+        }
+    }
+
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const tabId = item.getAttribute('data-tab');
+            if (!tabId) return; // تخطي أزرار تسجيل الخروج التي لا تحمل داتا تبويب
+
+            e.preventDefault();
+            switchTab(tabId);
+        });
+    });
+
+    viewAllButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const goToTab = btn.getAttribute('data-goto');
+            if (goToTab) switchTab(goToTab);
+        });
+    });
+}
+
+// ==========================================
+// 4. عرض البيانات الرسومية وتعبئة الحقول
+// ==========================================
+function displayWelcomeMessage(user) {
     const nameDisplay = document.getElementById('userNameDisplay');
+    if (!nameDisplay) return;
 
-    if (nameDisplay) {
-        nameDisplay.textContent = localUserName;
+    const name = user.first_name || user.firstName || user.name || fallbackUserData.name;
+    nameDisplay.textContent = `مرحباً ${name} 👋`;
+    
+    // حفظ الاسم في الـ localStorage لسرعة القراءة الفورية عند التحميل القادم
+    localStorage.setItem('userName', name);
+}
+
+function populateProfileFields(user) {
+    if (!user) return;
+
+    const firstNameInput = document.getElementById('profileFirstName');
+    const lastNameInput = document.getElementById('profileLastName');
+    const phoneInput = document.getElementById('profilePhone');
+    const emailInput = document.getElementById('profileEmail');
+    const cityInput = document.getElementById('profileCity');
+    const areaInput = document.getElementById('profileArea');
+
+    if (firstNameInput) firstNameInput.value = user.first_name || user.name || '';
+    if (lastNameInput) lastNameInput.value = user.last_name || '';
+    if (phoneInput) phoneInput.value = user.phone || '';
+    if (emailInput) emailInput.value = user.email || '';
+    if (cityInput) cityInput.value = user.governorate || 'Amman';
+    if (areaInput) areaInput.value = user.detailed_area || user.area || '';
+}
+
+// ==========================================
+// 5. جلب بيانات المستخدم والحجوزات من السيرفر
+// ==========================================
+async function fetchUserDataFromServer() {
+    let userId = localStorage.getItem('userId');
+    
+    // محاولة استخراج الـ ID من كائن الجلسة كخطة بديلة
+    if (!userId) {
+        const currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user'));
+        userId = currentUser ? currentUser.id : null;
     }
 
     if (!userId) {
-        console.log("⚠️ [FIXORA] تنبيه: لم يتم العثور على userId مستخدم نشط في الـ localStorage.");
-        return; 
+        console.error("🚨 [FIXORA] لم يتم العثور على المعرف الحقيقي للمستخدم (User ID).");
+        return;
     }
 
     const fallbackBookings = [
-        { id: "1092", service_title: "تصليح تكييف سبليت", date: new Date(), notes: "شحن فريون وتصليح تكييف سبليت عاجل", status: "مؤكد" }
+        { id: "1092", service_title: "تصليح تكييف سبليت", booking_date: new Date(), notes: "شحن فريون وتصليح تكييف سبليت عاجل", status: "مؤكد" }
     ];
 
     try {
-        const response = await fetch(`http://localhost:3000/api/users/user/${userId}`);
-        
-        if (!response.ok) throw new Error('404 المسار غير موجود أو السيرفر متوقف');
-
-        const userResult = await response.json();
-        
-        if (userResult.success && userResult.user) {
-            console.log("✅ [FIXORA] تم الاتصال بقاعدة البيانات بنجاح! جلب بيانات المستخدم الحالية...");
-
-            const currentName = userResult.user.first_name || userResult.user.name || localUserName;
-            
-            if (nameDisplay) {
-                nameDisplay.textContent = currentName;
+        const response = await fetch(`http://localhost:3000/api/users/user/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            fillProfileInputs(userResult.user);
-            localStorage.setItem('userName', currentName);
+        });
 
-            const databaseBookings = userResult.bookings || [];
-            renderOrdersFromDB(databaseBookings.length > 0 ? databaseBookings : fallbackBookings);
-            updateBadgesFromDB(databaseBookings.length > 0 ? databaseBookings : fallbackBookings);
+        if (!response.ok) {
+            throw new Error(`خطأ سيرفر بكود استجابة: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const userData = result.user || result;
+
+        if (userData) {
+            // تحديث كاش الجلسة بالبيانات المحدثة كاملة
+            sessionStorage.setItem('fixora_current_user', JSON.stringify(userData));
+
+            displayWelcomeMessage(userData);
+            populateProfileFields(userData);
+
+            // جلب الحجوزات الديناميكية المسترجعة من الـ Controller
+            const bookings = result.bookings || userData.bookings || [];
+            renderOrdersFromDB(bookings.length > 0 ? bookings : fallbackBookings);
+            updateBadgesFromDB(bookings.length > 0 ? bookings : fallbackBookings);
             
-            console.log(`🎉 [FIXORA] تم التحديث بنجاح. المستخدم النشط الآن: ${currentName}`);
-        } else {
-            console.log("ℹ️ [FIXORA] استجابة السيرفر ناجحة ولكن لم تعد بيانات مخصصة، تم تشغيل المظهر الجمالي.");
-            renderOrdersFromDB(fallbackBookings);
-            updateBadgesFromDB(fallbackBookings);
+            console.log("✅ [FIXORA] تم تحديث البيانات والحجوزات حياً من قاعدة البيانات.");
         }
 
     } catch (error) {
-        console.log("🚨 [FIXORA] تفعيل خطة الطوارئ الآمنة بسبب: ", error.message);
+        console.warn("🚨 [FIXORA] تفعيل خطة الطوارئ الآمنة واستخدام الـ Fallback بسبب:", error.message);
+        
         renderOrdersFromDB(fallbackBookings);
         updateBadgesFromDB(fallbackBookings);
         
-        fillProfileInputs({
-            first_name: localUserName,
-            last_name: '',
-            email: localStorage.getItem('userEmail') || 'user@fixora.com',
-            phone: '0790124578'
-        });
+        // محاولة عرض الاسم المخزن محلياً لضمان الشكل الجمالي
+        const localName = localStorage.getItem('userName') || fallbackUserData.name;
+        const nameDisplay = document.getElementById('userNameDisplay');
+        if (nameDisplay) nameDisplay.textContent = `مرحباً ${localName} 👋`;
     }
 }
 
-// =========================================================================
-// 2. دالة تسجيل الخروج المحدثة والمضمونة
-// =========================================================================
-function handleLogout() {
-    localStorage.clear(); 
-    sessionStorage.clear();
-    alert('تم تسجيل الخروج بنجاح! نراكم قريباً في FIXORA الأردن.');
-    window.location.href = 'login.html'; 
-}
-
-// ========== دوال الواجهة الرسومية لعرض البيانات والمظهر التجاري ==========
+// ==========================================
+// 6. حقن وعرض الحجوزات في شاشات الـ HTML
+// ==========================================
 function renderOrdersFromDB(bookings) {
     const container = document.getElementById('ordersListContainer');
     if (!container) return;
@@ -116,15 +234,17 @@ function renderOrdersFromDB(bookings) {
 
     container.innerHTML = bookings.map(booking => {
         let statusBadge = '';
-        if (booking.status === 'مؤكد' || booking.status === 'confirmed') {
-            statusBadge = '<span class="status-badge status-confirmed">مؤكد</span>';
-        } else if (booking.status === 'قيد الانتظار' || booking.status === 'pending') {
-            statusBadge = '<span class="status-badge status-pending">قيد الانتظار</span>';
+        const status = (booking.status || '').toLowerCase();
+        
+        if (status === 'مؤكد' || status === 'confirmed') {
+            statusBadge = '<span class="status-badge status-confirmed" style="background:#2ecc71; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">مؤكد</span>';
+        } else if (status === 'قيد الانتظار' || status === 'pending') {
+            statusBadge = '<span class="status-badge status-pending" style="background:#f1c40f; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">قيد الانتظار</span>';
         } else {
-            statusBadge = `<span class="status-badge status-confirmed">${booking.status || 'مؤكد'}</span>`;
+            statusBadge = `<span class="status-badge" style="background:#3498db; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">${booking.status || 'مؤكد'}</span>`;
         }
 
-        const rawDate = booking.date || booking.booking_date;
+        const rawDate = booking.booking_date || booking.date;
         const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('ar-JO', { day: 'numeric', month: 'long', year: 'numeric' }) : 'قريباً';
 
         return `
@@ -148,48 +268,82 @@ function updateBadgesFromDB(bookings) {
 
     if (totalCountBadge) totalCountBadge.textContent = bookings.length;
     
-    const pendingCount = bookings.filter(b => b.status === 'قيد الانتظار' || b.status === 'pending').length;
+    const pendingCount = bookings.filter(b => {
+        const s = (b.status || '').toLowerCase();
+        return s === 'قيد الانتظار' || s === 'pending';
+    }).length;
     if (pendingCountBadge) pendingCountBadge.textContent = pendingCount;
 
-    const confirmedCount = bookings.filter(b => b.status === 'مؤكد' || b.status === 'confirmed' || b.status === 'completed').length;
+    const confirmedCount = bookings.filter(b => {
+        const s = (b.status || '').toLowerCase();
+        return s === 'مؤكد' || s === 'confirmed' || s === 'completed';
+    }).length;
     if (confirmedCountBadge) confirmedCountBadge.textContent = confirmedCount > 0 ? confirmedCount : bookings.length;
 }
 
-function fillProfileInputs(user) {
-    const fNameInput = document.getElementById('profileFirstName');
-    const emailInput = document.getElementById('profileEmail');
-    const phoneInput = document.getElementById('profilePhone');
+// ==========================================
+// 7. تحديث البيانات الشخصية (PUT Request)
+// ==========================================
+function initializeProfileUpdate() {
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
 
-    if (fNameInput) fNameInput.value = user.first_name || user.name || '';
-    if (emailInput) emailInput.value = user.email || '';
-    if (phoneInput) phoneInput.value = user.phone || '0790124578';
-}
+    if (!saveProfileBtn) return;
 
-// الدالة المركزية المعدلة لتطابق كلاسات السايد بار والأقسام الحقيقية بالملي
-function showSection(sectionId) {
-    // إخفاء جميع الأقسام التي تحمل كلاس الـ HTML الفعلي تَبَعكِ
-    document.querySelectorAll('.dashboard-section').forEach(sec => {
-        sec.classList.remove('active');
-        sec.style.display = 'none';
-    });
+    saveProfileBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
 
-    // إظهار القسم المطلوب فوراً وعمل تفعيل له
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-        targetSection.style.display = 'block';
-    }
+        const firstName = document.getElementById('profileFirstName').value.trim();
+        const lastName = document.getElementById('profileLastName').value.trim();
+        const phone = document.getElementById('profilePhone').value.trim();
+        const governorate = document.getElementById('profileCity').value;
+        const detailedArea = document.getElementById('profileArea').value.trim();
 
-    // إدارة تلوين عناصر السايد بار النشطة بذكاء لتدعم الـ data-tab والـ onclick معاً
-    const cleanName = sectionId.replace('-section', '');
-    document.querySelectorAll('.sidebar-item').forEach(li => {
-        li.classList.remove('active');
-        if(li.getAttribute('data-tab') === cleanName) {
-            li.classList.add('active');
+        if (!firstName || !lastName || !phone) {
+            alert("يرجى تعبئة الحقول الأساسية: الاسم الأول، العائلة، ورقم الهاتف.");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/users/update-profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                    governorate: governorate,
+                    detailed_area: detailedArea
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message || "تم تحديث البيانات الشخصية بنجاح! 🎉");
+
+                // تحديث الـ Session Storage بالملف الشخصي الجديد المستلم من السيرفر
+                sessionStorage.setItem('fixora_current_user', JSON.stringify(result.user));
+                
+                // تحديث الرسائل والمدخلات الفورية على الشاشة
+                displayWelcomeMessage(result.user);
+                populateProfileFields(result.user);
+            } else {
+                alert(result.message || "فشل تحديث البيانات، يرجى المحاولة لاحقاً.");
+            }
+
+        } catch (error) {
+            console.error("خطأ أثناء تحديث الملف الشخصي:", error);
+            alert("حدث خطأ في الاتصال بالسيرفر، يرجى التحقق من تشغيل السيرفر والمحاولة مجدداً.");
         }
     });
 }
 
+// ==========================================
+// 8. عرض البيانات الجمالية للإشعارات والمحادثات
+// ==========================================
 function renderNotifications() {
     const container = document.getElementById('notificationsList');
     if (!container) return;
@@ -233,79 +387,24 @@ function renderMessages() {
     `).join('');
 }
 
-function handleProfilePictureUpload(event) {
-    const file = event.target.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const imgUrl = e.target.result;
-        const imgElement = document.getElementById('profileAvatarImg');
-        const defaultElement = document.getElementById('profileAvatarDefault');
-        
-        if (imgElement && defaultElement) {
-            imgElement.src = imgUrl;
-            imgElement.style.display = 'block';
-            defaultElement.style.display = 'none';
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
-// ============================================================
-// 🔒 المحرك النهائي للسايد بار - متوافق ومطابق للـ HTML بالملي
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. تشغيل جلب البيانات بأمان لتجنب أي كراش
-    if (typeof fetchUserOrders === 'function') try { fetchUserOrders(); } catch(e) {}
-    if (typeof renderNotifications === 'function') try { renderNotifications(); } catch(e) {}
-    if (typeof renderFavorites === 'function') try { renderFavorites(); } catch(e) {}
-    if (typeof renderMessages === 'function') try { renderMessages(); } catch(e) {}
-
-    // 2. محرك السايد بار الذكي المطابق لكلاس tab-panel والـ id تَبَعكِ
-    const sidebarItems = document.querySelectorAll('.dashboard-sidebar .sidebar-item, .sidebar-item');
-    
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            const tabName = item.getAttribute('data-tab');
-            if (!tabName) return; // تخطي زر تسجيل الخروج
-
-            e.preventDefault();
-            console.log("🎯 [FIXORA] جاري الانتقال للقسم:", tabName);
-
-            // تلوين الزر النشط وإزالة التلوين عن الباقي
-            sidebarItems.forEach(li => li.classList.remove('active'));
-            item.classList.add('active');
-
-            // إخفاء جميع الواجهات الحالية بأمان (فحص كامل للكلاس tab-panel تَبَعكِ)
-            document.querySelectorAll('.tab-panel, .tab-content, .fxr-tab-content, .content-section, .dashboard-section, [id^="tab-"]').forEach(el => {
-                if (el) {
-                    el.style.display = 'none';
-                    el.classList.remove('active');
-                }
-            });
-
-            // إظهار القسم المطلوب بالظبط بناءً على الـ id في صورتكِ
-            const targetTab = document.getElementById(tabName);
-            if (targetTab) {
-                targetTab.style.display = 'block';
-                targetTab.classList.add('active');
-                console.log(`✅ تم إظهار واجهة [${tabName}] بنجاح تام!`);
-            } else {
-                console.warn(`⚠️ لم يتم العثور في الـ HTML على عنصر بـ id يطابق: ${tabName}`);
-            }
-        });
-    });
-
-    // 3. زر تسجيل الخروج المحمي
+// ==========================================
+// 9. إدارة تسجيل الخروج بأمان (Logout)
+// ==========================================
+function initializeLogout() {
     const logoutBtn = document.getElementById('logoutBtn') || document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.clear();
-            sessionStorage.clear();
-            alert('تم تسجيل الخروج بنجاح من FIXORA.');
-            window.location.href = 'login.html';
-        });
-    }
-}); // 👈 الإغلاق النهائي الآمن للملف كامل!
+    const sidebarLogoutLink = document.querySelector('.fxr-sidebar-links a[style*="color: #f75555"]');
+
+    const handleLogout = (e) => {
+        if (e) e.preventDefault();
+        
+        // تنظيف جلسة المستخدم والتوكنات بالكامل لمنع الوصول غير المصرح به
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        alert('تم تسجيل الخروج بنجاح! نراكم قريباً في FIXORA الأردن.');
+        window.location.href = 'login.html';
+    };
+
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (sidebarLogoutLink) sidebarLogoutLink.addEventListener('click', handleLogout);
+}
