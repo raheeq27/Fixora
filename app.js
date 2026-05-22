@@ -34,8 +34,7 @@ app.use((err, req, res, next) => {
         message: err.message || 'Internal Server Error'
     });
 });
-
-const PORT = process.env.PORT || 3000;
+const PORT = 8080;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

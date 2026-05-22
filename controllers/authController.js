@@ -74,8 +74,8 @@ export const register = async (req, res, next) => {
     if (role === 'client') {
       const clientRes = await pool.query(
         `
-        INSERT INTO client_profiles (id, user_id)
-        VALUES (gen_random_uuid(), $1)
+        INSERT INTO client_profiles (user_id)
+        VALUES ($1)
         RETURNING id;
         `,
         [userId]
@@ -86,23 +86,23 @@ export const register = async (req, res, next) => {
     else if (role === 'provider') {
       const providerRes = await pool.query(
         `
-        INSERT INTO provider_profiles (id, user_id)
-        VALUES (gen_random_uuid(), $1)
-        RETURNING id;
+        INSERT INTO provider_profiles (user_id)
+        VALUES ($1)
+        RETURNING user_id;
         `,
         [userId]
       );
 
-      const providerId = providerRes.rows[0].id;
+      const providerId = providerRes.rows[0].user_id;
       newUser.provider_profile_id = providerId;
 
-      // إنشاء مستند مبدئي للفني
+      // إنشاء مستند مبدئي للفني متوافق مع الداتابيز
       await pool.query(
         `
-        INSERT INTO provider_documents (provider_id, file_url)
-        VALUES ($1, $2);
+        INSERT INTO provider_documents (provider_id, doc_type, file_url)
+        VALUES ($1, $2, $3);
         `,
-        [providerId, 'pending_upload']
+        [providerId, 'initial', 'pending_upload']
       );
     }
 
@@ -119,15 +119,13 @@ export const register = async (req, res, next) => {
     });
 
   } catch (err) {
-    console.error("Register Error:", err.message);
-
-    if (err.code === '23505') {
-      return res.status(400).json({
-        success: false,
-        message: 'البريد الإلكتروني أو رقم الهاتف مسجل بالفعل.'
-      });
-    }
-    next(err);
+    // تعديل الـ catch لإظهار الحقيقة كاملة في الـ Terminal وفي الـ Response داخل Thunder Client
+    console.error("❌ الخطأ الحقيقي في الداتابيز هو:", err);
+    return res.status(500).json({ 
+      success: false, 
+      realErrorDetail: err.detail || 'لا توجد تفاصيل إضافية',
+      message: err.message 
+    });
   }
 };
 
@@ -353,7 +351,7 @@ export const getProviderProfile = async (req, res, next) => {
         u.phone,
         u.governorate,
         u.role,
-        pp.id AS provider_profile_id,
+        pp.user_id AS provider_profile_id,
         pp.specialty,
         pp.bio,
         pp.experience_years,
@@ -381,6 +379,98 @@ export const getProviderProfile = async (req, res, next) => {
 
   } catch (err) {
     console.error("Get Provider Profile Error:", err.message);
+    next(err);
+  }
+};
+
+// =========================================
+// 7. دالة رفع وثائق الفني (Upload Documents)
+// =========================================
+export const uploadProviderDocument = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { file_url } = req.body;
+
+    if (!file_url) {
+      return res.status(400).json({
+        success: false,
+        message: 'الرجاء إرسال رابط الملف أو الوثيقة'
+      });
+    }
+
+    const providerResult = await pool.query(
+      'SELECT user_id FROM provider_profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    if (providerResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'لم يتم العثور على بروفايل فني لهذا المستخدم'
+      });
+    }
+
+    const providerId = providerResult.rows[0].user_id;
+
+    await pool.query(
+      `
+      UPDATE provider_documents
+      SET file_url = $1, uploaded_at = CURRENT_TIMESTAMP
+      WHERE provider_id = $2;
+      `,
+      [file_url, providerId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'تم رفع الوثائق بنجاح وفي انتظار مراجعة الأدمن 📄'
+    });
+
+  } catch (err) {
+    console.error("Upload Document Error:", err.message);
+    next(err);
+  }
+};
+
+// =========================================
+// 8. دالة تفعيل/توثيق الفني من قبل الأدمن (Verify Provider)
+// =========================================
+export const verifyProvider = async (req, res, next) => {
+  try {
+    const { provider_id, is_verified } = req.body;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'غير مصرح لك بالقيام بهذا الإجراء، هذا الأمر خاص بالأدمن فقط'
+      });
+    }
+
+    const updatedProvider = await pool.query(
+      `
+      UPDATE provider_profiles
+      SET is_verified = $1
+      WHERE user_id = $2
+      RETURNING user_id, is_verified;
+      `,
+      [is_verified, provider_id]
+    );
+
+    if (updatedProvider.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'لم يتم العثور على بروفايل الفني المطلوب'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: is_verified ? 'تم توثيق حساب الفني بنجاح ✅' : 'تم إلغاء توثيق حساب الفني',
+      data: updatedProvider.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Verify Provider Error:", err.message);
     next(err);
   }
 };
