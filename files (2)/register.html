@@ -6,6 +6,7 @@
   <title>FIXORA — إنشاء حساب</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/register.css" />
+  <link rel="stylesheet" href="css/fxr-navbar.css" />
 </head>
 <body>
 
@@ -19,7 +20,7 @@
       <span></span>
     </button>
     <a href="index.html" class="fxr-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon">
       <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
     </a>
   </div>
@@ -188,7 +189,6 @@
         <div class="fxr-form-group">
           <label class="fxr-label">المحافظة</label>
           <select class="fxr-select" id="u-gov" title="المحافظة">
-         select class="fxr-form-select" id="governorate">
                 <option value="Amman">عمّان</option>
                 <option value="Irbid">إربد</option>
                 <option value="Zarqa">الزرقاء</option>
@@ -196,11 +196,12 @@
                 <option value="Salat">السلط</option>
                 <option value="Mafraq">المفرق</option>
                 <option value="Karak">الكرك</option>
-                <option value="Ma''an">معان</option>
+                <option value="Ma'an">معان</option>
                 <option value="Tafileh">الطفيلة</option>
                 <option value="Ajloun">عجلون</option>
                 <option value="Jerash">جرش</option>
-                <option value=Madaba">مادبا</option> </select>
+                <option value="Madaba">مادبا</option>
+          </select>
           <span class="fxr-error-msg" id="err-gov">الرجاء اختيار المحافظة</span>
         </div>
 
@@ -325,6 +326,13 @@
             <span class="fxr-input-icon fxr-clickable" id="p-eye" onclick='FXR.togglePass("p-pass","p-eye")'>&#128065;</span>
             <input class="fxr-input" id="p-pass" type="password" placeholder="8 أحرف على الأقل" />
           </div>
+          <span class="fxr-error-msg" id="err-p-pass">كلمة المرور يجب أن تكون 8 أحرف على الأقل</span>
+        </div>
+
+        <div class="fxr-form-group">
+          <label class="fxr-label">تأكيد كلمة المرور</label>
+          <input class="fxr-input" id="p-pass2" type="password" placeholder="أعد كتابة كلمة المرور" />
+          <span class="fxr-error-msg" id="err-p-pass2">كلمتا المرور غير متطابقتين</span>
         </div>
 
         <div class="fxr-check-row">
@@ -343,10 +351,6 @@
           <label class="fxr-label">تخصصك الرئيسي</label>
           <select class="fxr-select" id="p-spec" title="تخصصك الرئيسي">
             <option value="">— اختر تخصصك —</option>
-            <option>تكييف وتبريد</option><option>كهرباء منزلية</option>
-            <option>سباكة</option><option>نجارة</option><option>دهانات</option>
-            <option>أجهزة منزلية</option><option>تنظيف</option>
-            <option>بناء وترميم</option><option>أخرى</option>
           </select>
         </div>
 
@@ -371,47 +375,18 @@
                 <option value="Salat">السلط</option>
                 <option value="Mafraq">المفرق</option>
                 <option value="Karak">الكرك</option>
-                <option value="Ma''an">معان</option>
+                <option value="Ma'an">معان</option>
                 <option value="Tafileh">الطفيلة</option>
                 <option value="Ajloun">عجلون</option>
                 <option value="Jerash">جرش</option>
-                <option value=Madaba">مادبا</option>
+                <option value="Madaba">مادبا</option>
                  </select>
         </div>
 
         <div class="fxr-form-group">
-          <label class="fxr-label">المناطق التي تخدمها</label>
-          <input class="fxr-input" id="p-areas" placeholder="مثال: الشميساني، عبدون، الجبيهة" />
-          <p class="fxr-input-hint">افصل بين المناطق بفاصلة</p>
-        </div>
-
-        <div class="fxr-form-group">
-          <label class="fxr-label">أيام عملك</label>
-          <div class="fxr-days-grid">
-            <button class="fxr-day-btn fxr-day-off" type="button" onclick="FXR.toggleDay(this)">الجمعة</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">السبت</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">الأحد</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">الاثنين</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">الثلاثاء</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">الأربعاء</button>
-            <button class="fxr-day-btn fxr-day-on"  type="button" onclick="FXR.toggleDay(this)">الخميس</button>
-          </div>
-          <p class="fxr-input-hint">اضغط على اليوم لتفعيله أو تعطيله</p>
-        </div>
-
-        <div class="row g-2 mb-1">
-          <div class="col-6">
-            <div class="fxr-form-group mb-0">
-              <label class="fxr-label">وقت البداية</label>
-              <input class="fxr-input" id="p-from" type="time" value="08:00" title="وقت البداية" />
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="fxr-form-group mb-0">
-              <label class="fxr-label">وقت النهاية</label>
-              <input class="fxr-input" id="p-to" type="time" value="20:00" title="وقت النهاية" />
-            </div>
-          </div>
+          <label class="fxr-label">أين تقدّم الخدمة؟ (المناطق / الألوية)</label>
+          <input class="fxr-input" id="p-areas" placeholder="مثال: لواء بني كنانة، لواء قصبة إربد" />
+          <p class="fxr-input-hint">اكتب الألوية أو المناطق التي تعمل فيها فقط — تظهر في ملفك الشخصي ولا تُستخدم في البحث. افصل بفاصلة.</p>
         </div>
 
         <div class="d-flex gap-2">
@@ -424,10 +399,6 @@
       <div class="fxr-step-panel" id="prov-step3">
         <h3 class="fxr-step-heading">&#128206; المستندات والتحقق</h3>
         <p class="fxr-info-text">لضمان موثوقية الحرفيين على المنصة</p>
-
-        <div class="fxr-info-box">
-          &#8505;&#65039; سيتم مراجعة حسابك من قبل فريق FIXORA خلال 24–48 ساعة.
-        </div>
 
         <div class="fxr-form-group">
           <label class="fxr-label">&#127891; شهادة أو ترخيص مهني <span class="fxr-small-text fxr-muted-text">(اختياري)</span></label>
@@ -457,25 +428,13 @@
           <label class="fxr-label">&#9997;&#65039; نبذة شخصية <span class="fxr-small-text fxr-muted-text">(اختياري)</span></label>
           <textarea class="fxr-input fxr-textarea" id="p-bio" rows="3"
             placeholder="اكتب نبذة مختصرة عن نفسك وخبراتك..."></textarea>
-          <p class="fxr-input-hint">ستظهر في بروفايلك العام</p>
+          <p class="fxr-input-hint">ستظهر في حسابك العام</p>
         </div>
 
         <div class="d-flex gap-2">
           <button class="fxr-btn-back" onclick="FXR.nextStep(2)">← رجوع</button>
           <button class="fxr-btn-primary" onclick="FXR.submitProvider()">إرسال الطلب ✓</button>
         </div>
-      </div>
-
-      <!-- نجاح الحرفي -->
-      <div class="fxr-success-screen" id="prov-success">
-        <div class="fxr-success-icon">&#127881;</div>
-        <p class="fxr-success-title">تم إرسال طلبك!</p>
-        <p class="fxr-success-sub">شكراً لانضمامك لـ FIXORA الأردن.</p>
-        <p class="fxr-success-sub">سيتم مراجعة حسابك خلال</p>
-        <p class="fxr-success-timer">24 – 48 ساعة &#9201;&#65039;</p>
-        <p class="fxr-success-sub fxr-small-sub">سنُرسل إشعاراً على جوالك وبريدك الإلكتروني.</p>
-        <br/>
-        <button class="fxr-btn-primary" onclick="FXR.goHome()">العودة للرئيسية</button>
       </div>
 
     </div>
@@ -495,6 +454,12 @@
 </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+  <script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
   <script src="js/register.js"></script>
 </body>
 </html>

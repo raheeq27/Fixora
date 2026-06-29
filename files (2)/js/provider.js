@@ -1,612 +1,28 @@
 /**
- * FIXORA — booking.js
- * JavaScript الخاص بصفحة حجز الخدمة - مع استقبال معرف الحرفي من الرابط
+ * FIXORA — بروفايل الحرفي (بيانات حقيقية من API)
  */
-
 'use strict';
 
-// ========================================
-// PROVIDER DATA (يتم جلبها حسب ID من الرابط)
-// ========================================
-const fxrProvidersDB = {
-  1: {
-    id: 1,
-    name: 'محمد أبو خالد',
-    specialty: 'تقني تكييف وأجهزة منزلية',
-    rating: 4.9,
-    avatar: '👨‍🔧',
-    priceMin: 15,
-    priceMax: 30
-  },
-  2: {
-    id: 2,
-    name: 'خالد النابلسي',
-    specialty: 'كهرباء منزلية',
-    rating: 4.7,
-    avatar: '👨‍🔧',
-    priceMin: 10,
-    priceMax: 25
-  },
-  3: {
-    id: 3,
-    name: 'يوسف الحوراني',
-    specialty: 'سباكة وصرف صحي',
-    rating: 4.6,
-    avatar: '👷',
-    priceMin: 12,
-    priceMax: 35
-  }
-};
-
-// ========================================
-// STATE
-// ========================================
-let fxrProvider = null;
-let fxrBookingState = {
-  step: 1,
-  serviceType: '',
-  problemDescription: '',
-  urgency: 'normal',
-  selectedDate: null,
-  selectedDay: null,
-  selectedDayName: null,
-  selectedTime: null,
-  locationType: 'home',
-  governorate: 'عمّان',
-  area: '',
-  addressDetail: '',
-  landmark: '',
-  additionalNotes: '',
-  customerName: '',
-  customerPhone: '',
-  customerEmail: '',
-  paymentMethod: 'cash'
-};
-
-// ========================================
-// PRICE MAPPING
-// ========================================
-const fxrPriceMapping = {
-  'تصليح تكييف سبليت': { min: 15, max: 25 },
-  'تصليح تكييف مركزي': { min: 25, max: 40 },
-  'شحن فريون': { min: 10, max: 20 },
-  'صيانة دورية': { min: 12, max: 20 },
-  'تنظيف مكيفات': { min: 8, max: 15 },
-  'تصليح غسالة': { min: 12, max: 25 },
-  'تصليح ثلاجة': { min: 15, max: 30 },
-  'تصليح سخان مياه': { min: 10, max: 20 }
-};
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
-function fxrShowToast(message) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add('show');
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2600);
-}
-
-function fxrFormatPrice(min, max) {
-  return `${min} - ${max} دينار أردني`;
-}
-
-function fxrGetEstimatedPrice() {
-  if (!fxrBookingState.serviceType || !fxrProvider) return '—';
-  const price = fxrPriceMapping[fxrBookingState.serviceType];
-  if (!price) return '—';
-  if (fxrBookingState.urgency === 'emergency') {
-    return fxrFormatPrice(price.min + 10, price.max + 15);
-  }
-  if (fxrBookingState.urgency === 'urgent') {
-    return fxrFormatPrice(price.min + 5, price.max + 8);
-  }
-  return fxrFormatPrice(price.min, price.max);
-}
-
-// ========================================
-// STEP NAVIGATION
-// ========================================
-function fxrUpdateStepsUI() {
-  for (let i = 1; i <= 3; i++) {
-    const step = document.querySelector(`.fxr-step[data-step="${i}"]`);
-    const content = document.getElementById(`step${i}`);
-    if (step) {
-      if (i < fxrBookingState.step) {
-        step.classList.add('completed');
-      } else {
-        step.classList.remove('completed');
-      }
-      if (i === fxrBookingState.step) {
-        step.classList.add('active');
-      } else {
-        step.classList.remove('active');
-      }
-    }
-    if (content) {
-      if (i === fxrBookingState.step) {
-        content.classList.add('active');
-      } else {
-        content.classList.remove('active');
-      }
-    }
-  }
-}
-
-function fxrNextStep(step) {
-  // Validation for step 1
-  if (step === 2) {
-    if (!fxrBookingState.serviceType) {
-      fxrShowToast('❌ الرجاء اختيار نوع الخدمة');
-      return;
-    }
-    if (!fxrBookingState.problemDescription) {
-      fxrShowToast('❌ الرجاء كتابة وصف المشكلة');
-      return;
-    }
-  }
-  
-  // Validation for step 2
-  if (step === 3) {
-    if (!fxrBookingState.selectedDate) {
-      fxrShowToast('❌ الرجاء اختيار تاريخ الخدمة');
-      return;
-    }
-    if (!fxrBookingState.selectedTime) {
-      fxrShowToast('❌ الرجاء اختيار الوقت المناسب');
-      return;
-    }
-    if (!fxrBookingState.area || !fxrBookingState.addressDetail) {
-      fxrShowToast('❌ الرجاء إدخال العنوان بالكامل');
-      return;
-    }
-    
-    // Update order summary before showing step 3
-    fxrUpdateOrderSummary();
-  }
-  
-  fxrBookingState.step = step;
-  fxrUpdateStepsUI();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function fxrPrevStep(step) {
-  fxrBookingState.step = step;
-  fxrUpdateStepsUI();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ========================================
-// STEP 1 FUNCTIONS
-// ========================================
-function fxrUpdateServiceDetails() {
-  const serviceSelect = document.getElementById('serviceType');
-  fxrBookingState.serviceType = serviceSelect.value;
-  
-  const priceEl = document.getElementById('estimatedPrice');
-  if (priceEl) {
-    priceEl.textContent = fxrGetEstimatedPrice();
-  }
-}
-
-function fxrUpdateProblemDescription() {
-  fxrBookingState.problemDescription = document.getElementById('problemDescription').value;
-}
-
-function fxrUpdateUrgency() {
-  const radios = document.querySelectorAll('input[name="urgency"]');
-  for (const radio of radios) {
-    if (radio.checked) {
-      fxrBookingState.urgency = radio.value;
-      break;
-    }
-  }
-  const priceEl = document.getElementById('estimatedPrice');
-  if (priceEl) {
-    priceEl.textContent = fxrGetEstimatedPrice();
-  }
-}
-
-// ========================================
-// STEP 2 FUNCTIONS - DATE & TIME
-// ========================================
-function fxrGenerateDates() {
-  const dateGrid = document.getElementById('dateGrid');
-  if (!dateGrid) return;
-  
-  const today = new Date();
-  const dates = [];
-  
-  for (let i = 1; i <= 12; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    dates.push(date);
-  }
-  
-  dateGrid.innerHTML = dates.map(date => {
-    const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const dayName = dayNames[date.getDay()];
-    const dayNumber = date.getDate();
-    const month = date.getMonth() + 1;
-    const dateStr = `${date.getFullYear()}-${month}-${dayNumber}`;
-    const isSelected = fxrBookingState.selectedDate === dateStr;
-    
-    return `
-      <div class="fxr-date-card ${isSelected ? 'selected' : ''}" onclick="fxrSelectDate('${dateStr}', ${dayNumber}, '${dayName}')">
-        <div class="fxr-date-day">${dayName}</div>
-        <div class="fxr-date-number">${dayNumber}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function fxrSelectDate(dateStr, dayNumber, dayName) {
-  fxrBookingState.selectedDate = dateStr;
-  fxrBookingState.selectedDay = dayNumber;
-  fxrBookingState.selectedDayName = dayName;
-  
-  // Update UI
-  document.querySelectorAll('.fxr-date-card').forEach(card => {
-    card.classList.remove('selected');
-  });
-  event.target.closest('.fxr-date-card').classList.add('selected');
-  
-  // Show time selection
-  const timeGroup = document.getElementById('timeGroup');
-  if (timeGroup) timeGroup.style.display = 'block';
-  
-  fxrGenerateTimes();
-}
-
-function fxrGenerateTimes() {
-  const timeGrid = document.getElementById('timeGrid');
-  if (!timeGrid) return;
-  
-  const times = ['9:00 ص', '10:00 ص', '11:00 ص', '12:00 م', '1:00 م', '2:00 م', '3:00 م', '4:00 م', '5:00 م', '6:00 م'];
-  const isFriday = fxrBookingState.selectedDayName === 'الجمعة';
-  
-  timeGrid.innerHTML = times.map(time => {
-    let disabled = false;
-    if (isFriday) disabled = true;
-    if (time === '12:00 م') disabled = true;
-    
-    const isSelected = fxrBookingState.selectedTime === time;
-    
-    return `
-      <div class="fxr-time-card ${disabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}" 
-           onclick="${disabled ? '' : `fxrSelectTime('${time}')`}">
-        ${time}
-      </div>
-    `;
-  }).join('');
-}
-
-function fxrSelectTime(time) {
-  fxrBookingState.selectedTime = time;
-  
-  document.querySelectorAll('.fxr-time-card').forEach(card => {
-    card.classList.remove('selected');
-  });
-  event.target.classList.add('selected');
-}
-
-// ========================================
-// STEP 2 FUNCTIONS - LOCATION
-// ========================================
-function fxrToggleLocationForm() {
-  const radios = document.querySelectorAll('input[name="locationType"]');
-  for (const radio of radios) {
-    if (radio.checked) {
-      fxrBookingState.locationType = radio.value;
-      break;
-    }
-  }
-  
-  const addressForm = document.getElementById('addressForm');
-  if (addressForm) addressForm.style.display = 'block';
-}
-
-function fxrUpdateAddress() {
-  fxrBookingState.governorate = document.getElementById('governorate').value;
-  fxrBookingState.area = document.getElementById('area').value;
-  fxrBookingState.addressDetail = document.getElementById('addressDetail').value;
-  fxrBookingState.landmark = document.getElementById('landmark').value;
-  fxrBookingState.additionalNotes = document.getElementById('additionalNotes').value;
-}
-
-// ========================================
-// STEP 3 FUNCTIONS
-// ========================================
-function fxrUpdateOrderSummary() {
-  const summaryEl = document.getElementById('orderSummary');
-  if (!summaryEl || !fxrProvider) return;
-  
-  const fullAddress = `${fxrBookingState.governorate}، ${fxrBookingState.area}، ${fxrBookingState.addressDetail}`;
-  const urgencyText = {
-    'normal': 'عادي',
-    'urgent': 'مستعجل',
-    'emergency': 'طوارئ'
-  };
-  
-  summaryEl.innerHTML = `
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">الحرفي</span>
-      <span class="fxr-summary-value">${fxrProvider.name}</span>
-    </div>
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">نوع الخدمة</span>
-      <span class="fxr-summary-value">${fxrBookingState.serviceType}</span>
-    </div>
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">وصف المشكلة</span>
-      <span class="fxr-summary-value">${fxrBookingState.problemDescription.substring(0, 60)}${fxrBookingState.problemDescription.length > 60 ? '...' : ''}</span>
-    </div>
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">درجة الإلحاح</span>
-      <span class="fxr-summary-value">${urgencyText[fxrBookingState.urgency]}</span>
-    </div>
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">تاريخ ووقت الخدمة</span>
-      <span class="fxr-summary-value">${fxrBookingState.selectedDayName} ${fxrBookingState.selectedDay} — ${fxrBookingState.selectedTime}</span>
-    </div>
-    <div class="fxr-summary-item">
-      <span class="fxr-summary-label">موقع الخدمة</span>
-      <span class="fxr-summary-value">${fullAddress}</span>
-    </div>
-    <div class="fxr-summary-item fxr-summary-total">
-      <span class="fxr-summary-label">السعر التقريبي</span>
-      <span class="fxr-summary-value">${fxrGetEstimatedPrice()}</span>
-    </div>
-  `;
-}
-
-function fxrUpdateCustomerInfo() {
-  fxrBookingState.customerName = document.getElementById('customerName').value;
-  fxrBookingState.customerPhone = document.getElementById('customerPhone').value;
-  fxrBookingState.customerEmail = document.getElementById('customerEmail').value;
-}
-
-function fxrUpdatePaymentMethod() {
-  const radios = document.querySelectorAll('input[name="payment"]');
-  for (const radio of radios) {
-    if (radio.checked) {
-      fxrBookingState.paymentMethod = radio.value;
-      break;
-    }
-  }
-}
-
-function fxrToggleConfirmBtn() {
-  const agreeCheckbox = document.getElementById('agreeTerms');
-  const confirmBtn = document.getElementById('confirmBtn');
-  if (confirmBtn) {
-    confirmBtn.disabled = !agreeCheckbox.checked;
-  }
-}
-
-function fxrConfirmBooking() {
-  fxrUpdateCustomerInfo();
-  fxrUpdatePaymentMethod();
-  
-  // Validate customer info
-  if (!fxrBookingState.customerName) {
-    fxrShowToast('❌ الرجاء إدخال الاسم الكامل');
-    return;
-  }
-  if (!fxrBookingState.customerPhone) {
-    fxrShowToast('❌ الرجاء إدخال رقم الجوال');
-    return;
-  }
-  if (!fxrBookingState.customerPhone.match(/07[0-9]{8}/)) {
-    fxrShowToast('❌ الرجاء إدخال رقم جوال أردني صحيح (07xxxxxxxx)');
-    return;
-  }
-  
-  // Save booking to localStorage (simulate)
-  const booking = {
-    id: Date.now(),
-    providerId: fxrProvider.id,
-    provider: fxrProvider,
-    ...fxrBookingState,
-    bookingDate: new Date().toISOString(),
-    status: 'pending'
-  };
-  
-  const bookings = JSON.parse(localStorage.getItem('fxrBookings') || '[]');
-  bookings.push(booking);
-  localStorage.setItem('fxrBookings', JSON.stringify(bookings));
-  
-  fxrShowToast('✅ تم تأكيد حجزك بنجاح! سيتم إشعارك قريباً');
-  
-  // Redirect to user dashboard after 2 seconds
-  setTimeout(() => {
-    window.location.href = 'user-dashboard.html';
-  }, 2000);
-}
-
-// ========================================
-// INITIALIZE PROVIDER INFO FROM URL
-// ========================================
-function fxrInitProviderInfo() {
-  // Get provider ID from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const providerId = urlParams.get('id');
-  
-  if (providerId && fxrProvidersDB[providerId]) {
-    fxrProvider = fxrProvidersDB[providerId];
-  } else {
-    // Default to first provider if ID not found
-    fxrProvider = fxrProvidersDB[1];
-  }
-  
-  // Update UI with provider info
-  const avatarEl = document.getElementById('providerAvatar');
-  const nameEl = document.getElementById('providerName');
-  const specialtyEl = document.getElementById('providerSpecialty');
-  const ratingEl = document.getElementById('providerRating');
-  
-  if (avatarEl) avatarEl.textContent = fxrProvider.avatar;
-  if (nameEl) nameEl.textContent = fxrProvider.name;
-  if (specialtyEl) specialtyEl.textContent = `🔧 ${fxrProvider.specialty}`;
-  if (ratingEl) ratingEl.textContent = `★★★★★ ${fxrProvider.rating}`;
-}
-
-// ========================================
-// EVENT LISTENERS
-// ========================================
-function fxrSetupEventListeners() {
-  // Step 1
-  const serviceSelect = document.getElementById('serviceType');
-  if (serviceSelect) serviceSelect.addEventListener('change', fxrUpdateServiceDetails);
-  
-  const problemDesc = document.getElementById('problemDescription');
-  if (problemDesc) problemDesc.addEventListener('input', fxrUpdateProblemDescription);
-  
-  const urgencyRadios = document.querySelectorAll('input[name="urgency"]');
-  urgencyRadios.forEach(radio => radio.addEventListener('change', fxrUpdateUrgency));
-  
-  // Step 2
-  const governorateSelect = document.getElementById('governorate');
-  if (governorateSelect) governorateSelect.addEventListener('change', fxrUpdateAddress);
-  
-  const areaInput = document.getElementById('area');
-  if (areaInput) areaInput.addEventListener('input', fxrUpdateAddress);
-  
-  const addressDetailInput = document.getElementById('addressDetail');
-  if (addressDetailInput) addressDetailInput.addEventListener('input', fxrUpdateAddress);
-  
-  const landmarkInput = document.getElementById('landmark');
-  if (landmarkInput) landmarkInput.addEventListener('input', fxrUpdateAddress);
-  
-  const notesInput = document.getElementById('additionalNotes');
-  if (notesInput) notesInput.addEventListener('input', fxrUpdateAddress);
-  
-  const locationRadios = document.querySelectorAll('input[name="locationType"]');
-  locationRadios.forEach(radio => radio.addEventListener('change', fxrToggleLocationForm));
-  
-  // Step 3
-  const customerNameInput = document.getElementById('customerName');
-  if (customerNameInput) customerNameInput.addEventListener('input', fxrUpdateCustomerInfo);
-  
-  const customerPhoneInput = document.getElementById('customerPhone');
-  if (customerPhoneInput) customerPhoneInput.addEventListener('input', fxrUpdateCustomerInfo);
-  
-  const customerEmailInput = document.getElementById('customerEmail');
-  if (customerEmailInput) customerEmailInput.addEventListener('input', fxrUpdateCustomerInfo);
-  
-  const paymentRadios = document.querySelectorAll('input[name="payment"]');
-  paymentRadios.forEach(radio => radio.addEventListener('change', fxrUpdatePaymentMethod));
-  
-  const agreeCheckbox = document.getElementById('agreeTerms');
-  if (agreeCheckbox) agreeCheckbox.addEventListener('change', fxrToggleConfirmBtn);
-}
-
-// ========================================
-// INITIALIZE
-// ========================================
-function fxrInit() {
-  fxrInitProviderInfo();
-  fxrGenerateDates();
-  fxrSetupEventListeners();
-  
-  // Set initial urgency
-  fxrBookingState.urgency = 'normal';
-}
-/**
- * FIXORA — provider.js
- * JavaScript الخاص بصفحة بروفايل الحرفي
- */
-
-'use strict';
-
-// ========================================
-// DATA - معلومات الحرفي (Mock Data)
-// ========================================
-const fxrProviderData = {
-  id: 1,
-  name: 'محمد أحمد أبو خالد',
-  specialty: 'تقني تكييف وأجهزة منزلية',
-  rating: 4.9,
-  reviewsCount: 112,
-  governorate: 'عمّان',
-  areas: ['الشميساني', 'عبدون', 'الجبيهة', 'الدوار السابع', 'مرج الحمام', 'خلدا', 'الرابية', 'تلاع العلي'],
-  priceMin: 15,
-  priceMax: 30,
-  phone: '079 1234 567',
-  email: 'mohammad.abukhaled@fixora.com',
-  avatar: '👨‍🔧',
-  services: [
-    'تصليح تكييفات سبليت',
-    'تصليح تكييفات مركزية',
-    'تصليح تكييفات شباك',
-    'تصليح غسالات',
-    'تصليح ثلاجات',
-    'تصليح سخانات مياه',
-    'شحن فريون',
-    'صيانة دورية'
-  ],
-  schedule: {
-    'الأحد': { hours: '8:00 ص – 8:00 م', available: true },
-    'الإثنين': { hours: '8:00 ص – 8:00 م', available: true },
-    'الثلاثاء': { hours: '8:00 ص – 8:00 م', available: true },
-    'الأربعاء': { hours: '8:00 ص – 8:00 م', available: true },
-    'الخميس': { hours: '8:00 ص – 8:00 م', available: true },
-    'الجمعة': { hours: '——', available: false },
-    'السبت': { hours: '9:00 ص – 4:00 م', available: true }
-  },
-  // بيانات التقييمات
-  reviews: [
-    { id: 1, name: 'أحمد الكيلاني', rating: 5, date: '15 مارس 2025', text: 'خدمة ممتازة وسريعة، أسعاره معقولة جداً. جاء في الوقت المحدد وأصلح المشكلة بكفاءة عالية. أنصح به بشدة.' },
-    { id: 2, name: 'رنا الشرايري', rating: 4, date: '10 مارس 2025', text: 'جاء في الوقت المحدد وأصلح المشكلة. التعامل محترم والخدمة جيدة. السعر مناسب مقارنة بغيره.' },
-    { id: 3, name: 'سامر البطاينة', rating: 5, date: '5 مارس 2025', text: 'ممتاز محترم وفاهم بشغله. شكراً لكم على هذا الحرفي المتميز. سأتعامل معه مرة أخرى بالتأكيد.' },
-    { id: 4, name: 'ليلى عبابنة', rating: 5, date: '28 فبراير 2025', text: 'الله يبارك فيه، أصلح التكييف بسرعة وخبرة. أنصح الجميع بالتعامل معه. أسعاره مناسبة جداً.' },
-    { id: 5, name: 'محمود السعدي', rating: 4, date: '20 فبراير 2025', text: 'جيد جداً، أنجز العمل في الوقت المتفق عليه. السعر مناسب.' },
-    { id: 6, name: 'ناديا الخالدي', rating: 5, date: '15 فبراير 2025', text: 'أفضل حرفي تعاملت معه. محترم ومتقن لعمله.' }
-  ],
-  // إحصائيات التقييمات
-  ratingStats: {
-    5: 78,
-    4: 15,
-    3: 5,
-    2: 1,
-    1: 1
-  },
-  // معرض الأعمال
-  gallery: [
-    { id: 1, icon: '❄️', caption: 'تصليح تكييف سبليت', color: 'rgba(145,189,209,.15)' },
-    { id: 2, icon: '🔧', caption: 'صيانة مكيف مركزي', color: 'rgba(240,122,38,.1)' },
-    { id: 3, icon: '⚙️', caption: 'تركيب وحدة خارجية', color: 'rgba(40,200,100,.08)' },
-    { id: 4, icon: '🧊', caption: 'شحن فريون', color: 'rgba(145,189,209,.12)' },
-    { id: 5, icon: '🌀', caption: 'تنظيف مكيفات', color: 'rgba(240,122,38,.08)' },
-    { id: 6, icon: '📺', caption: 'تصليح شاشات', color: 'rgba(40,200,100,.1)' },
-    { id: 7, icon: '🔌', caption: 'تصليح أجهزة كهربائية', color: 'rgba(145,189,209,.15)' },
-    { id: 8, icon: '💧', caption: 'تصليح سخانات مياه', color: 'rgba(240,122,38,.1)' },
-    { id: 9, icon: '🧹', caption: 'تنظيف فلتر المكيف', color: 'rgba(40,200,100,.08)' }
-  ]
-};
-
-// ========================================
-// STATE
-// ========================================
+const api = window.FixoraAPI;
+let fxrProviderData = null;
+let fxrCurrentProviderId = null;
 let fxrIsFavorite = false;
-let fxrCurrentProviderId = 1;
 
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
+const GOV_AR = {
+  Amman: 'عمّان', Irbid: 'إربد', Zarqa: 'الزرقاء', Aqaba: 'العقبة',
+  Balqa: 'البلقاء', Mafraq: 'المفرق', Jerash: 'جرش', Ajloun: 'عجلون',
+  Madaba: 'مادبا', Karak: 'الكرك', Tafileh: 'الطفيلة', "Ma'an": 'معان'
+};
+
+const DAY_AR = {
+  sun: 'الأحد', mon: 'الإثنين', tue: 'الثلاثاء', wed: 'الأربعاء',
+  thu: 'الخميس', fri: 'الجمعة', sat: 'السبت'
+};
+
 function fxrBuildStars(rating) {
-  const full = Math.floor(rating);
-  const half = rating % 1 >= 0.5 ? 1 : 0;
-  const empty = 5 - full - half;
-  
-  let stars = '★'.repeat(full);
-  if (half) stars += '½';
-  stars += '☆'.repeat(empty);
-  
-  return stars;
+  const r = parseFloat(rating) || 0;
+  const full = Math.floor(r);
+  return '★'.repeat(full) + '☆'.repeat(5 - full);
 }
 
 function fxrShowToast(message) {
@@ -614,319 +30,678 @@ function fxrShowToast(message) {
   if (!toast) return;
   toast.textContent = message;
   toast.classList.add('show');
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2600);
+  setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
-// ========================================
-// UPDATE BOOKING BUTTON LINK
-// ========================================
-function fxrUpdateBookingLink() {
+function fxrGetProviderIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id') || params.get('provider_id');
+  return id ? String(id).trim() : null;
+}
+
+function fxrUpdateBookingLink(providerId) {
+  const id = providerId || fxrCurrentProviderId || fxrGetProviderIdFromUrl();
+  if (!id) return;
+
+  fxrCurrentProviderId = id;
+  sessionStorage.setItem('fixora_booking_provider_id', id);
+
   const bookBtn = document.getElementById('bookBtn');
+  const messageBtn = document.getElementById('messageBtn');
+
   if (bookBtn) {
-    bookBtn.href = `booking.html?id=${fxrCurrentProviderId}`;
+    const verified = fxrProviderData?.is_verified !== false;
+    const banned = fxrProviderData?.is_banned === true;
+    if (banned) {
+      bookBtn.removeAttribute('href');
+      bookBtn.setAttribute('aria-disabled', 'true');
+      bookBtn.classList.add('disabled');
+      bookBtn.title = 'هذا الحرفي غير متاح للحجز (تم تعليق حسابه)';
+      bookBtn.textContent = '🚫 غير متاح للحجز';
+    } else if (verified) {
+      bookBtn.href = `booking.html?id=${encodeURIComponent(id)}`;
+      bookBtn.removeAttribute('aria-disabled');
+      bookBtn.classList.remove('disabled');
+      bookBtn.title = '';
+      bookBtn.textContent = '📅 احجز الآن';
+    } else {
+      bookBtn.removeAttribute('href');
+      bookBtn.setAttribute('aria-disabled', 'true');
+      bookBtn.classList.add('disabled');
+      bookBtn.title = 'الحرفي بانتظار اعتماد الإدارة';
+    }
+  }
+  if (messageBtn) {
+    messageBtn.href = `chat.html?providerId=${encodeURIComponent(id)}`;
+    messageBtn.removeAttribute('aria-disabled');
   }
 }
 
-// ========================================
-// RENDER FUNCTIONS
-// ========================================
 function fxrRenderProviderInfo() {
-  const nameEl = document.getElementById('providerName');
-  if (nameEl) nameEl.textContent = fxrProviderData.name;
-  
-  const specialtyEl = document.getElementById('providerSpecialty');
-  if (specialtyEl) specialtyEl.textContent = `🔧 ${fxrProviderData.specialty}`;
-  
-  const starsEl = document.getElementById('starsRating');
-  if (starsEl) starsEl.textContent = fxrBuildStars(fxrProviderData.rating);
-  
-  const ratingValueEl = document.getElementById('ratingValue');
-  if (ratingValueEl) ratingValueEl.textContent = fxrProviderData.rating;
-  
-  const reviewsCountEl = document.getElementById('reviewsCount');
-  if (reviewsCountEl) reviewsCountEl.textContent = `(${fxrProviderData.reviewsCount} تقييم)`;
-  
+  const p = fxrProviderData;
+  if (!p) return;
+
+  const name = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+  const gov = GOV_AR[p.governorate] || p.governorate || '—';
+
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  set('providerName', name || 'حرفي Fixora');
+  set('providerSpecialty', `🔧 ${p.specialty || 'مقدم خدمة'}`);
+  set('starsRating', fxrBuildStars(p.avg_rating));
+  set('ratingValue', parseFloat(p.avg_rating) || 'جديد');
+  set('reviewsCount', `(${p.reviews?.length || 0} تقييم)`);
+
   const avatarEl = document.getElementById('avatarCircle');
-  if (avatarEl) avatarEl.textContent = fxrProviderData.avatar;
-  
+  if (avatarEl) {
+    avatarEl.textContent = p.profile_pic_url
+      ? ''
+      : '🧑‍🔧';
+    if (p.profile_pic_url) {
+      avatarEl.innerHTML = `<img src="${p.profile_pic_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    }
+  }
+
   const locationTagsEl = document.getElementById('locationTags');
   if (locationTagsEl) {
-    locationTagsEl.innerHTML = `
-      <span class="fxr-location-tag">📍 ${fxrProviderData.governorate}</span>
-      ${fxrProviderData.areas.slice(0, 6).map(area => `<span class="fxr-location-tag">🏘️ ${area}</span>`).join('')}
-    `;
+    locationTagsEl.innerHTML = `<span class="fxr-location-tag">📍 ${gov}</span>`;
+    if (p.is_banned) {
+      locationTagsEl.innerHTML += '<span class="fxr-location-tag" style="background:#fdecea;color:#c0392b">🚫 غير متاح للحجز</span>';
+    } else if (p.is_verified) {
+      locationTagsEl.innerHTML += '<span class="fxr-location-tag">✅ موثّق</span>';
+    }
   }
+
+  set('phoneNumber', p.phone || '—');
+  set('email', p.email || '—');
+
+  const bioEl = document.getElementById('providerBio');
+  if (bioEl) bioEl.textContent = p.bio || 'لا توجد نبذة بعد.';
 }
 
 function fxrRenderServices() {
+  const p = fxrProviderData;
+  if (!p) return;
+
   const servicesList = document.getElementById('servicesList');
   if (servicesList) {
-    servicesList.innerHTML = fxrProviderData.services.map(service => 
-      `<span class="fxr-service-tag">${service}</span>`
-    ).join('');
+    const items = (p.services || []).map((s) => s.name_ar);
+    servicesList.innerHTML = items.length
+      ? items.map((s) => `<span class="fxr-service-tag">${s}</span>`).join('')
+      : `<span class="fxr-service-tag">${p.specialty || 'خدمات متنوعة'}</span>`;
   }
-  
+
   const priceRangeEl = document.getElementById('priceRange');
   if (priceRangeEl) {
-    priceRangeEl.innerHTML = `
-      <span class="fxr-price-value">${fxrProviderData.priceMin} - ${fxrProviderData.priceMax} دينار أردني</span>
-      <span class="fxr-price-note">(حسب نوع العطل وقطع الغيار)</span>
-    `;
+    priceRangeEl.innerHTML = '<span class="fxr-price-note">السعر يُحدد بعد معاينة المشكلة</span>';
   }
-  
-  const areasListEl = document.getElementById('areasList');
-  if (areasListEl) {
-    areasListEl.innerHTML = fxrProviderData.areas.map(area => 
-      `<span class="fxr-area-tag">${area}</span>`
-    ).join('');
-  }
-  
-  const phoneEl = document.getElementById('phoneNumber');
-  if (phoneEl) phoneEl.textContent = fxrProviderData.phone;
-  
-  const emailEl = document.getElementById('email');
-  if (emailEl) emailEl.textContent = fxrProviderData.email;
 }
 
-// ========================================
-// RENDER SCHEDULE (ساعات العمل)
-// ========================================
 function fxrRenderSchedule() {
+  const p = fxrProviderData;
   const scheduleTable = document.getElementById('scheduleTable');
-  if (scheduleTable) {
-    scheduleTable.innerHTML = Object.entries(fxrProviderData.schedule).map(([day, data]) => `
-      <div class="fxr-schedule-row">
-        <div class="fxr-schedule-day">${day}</div>
-        <div class="fxr-schedule-hours">${data.hours}</div>
-        <div class="fxr-schedule-status ${data.available ? 'available' : 'closed'}">
-          ${data.available ? 'متاح' : 'إجازة'}
-        </div>
-      </div>
-    `).join('');
+  if (!scheduleTable || !p) return;
+
+  const rows = p.availability || [];
+  if (!rows.length) {
+    scheduleTable.innerHTML = '<p class="text-muted">لم يُحدد جدول عمل بعد.</p>';
+    return;
   }
-  
-  // التقويم الأسبوعي (حالة الحجوزات)
-  const calendarEl = document.getElementById('calendar');
-  if (calendarEl) {
-    const days = [
-      { name: 'سبت', status: 'available', label: 'متاح' },
-      { name: 'أحد', status: 'available', label: 'متاح' },
-      { name: 'اثن', status: 'busy', label: 'محجوز' },
-      { name: 'ثلا', status: 'available', label: 'متاح' },
-      { name: 'أرب', status: 'available', label: 'متاح' },
-      { name: 'خمي', status: 'available', label: 'متاح' },
-      { name: 'جمعة', status: 'closed', label: 'إجازة' }
-    ];
-    
-    calendarEl.innerHTML = days.map(day => `
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">${day.name}</div>
-        <div class="fxr-calendar-status ${day.status}">${day.label}</div>
+
+  scheduleTable.innerHTML = rows.map((row) => `
+    <div class="fxr-schedule-row">
+      <div class="fxr-schedule-day">${DAY_AR[row.day_of_week] || row.day_of_week}</div>
+      <div class="fxr-schedule-hours">${row.start_time} – ${row.end_time}</div>
+      <div class="fxr-schedule-status ${row.is_available ? 'available' : 'closed'}">
+        ${row.is_available ? 'متاح' : 'غير متاح'}
       </div>
-    `).join('');
-  }
+    </div>
+  `).join('');
 }
 
-// ========================================
-// RENDER REVIEWS (التقييمات)
-// ========================================
 function fxrRenderReviews() {
-  // ملخص التقييمات
-  const summaryScore = document.getElementById('summaryScore');
-  if (summaryScore) summaryScore.textContent = fxrProviderData.rating;
-  
-  const summaryStars = document.getElementById('summaryStars');
-  if (summaryStars) summaryStars.textContent = fxrBuildStars(fxrProviderData.rating);
-  
-  const summaryCount = document.getElementById('summaryCount');
-  if (summaryCount) summaryCount.textContent = `بناءً على ${fxrProviderData.reviewsCount} تقييم`;
-  
-  // أشرطة النسبة المئوية
-  const ratingBars = document.getElementById('ratingBars');
-  if (ratingBars) {
-    const stars = [5, 4, 3, 2, 1];
-    ratingBars.innerHTML = stars.map(star => `
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">${star} ★</span>
-        <div class="fxr-bar-bg">
-          <div class="fxr-bar-fill" style="width: ${fxrProviderData.ratingStats[star]}%"></div>
-        </div>
-        <span class="fxr-bar-percent">${fxrProviderData.ratingStats[star]}%</span>
-      </div>
-    `).join('');
-  }
-  
-  // قائمة التقييمات
+  const p = fxrProviderData;
+  if (!p) return;
+
+  const reviews = p.reviews || [];
+  const avg = parseFloat(p.avg_rating) || 0;
+
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  set('summaryScore', avg > 0 ? avg.toFixed(1) : '—');
+  set('summaryStars', fxrBuildStars(avg));
+  set('summaryCount', reviews.length
+    ? `بناءً على ${reviews.length} تقييم`
+    : 'لا توجد تقييمات بعد');
+
+  fxrRenderRatingBars(reviews);
+
   const reviewsList = document.getElementById('reviewsList');
   if (reviewsList) {
-    reviewsList.innerHTML = fxrProviderData.reviews.map(review => `
-      <div class="fxr-review-card">
-        <div class="fxr-review-header">
-          <div class="fxr-reviewer-avatar">${review.name.charAt(0)}</div>
-          <div class="fxr-reviewer-info">
-            <div class="fxr-reviewer-name">${review.name}</div>
-            <div class="fxr-review-stars">${fxrBuildStars(review.rating)}</div>
+    const visible = reviews.slice(0, 3);
+    reviewsList.innerHTML = visible.length
+      ? visible.map((r) => `
+        <div class="fxr-review-card">
+          <div class="fxr-review-header">
+            <div class="fxr-reviewer-avatar">${(r.first_name || 'ع')[0]}</div>
+            <div class="fxr-reviewer-info">
+              <div class="fxr-reviewer-name">${r.first_name || ''} ${r.last_name || ''}</div>
+              <div class="fxr-review-stars">${fxrBuildStars(r.rating)}</div>
+            </div>
+            <div class="fxr-review-date">${new Date(r.created_at).toLocaleDateString('ar-JO')}</div>
           </div>
-          <div class="fxr-review-date">${review.date}</div>
-        </div>
-        <p class="fxr-review-text">${review.text}</p>
-      </div>
-    `).join('');
+          <p class="fxr-review-text">${r.comment || ''}</p>
+        </div>`).join('')
+      : '<p class="text-muted">لا توجد تقييمات بعد.</p>';
+  }
+
+  const showMoreBtn = document.getElementById('showMoreReviews');
+  if (showMoreBtn) {
+    showMoreBtn.style.display = reviews.length > 3 ? 'block' : 'none';
   }
 }
 
-// ========================================
-// RENDER GALLERY (معرض الأعمال)
-// ========================================
+function fxrRenderRatingBars(reviews) {
+  const barsContainer = document.getElementById('ratingBars');
+  if (!barsContainer) return;
+
+  const counts = [0, 0, 0, 0, 0];
+  reviews.forEach((r) => {
+    const star = Math.round(parseFloat(r.rating));
+    if (star >= 1 && star <= 5) counts[star - 1] += 1;
+  });
+  const total = reviews.length;
+
+  barsContainer.innerHTML = [5, 4, 3, 2, 1].map((star) => {
+    const count = counts[star - 1];
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    return `
+      <div class="fxr-rating-bar-item">
+        <span class="fxr-bar-label">${star} ★</span>
+        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: ${pct}%"></div></div>
+        <span class="fxr-bar-percent">${pct}%</span>
+      </div>`;
+  }).join('');
+}
+
 function fxrRenderGallery() {
   const galleryGrid = document.getElementById('galleryGrid');
-  if (galleryGrid) {
-    galleryGrid.innerHTML = fxrProviderData.gallery.map(item => `
-      <div class="fxr-gallery-item" style="background: ${item.color}" onclick="fxrShowGalleryItem('${item.caption}')">
-        <div class="fxr-gallery-icon">${item.icon}</div>
-        <div class="fxr-gallery-caption">${item.caption}</div>
-      </div>
-    `).join('');
+  if (!galleryGrid) return;
+
+  const items = fxrProviderData?.portfolio || [];
+  if (!items.length) {
+    galleryGrid.innerHTML = '<p class="text-muted p-3">لم يُضف الحرفي أعمالاً في المعرض بعد.</p>';
+    return;
+  }
+
+  galleryGrid.innerHTML = items.map((item) => `
+    <div class="fxr-gallery-item">
+      ${item.imageData
+        ? `<img src="${item.imageData}" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:8px 8px 0 0">`
+        : `<div class="fxr-gallery-icon">${item.icon || '🖼️'}</div>`}
+      <div class="fxr-gallery-caption">${item.description || ''}</div>
+    </div>`).join('');
+}
+
+function fxrAreasForDisplay() {
+  const p = fxrProviderData;
+  if (!p) return [];
+  const fromList = Array.isArray(p.service_areas) ? p.service_areas : [];
+  if (fromList.length) return fromList;
+  if (p.serviced_areas_text) {
+    return String(p.serviced_areas_text)
+      .split(/[,،]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function fxrRenderAreas() {
+  const areasList = document.getElementById('areasList');
+  if (!areasList || !fxrProviderData) return;
+
+  const areas = fxrAreasForDisplay();
+  const tags = areas.map((a) => {
+    const label = typeof a === 'string'
+      ? a
+      : (a.district || GOV_AR[a.governorate] || a.governorate || null);
+    return label ? `<span class="fxr-area-tag">${label}</span>` : '';
+  }).filter(Boolean);
+
+  areasList.innerHTML = tags.length
+    ? tags.join('')
+    : '<p class="text-muted" style="margin:0">لم يُحدد الحرفي المناطق التي يقدّم فيها خدمته بعد.</p>';
+}
+
+let fxrReviewsExpanded = false;
+
+function fxrShowMoreReviews() {
+  fxrReviewsExpanded = !fxrReviewsExpanded;
+  const reviews = fxrProviderData?.reviews || [];
+  const reviewsList = document.getElementById('reviewsList');
+  const showMoreBtn = document.getElementById('showMoreReviews');
+  if (!reviewsList) return;
+
+  const visible = fxrReviewsExpanded ? reviews : reviews.slice(0, 3);
+  reviewsList.innerHTML = visible.length
+    ? visible.map((r) => `
+      <div class="fxr-review-card">
+        <div class="fxr-review-header">
+          <div class="fxr-reviewer-avatar">${(r.first_name || 'ع')[0]}</div>
+          <div class="fxr-reviewer-info">
+            <div class="fxr-reviewer-name">${r.first_name || ''} ${r.last_name || ''}</div>
+            <div class="fxr-review-stars">${fxrBuildStars(r.rating)}</div>
+          </div>
+          <div class="fxr-review-date">${new Date(r.created_at).toLocaleDateString('ar-JO')}</div>
+        </div>
+        <p class="fxr-review-text">${r.comment || ''}</p>
+      </div>`).join('')
+    : '<p class="text-muted">لا توجد تقييمات بعد.</p>';
+
+  if (showMoreBtn) {
+    showMoreBtn.textContent = fxrReviewsExpanded
+      ? 'عرض أقل ←'
+      : 'عرض المزيد من التقييمات ←';
   }
 }
 
-// ========================================
-// TAB SWITCHING
-// ========================================
+let fxrReviewsPollTimer = null;
+let fxrLastReviewSignature = '';
+let fxrSelectedRating = 5;
+let fxrRateableBookings = [];
+
+function fxrInitStarPicker() {
+  const picker = document.getElementById('starPicker');
+  if (!picker) return;
+  picker.querySelectorAll('.fxr-star-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      fxrSelectedRating = parseInt(btn.dataset.star, 10);
+      picker.querySelectorAll('.fxr-star-btn').forEach((b) => {
+        const s = parseInt(b.dataset.star, 10);
+        b.textContent = s <= fxrSelectedRating ? '★' : '☆';
+        b.classList.toggle('active', s === fxrSelectedRating);
+      });
+    });
+  });
+}
+
+function fxrFormatBookingOption(b) {
+  const when = b.scheduled_at || b.created_at;
+  const dateStr = when
+    ? new Date(when).toLocaleDateString('ar-JO', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '';
+  return `${b.category_name || 'طلب خدمة'} — ${dateStr}`;
+}
+
+async function fxrLoadRateableBookings() {
+  const card = document.getElementById('rateServiceCard');
+  const loginMsg = document.getElementById('rateLoginMsg');
+  const pickerWrap = document.getElementById('rateBookingPickerWrap');
+  const select = document.getElementById('rateBookingSelect');
+  const hint = document.getElementById('rateServiceHint');
+  const submitBtn = document.getElementById('submitReviewBtn');
+  const starPicker = document.getElementById('starPicker');
+  const comment = document.getElementById('rateCommentInput');
+
+  if (!card) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const justBooked = params.get('booked') === '1';
+
+  const showFormParts = (show) => {
+    [starPicker, comment, submitBtn, hint].forEach((el) => {
+      if (el) el.hidden = !show;
+    });
+    if (pickerWrap) pickerWrap.hidden = !show || (fxrRateableBookings.length <= 1);
+  };
+
+  if (!localStorage.getItem('token')) {
+    card.hidden = false;
+    if (loginMsg) loginMsg.hidden = false;
+    showFormParts(false);
+    if (hint) {
+      hint.hidden = false;
+      hint.textContent = justBooked
+        ? 'تم إرسال طلب الحجز. سجّل الدخول لتتمكن من التقييم بعد إتمام الخدمة.'
+        : 'سجّل الدخول كعميل لتقييم الخدمة بعد إتمام الحجز.';
+    }
+    return;
+  }
+
+  if (loginMsg) loginMsg.hidden = true;
+
+  const role = window.FixoraAccess?.getRole?.();
+  if (role !== 'client') {
+    card.hidden = true;
+    return;
+  }
+
+  try {
+    const res = await api.getRateableBookings(fxrCurrentProviderId);
+    fxrRateableBookings = res.bookings || [];
+
+    // جلب جميع الحجوزات المكتملة (حتى المقيّمة) لإتاحة قسم البلاغ بشكل مستقل
+    let completedBookings = [];
+    try {
+      const cRes = await api.getCompletedBookings(fxrCurrentProviderId);
+      completedBookings = cRes.bookings || [];
+    } catch (_) {
+      completedBookings = fxrRateableBookings.slice();
+    }
+
+    const reportWrap = document.getElementById('secretReportWrap');
+    const reportSelect = document.getElementById('reportBookingSelect');
+
+    const populateReportSelect = () => {
+      if (reportSelect && completedBookings.length) {
+        reportSelect.innerHTML = completedBookings
+          .map((b) => `<option value="${b.id}">${fxrFormatBookingOption(b)}</option>`)
+          .join('');
+      }
+    };
+
+    if (!fxrRateableBookings.length) {
+      if (completedBookings.length) {
+        // لا يوجد حجوزات للتقييم لكن يوجد مكتملة — أظهر قسم البلاغ فقط
+        card.hidden = false;
+        showFormParts(false);
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent = 'لقد قيّمت جميع حجوزاتك مع هذا الحرفي. يمكنك تقديم بلاغ إن لزم.';
+        }
+        if (reportWrap) {
+          reportWrap.hidden = false;
+          populateReportSelect();
+        }
+      } else if (justBooked) {
+        card.hidden = false;
+        showFormParts(false);
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent =
+            'تم إرسال طلب الحجز بنجاح. يمكنك تقييم الحرفي هنا بعد إتمام الخدمة وتحويل الحجز إلى «مكتمل».';
+        }
+      } else {
+        card.hidden = true;
+      }
+      return;
+    }
+
+    card.hidden = false;
+    showFormParts(true);
+    if (reportWrap) {
+      reportWrap.hidden = false;
+      populateReportSelect();
+    }
+    if (hint) {
+      hint.textContent = fxrRateableBookings.length === 1
+        ? 'لديك حجز مكتمل — شاركنا رأيك في الخدمة:'
+        : 'اختر الحجز الذي تريد تقييمه:';
+    }
+
+    if (select) {
+      select.innerHTML = fxrRateableBookings
+        .map((b) => `<option value="${b.id}">${fxrFormatBookingOption(b)}</option>`)
+        .join('');
+    }
+    if (pickerWrap) pickerWrap.hidden = fxrRateableBookings.length <= 1;
+  } catch (_) {
+    card.hidden = !justBooked;
+    if (justBooked && hint) {
+      showFormParts(false);
+      hint.textContent = 'تم إرسال طلب الحجز. يمكنك التقييم بعد إتمام الخدمة.';
+    }
+  }
+}
+async function fxrSubmitProviderReview() {
+  if (!api.requireAuth('client')) return;
+
+  const select = document.getElementById('rateBookingSelect');
+  const bookingId = select?.value || fxrRateableBookings[0]?.id;
+  if (!bookingId) {
+    fxrShowToast('لا يوجد حجز متاح للتقييم');
+    return;
+  }
+
+  const comment = document.getElementById('rateCommentInput')?.value?.trim() || '';
+  const btn = document.getElementById('submitReviewBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    await api.postReview({
+      booking_id: bookingId,
+      rating: fxrSelectedRating,
+      comment
+    });
+    fxrShowToast('شكراً! تم إرسال تقييمك وتحديث التقييمات.');
+    fxrLastReviewSignature = '';
+    document.getElementById('rateCommentInput').value = '';
+    await fxrLoadRateableBookings();
+    await fxrRefreshReviews();
+  } catch (e) {
+    fxrShowToast(e.message || 'تعذر إرسال التقييم');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function fxrSubmitSecretReport() {
+  if (!api.requireAuth('client')) return;
+
+  // \u064a\u0633\u062a\u062e\u062f\u0645 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0645\u0643\u062a\u0645\u0644\u0629 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0627\u0644\u0628\u0644\u0627\u063a (\u0645\u0646\u0641\u0635\u0644\u0629 \u0639\u0646 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0642\u064a\u064a\u0645)
+  const reportSelect = document.getElementById('reportBookingSelect');
+  const rateSelect = document.getElementById('rateBookingSelect');
+  const bookingId = reportSelect?.value || rateSelect?.value || fxrRateableBookings[0]?.id;
+  const reason = document.getElementById('reportReasonInput')?.value?.trim() || '';
+  const confirmed = document.getElementById('reportConfirmCheck')?.checked;
+
+  if (!bookingId) {
+    fxrShowToast('اختر الحجز أولاً');
+    return;
+  }
+  if (!confirmed) {
+    fxrShowToast('يجب تأكيد البلاغ');
+    return;
+  }
+  if (reason.length < 10) {
+    fxrShowToast('اكتب سبب البلاغ (10 أحرف على الأقل)');
+    return;
+  }
+
+  const btn = document.getElementById('submitReportBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    await api.postReport({ booking_id: bookingId, reason });
+    fxrShowToast('تم إرسال البلاغ للإدارة بنجاح — سيصلك إشعار للمسؤول.');
+    document.getElementById('reportReasonInput').value = '';
+    document.getElementById('reportConfirmCheck').checked = false;
+    window.fxrRefreshNotifications?.();
+  } catch (e) {
+    fxrShowToast(e.message || 'تعذر إرسال البلاغ');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function fxrApplyUrlTab() {
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  if (tab === 'reviews') fxrSwitchTab('reviews');
+}
+
+function fxrReviewsSignature(reviews, avg) {
+  const list = reviews || [];
+  return `${avg}|${list.length}|${list[0]?.id || ''}|${list[0]?.created_at || ''}`;
+}
+
+async function fxrRefreshReviews() {
+  if (!fxrCurrentProviderId || !api) return;
+  try {
+    const json = await api.getProviderReviews(fxrCurrentProviderId);
+    const sig = fxrReviewsSignature(json.reviews, json.avg_rating);
+    if (sig === fxrLastReviewSignature && fxrProviderData?.reviews?.length) return;
+    fxrLastReviewSignature = sig;
+
+    if (!fxrProviderData) fxrProviderData = {};
+    fxrProviderData.reviews = json.reviews || [];
+    fxrProviderData.avg_rating = json.avg_rating;
+    fxrRenderProviderInfo();
+    fxrRenderReviews();
+  } catch (_) {
+    /* ignore poll errors */
+  }
+}
+
+function fxrStartReviewsPoll() {
+  if (fxrReviewsPollTimer) clearInterval(fxrReviewsPollTimer);
+  fxrRefreshReviews();
+  fxrReviewsPollTimer = setInterval(fxrRefreshReviews, 8000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') fxrRefreshReviews();
+  });
+}
+
 function fxrSwitchTab(tabId) {
-  // تحديث أزرار التبويب
-  document.querySelectorAll('.fxr-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  const activeTab = document.querySelector(`.fxr-tab[data-tab="${tabId}"]`);
-  if (activeTab) activeTab.classList.add('active');
-  
-  // تحديث محتوى التبويب
-  document.querySelectorAll('.fxr-tab-content').forEach(content => {
-    content.classList.remove('active');
-  });
-  const activeContent = document.getElementById(`${tabId}Tab`);
-  if (activeContent) activeContent.classList.add('active');
+  document.querySelectorAll('.fxr-tab').forEach((t) => t.classList.remove('active'));
+  document.querySelector(`.fxr-tab[data-tab="${tabId}"]`)?.classList.add('active');
+  document.querySelectorAll('.fxr-tab-content').forEach((c) => c.classList.remove('active'));
+  document.getElementById(`${tabId}Tab`)?.classList.add('active');
+  if (tabId === 'reviews') {
+    fxrRefreshReviews();
+    fxrLoadRateableBookings();
+  }
 }
 
-// ========================================
-// ACTION FUNCTIONS
-// ========================================
 function fxrMessageProvider() {
-  fxrShowToast('💬 سيتم فتح نافذة المراسلة مع الحرفي');
+  if (!fxrCurrentProviderId) return;
+  if (!api.requireAuth('client')) return;
+  window.location.href = `chat.html?providerId=${encodeURIComponent(fxrCurrentProviderId)}`;
 }
 
-function fxrToggleFavorite() {
-  fxrIsFavorite = !fxrIsFavorite;
-  const favBtn = document.getElementById('favBtn');
+function fxrUpdateFavoriteButton() {
   const favIcon = document.getElementById('favIcon');
   const favText = document.getElementById('favText');
-  
+  const favBtn = document.getElementById('favBtn');
   if (fxrIsFavorite) {
-    favBtn.classList.add('active');
-    favIcon.textContent = '❤️';
-    favText.textContent = 'تمت الإضافة للمفضلة';
-    fxrShowToast('❤️ تم إضافة الحرفي إلى المفضلة');
-    
-    // حفظ في localStorage
-    const favorites = JSON.parse(localStorage.getItem('fxrFavorites') || '[]');
-    if (!favorites.includes(fxrCurrentProviderId)) {
-      favorites.push(fxrCurrentProviderId);
-      localStorage.setItem('fxrFavorites', JSON.stringify(favorites));
-    }
+    favBtn?.classList.add('active');
+    if (favIcon) favIcon.textContent = '❤️';
+    if (favText) favText.textContent = 'في المفضلة';
   } else {
-    favBtn.classList.remove('active');
-    favIcon.textContent = '🤍';
-    favText.textContent = 'أضف للمفضلة';
-    fxrShowToast('🗑️ تم إزالة الحرفي من المفضلة');
-    
-    // إزالة من localStorage
-    const favorites = JSON.parse(localStorage.getItem('fxrFavorites') || '[]');
-    const index = favorites.indexOf(fxrCurrentProviderId);
-    if (index > -1) {
-      favorites.splice(index, 1);
-      localStorage.setItem('fxrFavorites', JSON.stringify(favorites));
+    favBtn?.classList.remove('active');
+    if (favIcon) favIcon.textContent = '🤍';
+    if (favText) favText.textContent = 'أضف للمفضلة';
+  }
+}
+
+async function fxrLoadFavoriteState() {
+  const role = window.FixoraAccess?.getRole?.();
+  if (role !== 'client' || !fxrCurrentProviderId) return;
+  try {
+    const res = await api.getFavorites();
+    const ids = (res.data || []).map((f) => String(f.provider_profile_id));
+    fxrIsFavorite = ids.includes(String(fxrCurrentProviderId));
+    fxrUpdateFavoriteButton();
+  } catch (_) {
+    /* guest or error */
+  }
+}
+
+async function fxrToggleFavorite() {
+  if (!api.requireAuth('client')) return;
+  if (!fxrCurrentProviderId) return;
+
+  try {
+    const res = await api.toggleFavorite(fxrCurrentProviderId);
+    if (typeof res.favorited === 'boolean') {
+      fxrIsFavorite = res.favorited;
+    } else {
+      fxrIsFavorite = !fxrIsFavorite;
     }
+    fxrUpdateFavoriteButton();
+    fxrShowToast(res.message || (fxrIsFavorite ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة'));
+    if (typeof window.fxrRefreshClientFavorites === 'function') {
+      window.fxrRefreshClientFavorites();
+    }
+  } catch (e) {
+    fxrShowToast(e.message);
   }
 }
 
 function fxrCopyPhone() {
-  navigator.clipboard.writeText(fxrProviderData.phone);
-  fxrShowToast('📱 تم نسخ رقم الجوال');
-}
-
-function fxrCopyEmail() {
-  navigator.clipboard.writeText(fxrProviderData.email);
-  fxrShowToast('✉️ تم نسخ البريد الإلكتروني');
-}
-
-function fxrShowMoreReviews() {
-  fxrShowToast('📋 يتم تحميل المزيد من التقييمات...');
-}
-
-function fxrShowGalleryItem(caption) {
-  fxrShowToast(`🖼️ عرض: ${caption}`);
-}
-
-// ========================================
-// LOAD PROVIDER BY ID
-// ========================================
-function fxrLoadProviderById(providerId) {
-  fxrCurrentProviderId = parseInt(providerId) || 1;
-  
-  // تحديث رابط زر الحجز
-  fxrUpdateBookingLink();
-  
-  // إعادة عرض جميع البيانات
-  fxrRenderProviderInfo();
-  fxrRenderServices();
-  fxrRenderSchedule();
-  fxrRenderReviews();
-  fxrRenderGallery();
-}
-
-// ========================================
-// CHECK FAVORITE STATUS
-// ========================================
-function fxrCheckFavoriteStatus() {
-  const favorites = JSON.parse(localStorage.getItem('fxrFavorites') || '[]');
-  if (favorites.includes(fxrCurrentProviderId)) {
-    fxrIsFavorite = true;
-    const favBtn = document.getElementById('favBtn');
-    const favIcon = document.getElementById('favIcon');
-    const favText = document.getElementById('favText');
-    if (favBtn) favBtn.classList.add('active');
-    if (favIcon) favIcon.textContent = '❤️';
-    if (favText) favText.textContent = 'تمت الإضافة للمفضلة';
+  if (fxrProviderData?.phone) {
+    navigator.clipboard.writeText(fxrProviderData.phone);
+    fxrShowToast('تم نسخ رقم الجوال');
   }
 }
 
-// ========================================
-// INITIALIZE
-// ========================================
-function fxrInit() {
-  // Get provider ID from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const providerId = urlParams.get('id');
-  
-  if (providerId) {
-    fxrLoadProviderById(providerId);
-  } else {
-    fxrCurrentProviderId = 1;
+function fxrCopyEmail() {
+  if (fxrProviderData?.email) {
+    navigator.clipboard.writeText(fxrProviderData.email);
+    fxrShowToast('تم نسخ البريد');
+  }
+}
+
+async function fxrLoadProvider(providerId) {
+  const main = document.querySelector('.fxr-provider-page, main, body');
+  try {
+    const json = await api.getProvider(providerId);
+    fxrProviderData = json.data;
+    fxrCurrentProviderId = fxrProviderData.id;
     fxrUpdateBookingLink();
     fxrRenderProviderInfo();
     fxrRenderServices();
     fxrRenderSchedule();
     fxrRenderReviews();
     fxrRenderGallery();
+    fxrRenderAreas();
+    await fxrLoadFavoriteState();
+    await fxrLoadRateableBookings();
+  } catch (e) {
+    const msg = document.createElement('div');
+    msg.className = 'alert alert-warning m-4';
+    msg.textContent = e.message || 'تعذر تحميل بيانات الفني';
+    document.body.prepend(msg);
   }
-  
-  // التحقق من حالة المفضلة
-  fxrCheckFavoriteStatus();
 }
 
+async function fxrInit() {
+  const providerId = fxrGetProviderIdFromUrl();
+  if (!providerId) {
+    const empty = document.createElement('div');
+    empty.className = 'alert alert-info m-4';
+    empty.innerHTML = 'اختر فنياً من <a href="search.html">صفحة البحث</a>.';
+    document.body.prepend(empty);
+    return;
+  }
 
-// Start when DOM is ready
+  fxrInitStarPicker();
+  document.getElementById('submitReviewBtn')?.addEventListener('click', fxrSubmitProviderReview);
+  document.getElementById('submitReportBtn')?.addEventListener('click', fxrSubmitSecretReport);
+
+  fxrUpdateBookingLink(providerId);
+  await fxrLoadProvider(providerId);
+  fxrApplyUrlTab();
+  fxrStartReviewsPoll();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('booked') === '1') {
+    fxrShowToast('تم إرسال طلب الحجز بنجاح');
+  }
+}
+
+window.fxrSwitchTab = fxrSwitchTab;
+window.fxrRefreshProviderReviews = fxrRefreshReviews;
+window.fxrMessageProvider = fxrMessageProvider;
+window.fxrToggleFavorite = fxrToggleFavorite;
+window.fxrCopyPhone = fxrCopyPhone;
+window.fxrCopyEmail = fxrCopyEmail;
+window.fxrShowMoreReviews = fxrShowMoreReviews;
+
 document.addEventListener('DOMContentLoaded', fxrInit);

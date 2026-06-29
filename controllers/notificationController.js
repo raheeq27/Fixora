@@ -6,19 +6,26 @@ import pool from '../config/db.js';
 export const getUserNotifications = async (req, res, next) => {
     try {
         const userId = req.user.userId;
-        
-        // جلب الإشعارات مرتبة من الأحدث للأقدم
+
         const result = await pool.query(
-            `SELECT id, user_id, type, title, message, is_read, created_at 
-            FROM notifications 
-            WHERE user_id = $1 
-            ORDER BY created_at DESC`,
+            `SELECT id, user_id, type, title, message, is_read, created_at
+            FROM notifications
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 50`,
+            [userId]
+        );
+
+        const unread = await pool.query(
+            `SELECT COUNT(*)::int AS c FROM notifications
+             WHERE user_id = $1 AND is_read = FALSE`,
             [userId]
         );
 
         res.status(200).json({
             success: true,
             count: result.rowCount,
+            unread_count: unread.rows[0].c,
             data: result.rows
         });
     } catch (err) {

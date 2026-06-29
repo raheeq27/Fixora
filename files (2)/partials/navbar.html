@@ -1,0 +1,70 @@
+<header class="fxr-header" id="fxrSiteHeader">
+  <div class="fxr-header-start">
+    <button type="button" class="fxr-hamburger-btn" data-fxr-sidebar-toggle aria-label="القائمة">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" width="52" height="52">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+    <span class="fxr-admin-badge d-none" id="fxrAdminBadge">Admin</span>
+  </div>
+
+  <nav aria-label="التنقل الرئيسي">
+    <ul class="fxr-nav">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="services.html">الخدمات</a></li>
+      <li><a href="about.html">من نحن</a></li>
+      <li><a href="contact.html">تواصل معنا</a></li>
+    </ul>
+  </nav>
+
+  <div class="fxr-header-btns">
+    <div class="fxr-header-auth-cluster">
+      <div class="fxr-notif-wrap d-none" id="fxrNotifWrap">
+        <button type="button" class="fxr-notif-bell" id="fxrNotifBell" aria-label="الإشعارات" aria-expanded="false">
+          <span class="fxr-notif-icon">🔔</span>
+          <span class="fxr-notif-badge d-none" id="fxrNotifBadge">0</span>
+        </button>
+        <div class="fxr-notif-dropdown" id="fxrNotifDropdown" role="menu" aria-hidden="true">
+          <div class="fxr-notif-dropdown-head">
+            <strong>الإشعارات</strong>
+          </div>
+          <ul class="fxr-notif-list" id="fxrNotifList"></ul>
+          <p class="fxr-notif-empty d-none" id="fxrNotifEmpty">لا توجد إشعارات جديدة</p>
+        </div>
+      </div>
+      <span class="fxr-header-user d-none" id="fxrHeaderUser"></span>
+    </div>
+    <button type="button" class="logout-btn fxr-logged-in-only d-none" id="fxrHeaderLogout">تسجيل الخروج</button>
+    <a href="login.html" class="fxr-btn fxr-btn-outline fxr-guest-only" id="fxrNavLogin">دخول</a>
+    <a href="register.html" class="fxr-btn fxr-btn-primary fxr-guest-only" id="fxrNavRegister">تسجيل مجاناً</a>
+  </div>
+</header>
+
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay"></div>
+
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" width="40" height="40" style="border-radius:8px;object-fit:contain">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+    <button type="button" class="fxr-sidebar-close" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="fxr-sidebar-links">
+    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
+    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
+    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
+    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
+    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
+    <div class="fxr-sidebar-divider"></div>
+    <a href="user-dashboard.html" class="fxr-sidebar-link fxr-role-client">🎛️ لوحة العميل</a>
+    <a href="provider-dashboard.html" class="fxr-sidebar-link fxr-role-provider">🛠️ لوحة الحرفي</a>
+    <a href="admin-dashboard.html" class="fxr-sidebar-link fxr-role-admin">⚙️ لوحة الإدارة</a>
+    <div class="fxr-sidebar-divider"></div>
+    <a href="#" class="fxr-sidebar-link fxr-logged-in-only" data-fxr-logout style="color:#f75555">🚪 تسجيل الخروج</a>
+    <a href="login.html" class="fxr-sidebar-link fxr-guest-only">🔑 تسجيل الدخول</a>
+    <a href="register.html" class="fxr-sidebar-link fxr-guest-only">📝 إنشاء حساب</a>
+  </div>
+</aside>

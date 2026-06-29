@@ -711,6 +711,115 @@ body {
   color: var(--fxr-dark);
 }
 
+/* تقييم الخدمة — نموذج العميل */
+.fxr-rate-service-card {
+  margin-bottom: 20px;
+  border: 2px solid rgba(240, 122, 38, 0.25);
+}
+
+.fxr-secret-report {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(63, 74, 79, 0.2);
+}
+
+.fxr-secret-report-summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a8f96;
+  list-style: none;
+}
+
+.fxr-report-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin: 10px 0;
+  color: var(--fxr-muted);
+}
+
+.fxr-rate-hint {
+  font-size: 13px;
+  color: var(--fxr-muted);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.fxr-rate-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--fxr-dark);
+}
+
+.fxr-rate-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--fxr-radius-sm);
+  border: 1px solid #dde3e6;
+  font-family: inherit;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.fxr-rate-picker {
+  margin-bottom: 8px;
+}
+
+.fxr-star-picker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 12px 0 16px;
+  direction: ltr;
+}
+
+.fxr-star-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #ddd;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: var(--fxr-transition);
+}
+
+.fxr-star-btn.active,
+.fxr-star-btn:hover {
+  color: #f5a623;
+  transform: scale(1.08);
+}
+
+.fxr-rate-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dde3e6;
+  border-radius: var(--fxr-radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  margin-bottom: 14px;
+}
+
+.fxr-rate-login-msg {
+  font-size: 13px;
+  color: var(--fxr-muted);
+  margin-top: 12px;
+}
+
+.fxr-rate-login-msg a {
+  color: var(--fxr-orange);
+  font-weight: 700;
+}
+
+[hidden] {
+  display: none !important;
+}
+
 /* Gallery */
 .fxr-gallery-grid {
   display: grid;

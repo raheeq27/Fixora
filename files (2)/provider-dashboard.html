@@ -35,7 +35,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 
 /* DASHBOARD SHELL */
 .dshell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 110px)}
-.dside{background:#2a3236;padding:16px 0}
+.dside{background:#2a3236;padding:16px 0;display:flex;flex-direction:column;min-height:calc(100vh - 64px)}
 .ditem{display:flex;align-items:center;gap:10px;padding:12px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;border-right:3px solid transparent;transition:.2s}
 .ditem:hover,.ditem.on{color:white;background:rgba(255,255,255,.06);border-right-color:var(--orange)}
 .ditem .icon{font-size:16px;width:24px}
@@ -161,6 +161,46 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 .full-width{grid-column:span 2}
 @media(max-width:600px){.full-width{grid-column:span 1}}
 
+.public-profile-preview{margin-bottom:20px}
+.public-profile-preview .preview-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.public-profile-preview .preview-avatar{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e06618);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;overflow:hidden;flex-shrink:0}
+.public-profile-preview .preview-avatar img{width:100%;height:100%;object-fit:cover}
+.public-profile-preview .preview-head h3{font-size:18px;font-weight:900;margin:0 0 4px}
+.public-profile-preview .preview-meta{font-size:13px;color:var(--orange);margin:0}
+.public-profile-preview .preview-rating{font-size:12px;color:var(--muted);margin:6px 0 0}
+.public-profile-preview .preview-bio{font-size:13px;line-height:1.65;color:var(--dark);margin-bottom:12px}
+.public-profile-preview .preview-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.public-profile-preview .preview-tag{background:rgba(145,189,209,.2);color:var(--dark);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.public-profile-preview .preview-schedule-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}
+.ditem[data-fxr-logout]:hover{border-right-color:#ff6b6b!important;background:rgba(255,80,80,.12)!important}
+.provider-msg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #eee;flex-wrap:wrap}
+.provider-msg-row:last-child{border-bottom:none}
+
+/* PROVIDER NOTIFICATIONS */
+.provider-notif-row {
+  display: block;
+  width: 100%;
+  text-align: right;
+  border: none;
+  border-bottom: 1px solid #eee;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  background: rgba(63, 74, 79, 0.1);
+  transition: background 0.2s;
+}
+.provider-notif-row:hover {
+  background: rgba(240, 122, 38, 0.12);
+}
+.provider-notif-row.read {
+  background: #fafafa;
+  opacity: 0.72;
+}
+.provider-notif-row:not(.read) {
+  background: rgba(63, 74, 79, 0.14);
+  border-right: 3px solid var(--orange);
+}
+
 /* EMPTY STATE */
 .empty-state{text-align:center;padding:40px;background:white;border-radius:12px;color:var(--muted)}
 
@@ -183,24 +223,21 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
   .profile-header{flex-direction:column;text-align:center}
 }
 </style>
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
 <!-- HEADER / NAVBAR -->
 <header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
   <div style="display: flex; align-items: center; gap: 16px;">
-    <!-- Hamburger button -->
-    <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
-      <span></span>
-      <span></span>
-      <span></span>
+    <button type="button" class="fxr-hamburger-btn" data-fxr-sidebar-toggle aria-label="القائمة">
+      <span></span><span></span><span></span>
     </button>
     <a href="index.html" class="fxr-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
       <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
       <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
     </a>
   </div>
-
   <nav>
     <ul class="fxr-nav" style="display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;">
       <li><a href="index.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">الرئيسية</a></li>
@@ -209,78 +246,33 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
       <li><a href="contact.html" style="color: white; font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none;">تواصل معنا</a></li>
     </ul>
   </nav>
-
-  <div class="fxr-header-btns" style="display: flex; align-items: center; gap: 10px;">
-    <a href="login.html" class="fxr-btn fxr-btn-outline" style="border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">دخول</a>
-    <a href="register.html" class="fxr-btn fxr-btn-primary" style="background: #f07a26; color: white; border: none; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">تسجيل مجاناً</a>
-  </div>
+  <div class="fxr-header-btns" style="display: flex; align-items: center; gap: 10px;"></div>
 </header>
 
-<!-- SIDEBAR OVERLAY -->
-<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay" onclick="fxrToggleSidebar()"></div>
-
-<!-- SIDEBAR CONTENT -->
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay"></div>
 <aside class="fxr-main-sidebar" id="fxrMainSidebar">
   <div class="fxr-sidebar-header">
-    <a href="index.html" class="fxr-logo" style="padding:0; border:none; margin-bottom:0; display: flex; align-items: center; gap: 10px; text-decoration: none;">
-      <img src="png/logo-header.jpeg" alt="FIXORA" style="width: 40px; height: 40px; border-radius:8px; object-fit: contain;">
-      <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
+    <a href="index.html" class="fxr-logo" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <img src="png/logo-header.jpeg" alt="FIXORA" style="width:40px;height:40px;border-radius:8px;object-fit:contain">
+      <span class="fxr-logo-text" style="color:white;font-size:18px;font-weight:900">FIX<span style="color:#f07a26">O</span>RA</span>
     </a>
-    <button class="fxr-sidebar-close" onclick="fxrToggleSidebar()">✕</button>
+    <button type="button" class="fxr-sidebar-close" aria-label="إغلاق">✕</button>
   </div>
-  <div class="fxr-sidebar-links">
-    <a href="index.html" class="fxr-sidebar-link">🏠 الرئيسية</a>
-    <a href="search.html" class="fxr-sidebar-link">🔍 البحث</a>
-    <a href="services.html" class="fxr-sidebar-link">⚙️ الخدمات</a>
-    <a href="about.html" class="fxr-sidebar-link">ℹ️ من نحن</a>
-    <a href="contact.html" class="fxr-sidebar-link">📞 تواصل معنا</a>
-    
-    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
-    
-    <a href="login.html" class="fxr-sidebar-link">🔑 تسجيل الدخول</a>
-    <a href="register.html" class="fxr-sidebar-link">📝 إنشاء حساب</a>
-    <a href="user.html" class="fxr-sidebar-link">👤 الصفحة الشخصية للمستخدم</a>
-    <a href="user-dashboard.html" class="fxr-sidebar-link">🎛️ لوحة تحكم المستخدم</a>
-    <a href="provider-dashboard.html" class="fxr-sidebar-link">🛠️ لوحة تحكم الحرفي</a>
-    <a href="privider.html" class="fxr-sidebar-link">📋 الصفحة الشخصية للحرفي</a>
-    
-    <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
-    
-    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
-  </div>
-  
-  <style>
-    .fxr-header { background: #3f4a4f; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; box-shadow: 0 2px 16px rgba(0,0,0,.18); font-family: 'Cairo', sans-serif;}
-    .fxr-hamburger-btn { display: flex; flex-direction: column; gap: 4px; background: transparent; border: none; cursor: pointer; padding: 4px; }
-    .fxr-hamburger-btn span { width: 24px; height: 3px; background-color: white; border-radius: 2px; transition: 0.2s; }
-    .fxr-main-sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1050; opacity: 0; visibility: hidden; transition: 0.2s; }
-    .fxr-main-sidebar-overlay.active { opacity: 1; visibility: visible; }
-    .fxr-main-sidebar { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #3f4a4f; z-index: 1100; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.2); font-family: 'Cairo', sans-serif;}
-    .fxr-main-sidebar.active { transform: translateX(0); }
-    .fxr-sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .fxr-sidebar-close { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
-    .fxr-sidebar-close:hover { opacity: 1; }
-    .fxr-sidebar-links { display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
-    .fxr-sidebar-link { padding: 12px 24px; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 12px; border-right: 3px solid transparent; }
-    .fxr-sidebar-link:hover, .fxr-sidebar-link.active { background: rgba(240, 122, 38, 0.1); color: white; border-right-color: #f07a26; }
-  </style>
-  <script>
-    function fxrToggleSidebar() {
-      const s = document.getElementById('fxrMainSidebar');
-      const o = document.getElementById('fxrSidebarOverlay');
-      if(s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
-    }
-  </script>
+  <div class="fxr-sidebar-links"></div>
 </aside>
 
 <div class="dshell">
   <div class="dside">
     <div class="ditem on" data-tab="dashboard"><span class="icon">📊</span>الإحصائيات</div>
     <div class="ditem" data-tab="orders"><span class="icon">📥</span>طلبات العمل<span class="badge" id="ordersBadge">0</span></div>
+    <div class="ditem" data-tab="messages"><span class="icon">💬</span>الرسائل<span class="badge" id="messagesBadge">0</span></div>
+    <div class="ditem" data-tab="notifications"><span class="icon">🔔</span>الإشعارات<span class="badge" id="providerNotifBadge" style="display:none">0</span></div>
     <div class="ditem" data-tab="services"><span class="icon">🔨</span>خدماتي</div>
     <div class="ditem" data-tab="portfolio"><span class="icon">🖼️</span>معرض الأعمال</div>
     <div class="ditem" data-tab="schedule"><span class="icon">📅</span>جدول العمل</div>
     <div class="ditem" data-tab="profile"><span class="icon">👤</span>حسابي الشخصي</div>
+    <div class="ditem" data-tab="security"><span class="icon">🔒</span>الأمان</div>
+    <div class="ditem" data-fxr-logout style="margin-top:auto;color:#ff6b6b;border-right-color:transparent"><span class="icon">🚪</span>تسجيل الخروج</div>
   </div>
 
   <div class="dcontent">
@@ -288,17 +280,30 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
     <!-- الإحصائيات -->
     <div id="tab-dashboard" class="tab-content active">
       <h2 class="section-title">📊 لوحة الإحصائيات</h2>
-      <p class="section-subtitle">مرحباً محمد! إليك ملخص نشاطك على المنصة</p>
+      <p class="section-subtitle" id="dashboardWelcome">مرحباً! إليك ملخص نشاطك على المنصة</p>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-number" id="statOrders">0</div><div class="stat-label">إجمالي الطلبات</div></div>
         <div class="stat-card"><div class="stat-number" id="statPending">0</div><div class="stat-label">طلبات معلقة</div></div>
         <div class="stat-card"><div class="stat-number" id="statConfirmed">0</div><div class="stat-label">طلبات مؤكدة</div></div>
-        <div class="stat-card"><div class="stat-number" id="statRating">4.9</div><div class="stat-label">متوسط التقييم</div></div>
-        <div class="stat-card"><div class="stat-number" id="statServices">3</div><div class="stat-label">عدد الخدمات</div></div>
+        <div class="stat-card"><div class="stat-number" id="statRating">—</div><div class="stat-label">متوسط التقييم</div></div>
+        <div class="stat-card"><div class="stat-number" id="statServices">0</div><div class="stat-label">عدد الخدمات</div></div>
         <div class="stat-card"><div class="stat-number" id="statPortfolio">0</div><div class="stat-label">أعمال في المعرض</div></div>
       </div>
       <div class="card"><h3 style="font-size:14px;font-weight:700;margin-bottom:12px">📥 أحدث الطلبات</h3><div id="recentOrdersList"></div></div>
-      <div class="card"><h3 style="font-size:14px;font-weight:700;margin-bottom:12px">📅 أيام العمل هذا الأسبوع</h3><div id="workDaysSummary"></div></div>
+    </div>
+
+    <!-- الرسائل -->
+    <div id="tab-messages" class="tab-content" style="display:none">
+      <h2 class="section-title">💬 الرسائل</h2>
+      <p class="section-subtitle">محادثاتك مع العملاء</p>
+      <div id="providerMessagesList" class="card"></div>
+    </div>
+
+    <!-- الإشعارات -->
+    <div id="tab-notifications" class="tab-content" style="display:none">
+      <h2 class="section-title">🔔 الإشعارات</h2>
+      <p class="section-subtitle">تنبيهات النظام والرسائل</p>
+      <div id="providerNotificationsList" class="card"></div>
     </div>
 
     <!-- طلبات العمل -->
@@ -340,6 +345,23 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
     <!-- حسابي الشخصي -->
     <div id="tab-profile" class="tab-content" style="display:none">
       <h2 class="section-title">👤 حسابي الشخصي</h2>
+      <div class="card public-profile-preview" id="providerPublicPreview">
+        <div class="preview-head">
+          <div class="preview-avatar" id="previewAvatar">👨‍🔧</div>
+          <div>
+            <h3 id="previewName">—</h3>
+            <p id="previewSpecialty" class="preview-meta">—</p>
+            <p id="previewRating" class="preview-rating">⭐ —</p>
+          </div>
+          <a href="#" id="previewPublicLink" class="btn-save" style="margin:0;white-space:nowrap;font-size:12px" target="_blank" rel="noopener">👁️ كما يراه العميل</a>
+        </div>
+        <p id="previewBio" class="preview-bio">—</p>
+        <div id="previewServices" class="preview-tags"></div>
+        <p style="font-size:12px;color:var(--muted);margin:12px 0 6px">📍 المناطق المخدومة</p>
+        <div id="previewAreas" class="preview-tags"></div>
+        <div id="previewSchedule" class="preview-schedule"></div>
+      </div>
+      <p class="section-subtitle" style="margin-top:8px">تعديل بياناتك (تنعكس في البروفايل العام أعلاه)</p>
       <div class="profile-card">
         <div class="profile-header">
           <div class="profile-avatar-section">
@@ -349,31 +371,90 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
               <div class="avatar-overlay">✏️ تغيير</div>
             </div>
             <input type="file" id="avatarUpload" accept="image/*" style="display:none">
-            <div class="avatar-buttons">
-              <button class="avatar-btn" onclick="document.getElementById('avatarUpload').click()">📷 رفع صورة</button>
-              <button class="avatar-btn" id="resetAvatarBtn">🔄 إعادة تعيين</button>
-            </div>
           </div>
           <div class="profile-header-info">
-            <h3 id="profileName">محمد أحمد أبو خالد</h3>
-            <p id="profileContact">📞 0791234567 · ✉️ mohamed@fixora.jo</p>
-            <p id="profileLocation">📍 عمّان، الأردن</p>
+            <h3 id="profileName">—</h3>
+            <p id="profileContact">—</p>
+            <p id="profileLocation">—</p>
           </div>
         </div>
         <div class="profile-form">
-          <div class="form-group"><label>الاسم الكامل</label><input type="text" id="fullName" value="محمد أحمد أبو خالد"></div>
-          <div class="form-group"><label>رقم الجوال</label><input type="tel" id="phone" value="0791234567"></div>
-          <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email" value="mohamed@fixora.jo"></div>
-          <div class="form-group"><label>المحافظة</label><select id="city"><option>عمّان</option><option>إربد</option><option>الزرقاء</option><option>العقبة</option><option>السلط</option><option>المفرق</option><option>الكرك</option><option>معان</option><option>الطفيلة</option><option>عجلون</option><option>جرش</option><option>مادبا</option></select></div>
-          <div class="form-group"><label>التخصص الرئيسي</label><input type="text" id="specialty" value="تكييف وأجهزة منزلية"></div>
-          <div class="form-group"><label>المناطق المخدومة</label><input type="text" id="areas" value="الشميساني، عبدون، الجبيهة"></div>
-          <div class="form-group full-width"><label>نبذة تعريفية</label><textarea id="bio" rows="3">فني تكييف وأجهزة منزلية بخبرة 8 سنوات.</textarea></div>
+          <div class="form-group"><label>الاسم الكامل</label><input type="text" id="fullName" value=""></div>
+          <div class="form-group"><label>رقم الجوال</label><input type="tel" id="phone" value=""></div>
+          <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email" value=""></div>
+          <div class="form-group"><label>المحافظة</label><select id="city">
+            <option value="Amman">عمّان</option><option value="Irbid">إربد</option><option value="Zarqa">الزرقاء</option>
+            <option value="Aqaba">العقبة</option><option value="Salat">السلط</option><option value="Mafraq">المفرق</option>
+            <option value="Karak">الكرك</option><option value="Ma'an">معان</option><option value="Tafileh">الطفيلة</option>
+            <option value="Ajloun">عجلون</option><option value="Jerash">جرش</option><option value="Madaba">مادبا</option>
+            <option value="Balqa">البلقاء</option>
+          </select></div>
+          <div class="form-group"><label>التخصص الرئيسي</label><input type="text" id="specialty" value=""></div>
+          <div class="form-group">
+            <label>أين تقدّم الخدمة؟ (المناطق / الألوية)</label>
+            <input type="text" id="areas" value="" placeholder="مثال: لواء بني كنانة، لواء قصبة إربد">
+            <p class="form-hint" style="font-size:11px;color:var(--muted);margin-top:4px">تظهر للعميل في ملفك الشخصي فقط — البحث يعتمد على محافظتك الأساسية أعلاه.</p>
+          </div>
+          <div class="form-group full-width"><label>نبذة تعريفية</label><textarea id="bio" rows="3" placeholder="اكتب نبذة عنك..."></textarea></div>
         </div>
         <button id="saveProfileBtn" class="btn-save" style="width:100%">💾 حفظ التغييرات</button>
       </div>
     </div>
+
+    <!-- الأمان -->
+    <div id="tab-security" class="tab-content" style="display:none">
+      <h2 class="section-title">🔒 إعدادات الأمان</h2>
+      <div class="card">
+        <div class="profile-form" style="grid-template-columns:1fr;max-width:480px">
+          <div class="form-group">
+            <label>كلمة المرور الحالية</label>
+            <input type="password" id="oldPass" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور الجديدة</label>
+            <input type="password" id="newPass" placeholder="8 أحرف على الأقل">
+          </div>
+          <div class="form-group">
+            <label>تأكيد كلمة المرور</label>
+            <input type="password" id="confirmPass" placeholder="أعد كتابة كلمة المرور">
+          </div>
+        </div>
+        <button type="button" id="savePasswordBtn" class="btn-save">🔒 تغيير كلمة المرور</button>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- MODALS -->
+<div class="modal notification-modal" id="notificationModal">
+  <div class="modal-content">
+    <div class="icon" id="notifIcon">✅</div>
+    <h4 id="notifTitle">تم</h4>
+    <p id="notifMessage"></p>
+    <button id="closeNotifBtn">حسناً</button>
+  </div>
+</div>
+
+<div class="modal" id="uploadModal">
+  <div class="modal-content">
+    <h3>🖼️ إضافة عمل للمعرض</h3>
+    <div class="form-group">
+      <label>وصف العمل</label>
+      <textarea id="workDescription" rows="3" placeholder="اكتب وصفاً للعمل..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>صورة العمل</label>
+      <input type="file" id="workImage" accept="image/*">
+      <div class="image-preview" id="imagePreview"><div class="placeholder">📷 سيظهر معاينة الصورة هنا</div></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-confirm" id="confirmUploadBtn">حفظ</button>
+      <button class="modal-cancel" id="cancelUploadBtn">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div id="fxrToast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3f4a4f;color:#fff;padding:12px 24px;border-radius:10px;z-index:2000;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2)"></div>
 
 <!-- FOOTER -->
 <!-- FOOTER -->
@@ -388,325 +469,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
   </div>
 </footer>
 
-<script>
-// ========== البيانات ==========
-let ordersData = [
-  { id: 1, icon: '❄️', customer: 'أحمد الكيلاني', service: 'تصليح تكييف سبليت', date: 'اليوم', time: '3:00 م', location: 'الشميساني', status: 'pending' },
-  { id: 2, icon: '🌀', customer: 'رنا الشرايري', service: 'تنظيف وصيانة تكييف', date: 'غداً', time: '10:00 ص', location: 'عبدون', status: 'pending' },
-  { id: 3, icon: '🔌', customer: 'سامر البطاينة', service: 'تصليح غسالة', date: 'غداً', time: '2:00 م', location: 'الجبيهة', status: 'accepted' }
-];
-
-let portfolioData = [];
-
-let daysList = [
-  { name: 'الأحد', key: 'sun', isAvailable: true, from: '09:00', to: '17:00' },
-  { name: 'الإثنين', key: 'mon', isAvailable: true, from: '09:00', to: '17:00' },
-  { name: 'الثلاثاء', key: 'tue', isAvailable: true, from: '09:00', to: '17:00' },
-  { name: 'الأربعاء', key: 'wed', isAvailable: true, from: '09:00', to: '17:00' },
-  { name: 'الخميس', key: 'thu', isAvailable: true, from: '09:00', to: '17:00' },
-  { name: 'الجمعة', key: 'fri', isAvailable: false, from: '09:00', to: '12:00' },
-  { name: 'السبت', key: 'sat', isAvailable: true, from: '10:00', to: '14:00' }
-];
-
-let providerData = {
-  name: 'محمد أحمد أبو خالد', phone: '0791234567', email: 'mohamed@fixora.jo',
-  city: 'عمّان', specialty: 'تكييف وأجهزة منزلية', areas: 'الشميساني، عبدون، الجبيهة',
-  bio: 'فني تكييف وأجهزة منزلية بخبرة 8 سنوات.', rating: 4.9, avatar: null
-};
-
-let servicesDescription = `🔧 ما الخدمات التي أقدمها؟
-• تصليح وصيانة جميع أنواع المكيفات
-• تصليح الغسالات والثلاجات
-• تركيب أنظمة التكييف المركزية
-
-💎 ما الذي يميزني؟
-• خبرة 8 سنوات
-• التزام بالمواعيد
-• ضمان على القطع`;
-
-let pendingUpload = { file: null, description: '' };
-
-// ========== عرض الإشعارات (Modal) ==========
-function showNotification(icon, title, message) {
-  const modal = document.getElementById('notificationModal');
-  document.getElementById('notifIcon').innerHTML = icon;
-  document.getElementById('notifTitle').innerHTML = title;
-  document.getElementById('notifMessage').innerHTML = message;
-  modal.classList.add('active');
-  document.getElementById('closeNotifBtn').onclick = () => modal.classList.remove('active');
-}
-
-// ========== تحديث الإحصائيات ==========
-function updateStats() {
-  document.getElementById('statOrders').textContent = ordersData.length;
-  document.getElementById('statPending').textContent = ordersData.filter(o => o.status === 'pending').length;
-  document.getElementById('statConfirmed').textContent = ordersData.filter(o => o.status === 'confirmed').length;
-  document.getElementById('statPortfolio').textContent = portfolioData.length;
-  document.getElementById('ordersBadge').textContent = ordersData.filter(o => o.status === 'pending').length;
-}
-
-// ========== عرض أحدث الطلبات ==========
-function renderRecentOrders() {
-  const container = document.getElementById('recentOrdersList');
-  if (!container) return;
-  const recent = ordersData.slice(0, 3);
-  if (recent.length === 0) { container.innerHTML = '<div class="empty-state" style="padding:20px">لا توجد طلبات</div>'; return; }
-  container.innerHTML = recent.map(order => `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #eee"><span>${order.icon}</span><div style="flex:1"><strong>${order.customer}</strong> - ${order.service}</div><span style="padding:2px 8px;border-radius:20px;font-size:10px;background:${order.status === 'pending' ? 'rgba(240,122,38,.1)' : 'rgba(145,189,209,.2)'}">${order.status === 'pending' ? 'جديد' : 'قيد التأكيد'}</span></div>`).join('');
-}
-
-// ========== عرض أيام العمل ==========
-function renderWorkDaysSummary() {
-  const container = document.getElementById('workDaysSummary');
-  if (!container) return;
-  const workingDays = daysList.filter(d => d.isAvailable);
-  container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px">${workingDays.map(d => `<span style="background:var(--bg);padding:4px 12px;border-radius:20px;font-size:11px">${d.name} (${d.from} - ${d.to})</span>`).join('')}</div>`;
-}
-
-// ========== عرض الطلبات ==========
-function renderOrders() {
-  const container = document.getElementById('ordersList');
-  if (!container) return;
-  const pending = ordersData.filter(o => o.status === 'pending');
-  const accepted = ordersData.filter(o => o.status === 'accepted');
-  const confirmed = ordersData.filter(o => o.status === 'confirmed');
-  let html = '';
-  if (pending.length) {
-    html += `<div style="margin-bottom:20px"><h3 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--orange)">🆕 طلبات جديدة</h3>`;
-    pending.forEach(order => { html += `<div class="order-card"><div class="order-icon">${order.icon}</div><div class="order-details"><div class="order-customer">${order.customer}</div><div class="order-service">${order.service}</div><div class="order-datetime">📅 ${order.date} · 🕐 ${order.time} · 📍 ${order.location}</div></div><div class="order-status status-pending">جديد</div><div class="order-actions"><button class="btn-accept" onclick="acceptOrder(${order.id})">✅ قبول</button><button class="btn-reject" onclick="rejectOrder(${order.id})">✗ رفض</button></div></div>`; });
-    html += `</div>`;
-  }
-  if (accepted.length) {
-    html += `<div style="margin-bottom:20px"><h3 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--blue)">⏳ في انتظار التأكيد</h3>`;
-    accepted.forEach(order => { html += `<div class="order-card"><div class="order-icon">${order.icon}</div><div class="order-details"><div class="order-customer">${order.customer}</div><div class="order-service">${order.service}</div><div class="order-datetime">📅 ${order.date} · 🕐 ${order.time} · 📍 ${order.location}</div></div><div class="order-status status-accepted">تم القبول</div><div class="order-actions"><button class="btn-confirm" onclick="confirmOrder(${order.id})">✅ تأكيد</button><button class="btn-reject" onclick="rejectOrder(${order.id})">✗ رفض</button></div></div>`; });
-    html += `</div>`;
-  }
-  if (confirmed.length) {
-    html += `<div style="margin-bottom:20px"><h3 style="font-size:13px;font-weight:700;margin-bottom:10px;color:#28c840">✓ الطلبات المؤكدة</h3>`;
-    confirmed.forEach(order => { html += `<div class="order-card"><div class="order-icon">${order.icon}</div><div class="order-details"><div class="order-customer">${order.customer}</div><div class="order-service">${order.service}</div><div class="order-datetime">📅 ${order.date} · 🕐 ${order.time} · 📍 ${order.location}</div></div><div class="order-status status-confirmed">مؤكد</div><div class="order-actions"><button class="btn-delete" onclick="deleteOrder(${order.id})">🗑️ حذف</button></div></div>`; });
-    html += `</div>`;
-  }
-  if (!pending.length && !accepted.length && !confirmed.length) html = '<div class="empty-state">🎉 لا توجد طلبات</div>';
-  container.innerHTML = html;
-  updateStats();
-  renderRecentOrders();
-}
-
-// ========== عمليات الطلبات ==========
-window.acceptOrder = function(id) {
-  const order = ordersData.find(o => o.id === id);
-  if (order && order.status === 'pending') { order.status = 'accepted'; renderOrders(); showNotification('✅', 'تم قبول الطلب', `تم قبول طلب "${order.service}" بنجاح. اضغط "تأكيد" لإتمام الحجز.`); }
-}
-window.confirmOrder = function(id) {
-  const order = ordersData.find(o => o.id === id);
-  if (order && order.status === 'accepted') { order.status = 'confirmed'; renderOrders(); showNotification('✅', 'تم تأكيد الطلب', `تم تأكيد طلب "${order.service}"! سيتم إشعار العميل.`); }
-}
-window.rejectOrder = function(id) {
-  const order = ordersData.find(o => o.id === id);
-  if (order && (order.status === 'pending' || order.status === 'accepted')) { 
-    ordersData = ordersData.filter(o => o.id !== id); 
-    renderOrders(); 
-    showNotification('❌', 'تم رفض الطلب', `تم رفض طلب "${order.service}".`);
-  }
-}
-window.deleteOrder = function(id) {
-  ordersData = ordersData.filter(o => o.id !== id);
-  renderOrders();
-  showNotification('🗑️', 'تم الحذف', 'تم حذف الطلب بنجاح');
-}
-
-// ========== معرض الأعمال ==========
-function renderPortfolio() {
-  const container = document.getElementById('portfolioGrid');
-  if (!container) return;
-  if (portfolioData.length === 0) { container.innerHTML = '<div class="empty-state">📷 لا توجد أعمال مضافة بعد. اضغط "إضافة عمل جديد"</div>'; return; }
-  container.innerHTML = portfolioData.map(item => `
-    <div class="gallery-item">
-      <div class="gallery-image">${item.imageData ? `<img src="${item.imageData}" alt="${item.description}">` : `<div class="no-image">🖼️</div>`}</div>
-      <div class="gallery-info">
-        <div class="gallery-desc">${escapeHtml(item.description)}</div>
-        <div class="gallery-actions">
-          <button class="gallery-edit-btn" onclick="editPortfolioItem(${item.id})">✏️ تعديل</button>
-          <button class="gallery-delete-btn" onclick="deletePortfolioItem(${item.id})">🗑️ حذف</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-  updateStats();
-}
-
-window.editPortfolioItem = function(id) {
-  const item = portfolioData.find(p => p.id === id);
-  if (item) {
-    document.getElementById('workDescription').value = item.description;
-    pendingUpload = { file: null, description: item.description, editId: id };
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = item.imageData ? `<img src="${item.imageData}" style="max-width:100%;max-height:100%">` : '<div class="placeholder">📷 اضغط لرفع صورة جديدة</div>';
-    document.getElementById('uploadModal').classList.add('active');
-    document.getElementById('confirmUploadBtn').onclick = () => savePortfolioItem(true);
-  }
-}
-
-window.deletePortfolioItem = function(id) {
-  portfolioData = portfolioData.filter(p => p.id !== id);
-  renderPortfolio();
-  showNotification('🗑️', 'تم الحذف', 'تم حذف العمل بنجاح');
-}
-
-function savePortfolioItem(isEdit = false) {
-  const description = document.getElementById('workDescription').value.trim();
-  if (!description) { showNotification('⚠️', 'تنبيه', 'الرجاء إدخال وصف للعمل'); return; }
-  if (isEdit && pendingUpload.editId) {
-    const index = portfolioData.findIndex(p => p.id === pendingUpload.editId);
-    if (index !== -1) {
-      portfolioData[index].description = description;
-      if (pendingUpload.file) portfolioData[index].imageData = pendingUpload.file;
-    }
-    showNotification('✅', 'تم التعديل', 'تم تعديل العمل بنجاح');
-  } else {
-    const newId = Math.max(0, ...portfolioData.map(p => p.id), 0) + 1;
-    portfolioData.push({ id: newId, description: description, imageData: pendingUpload.file || null, icon: '📷' });
-    showNotification('✅', 'تم الإضافة', 'تم إضافة العمل بنجاح');
-  }
-  renderPortfolio();
-  closeUploadModal();
-}
-
-function closeUploadModal() {
-  document.getElementById('uploadModal').classList.remove('active');
-  document.getElementById('workDescription').value = '';
-  document.getElementById('workImage').value = '';
-  document.getElementById('imagePreview').innerHTML = '<div class="placeholder">📷 سيظهر معاينة الصورة هنا</div>';
-  pendingUpload = { file: null, description: '' };
-}
-
-// ========== معاينة الصورة ==========
-function setupImagePreview() {
-  const fileInput = document.getElementById('workImage');
-  fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        pendingUpload.file = event.target.result;
-        const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${event.target.result}" style="max-width:100%;max-height:100%">`;
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
-
-// ========== جدول العمل ==========
-function renderSchedule() {
-  const tbody = document.getElementById('scheduleBody');
-  if (!tbody) return;
-  tbody.innerHTML = daysList.map(day => `<tr><td style="font-weight:700">${day.name}</td><td><input type="checkbox" class="schedule-checkbox" data-day="${day.key}" ${day.isAvailable ? 'checked' : ''}></td><td><input type="time" class="schedule-time-input from-time" data-day="${day.key}" value="${day.from}" ${!day.isAvailable ? 'disabled' : ''}></td><td><input type="time" class="schedule-time-input to-time" data-day="${day.key}" value="${day.to}" ${!day.isAvailable ? 'disabled' : ''}></td></tr>`).join('');
-  document.querySelectorAll('.schedule-checkbox').forEach(cb => { cb.addEventListener('change', function() { const row = this.closest('tr'); row.querySelector('.from-time').disabled = !this.checked; row.querySelector('.to-time').disabled = !this.checked; }); });
-}
-
-function saveSchedule() {
-  const checkboxes = document.querySelectorAll('.schedule-checkbox');
-  checkboxes.forEach(cb => {
-    const dayKey = cb.getAttribute('data-day');
-    const row = cb.closest('tr');
-    const dayIndex = daysList.findIndex(d => d.key === dayKey);
-    if (dayIndex !== -1) {
-      daysList[dayIndex].isAvailable = cb.checked;
-      daysList[dayIndex].from = row.querySelector('.from-time').value;
-      daysList[dayIndex].to = row.querySelector('.to-time').value;
-    }
-  });
-  renderWorkDaysSummary();
-  showNotification('✅', 'تم الحفظ', 'تم حفظ جدول العمل بنجاح');
-}
-
-// ========== الملف الشخصي ==========
-function setupAvatarUpload() {
-  const fileInput = document.getElementById('avatarUpload');
-  fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        providerData.avatar = event.target.result;
-        updateAvatarDisplay();
-        showNotification('✅', 'تم التحديث', 'تم تغيير الصورة الشخصية بنجاح');
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
-
-function updateAvatarDisplay() {
-  const avatarIcon = document.getElementById('avatarIcon');
-  const avatarImg = document.getElementById('avatarImage');
-  if (providerData.avatar) {
-    avatarIcon.style.display = 'none';
-    avatarImg.style.display = 'block';
-    avatarImg.src = providerData.avatar;
-  } else {
-    avatarIcon.style.display = 'flex';
-    avatarImg.style.display = 'none';
-  }
-}
-
-function resetAvatar() { providerData.avatar = null; updateAvatarDisplay(); showNotification('🔄', 'تم الإعادة', 'تم إعادة تعيين الصورة الشخصية'); }
-function saveProfile() {
-  providerData.name = document.getElementById('fullName').value;
-  providerData.phone = document.getElementById('phone').value;
-  providerData.email = document.getElementById('email').value;
-  providerData.city = document.getElementById('city').value;
-  providerData.specialty = document.getElementById('specialty').value;
-  providerData.areas = document.getElementById('areas').value;
-  providerData.bio = document.getElementById('bio').value;
-  document.getElementById('userNameDisplay').innerHTML = `👷 ${providerData.name.split(' ')[0]}`;
-  document.getElementById('profileName').innerHTML = providerData.name;
-  document.getElementById('profileContact').innerHTML = `📞 ${providerData.phone} · ✉️ ${providerData.email}`;
-  document.getElementById('profileLocation').innerHTML = `📍 ${providerData.city}، الأردن`;
-  showNotification('✅', 'تم الحفظ', 'تم حفظ التغييرات بنجاح');
-}
-
-function saveServicesDescription() { servicesDescription = document.getElementById('servicesDescription').value; showNotification('✅', 'تم الحفظ', 'تم حفظ وصف الخدمات'); }
-
-// ========== تبديل التبويبات ==========
-function switchTab(tabId) {
-  document.querySelectorAll('.ditem').forEach(item => { item.classList.remove('on'); if (item.getAttribute('data-tab') === tabId) item.classList.add('on'); });
-  document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-  document.getElementById(`tab-${tabId}`).style.display = 'block';
-  if (tabId === 'orders') renderOrders();
-  if (tabId === 'portfolio') renderPortfolio();
-  if (tabId === 'schedule') renderSchedule();
-  if (tabId === 'dashboard') { updateStats(); renderRecentOrders(); renderWorkDaysSummary(); }
-  if (tabId === 'services') document.getElementById('servicesDescription').value = servicesDescription;
-}
-
-// ========== تسجيل الخروج ==========
-function logout() { showNotification('🔐', 'تسجيل الخروج', 'تم تسجيل الخروج بنجاح'); }
-
-// ========== تهيئة الصفحة ==========
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.ditem').forEach(item => { item.addEventListener('click', function() { const tabId = this.getAttribute('data-tab'); if (tabId) switchTab(tabId); }); });
-  document.getElementById('saveDescriptionBtn')?.addEventListener('click', saveServicesDescription);
-  document.getElementById('addPortfolioBtn')?.addEventListener('click', () => { pendingUpload = { file: null, description: '' }; document.getElementById('workDescription').value = ''; document.getElementById('workImage').value = ''; document.getElementById('imagePreview').innerHTML = '<div class="placeholder">📷 سيظهر معاينة الصورة هنا</div>'; document.getElementById('uploadModal').classList.add('active'); document.getElementById('confirmUploadBtn').onclick = () => savePortfolioItem(false); });
-  document.getElementById('cancelUploadBtn')?.addEventListener('click', closeUploadModal);
-  document.getElementById('saveScheduleBtn')?.addEventListener('click', saveSchedule);
-  document.getElementById('saveProfileBtn')?.addEventListener('click', saveProfile);
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-  document.getElementById('resetAvatarBtn')?.addEventListener('click', resetAvatar);
-  setupImagePreview();
-  setupAvatarUpload();
-  updateAvatarDisplay();
-  renderOrders();
-  renderPortfolio();
-  renderSchedule();
-  updateStats();
-  renderRecentOrders();
-  renderWorkDaysSummary();
-  document.getElementById('servicesDescription').value = servicesDescription;
-  document.getElementById('city').value = providerData.city;
-});
-
-function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-</script>
+<script src="js/api-config.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/provider-dashboard.js"></script>
 </body>
 </html>

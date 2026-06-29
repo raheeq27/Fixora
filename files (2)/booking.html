@@ -12,6 +12,7 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/booking.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
@@ -117,7 +118,7 @@
     <div class="fxr-step-line"></div>
     <div class="fxr-step" data-step="2">
       <div class="fxr-step-number">2</div>
-      <div class="fxr-step-label">الموعد والموقع</div>
+      <div class="fxr-step-label">الموقع</div>
     </div>
     <div class="fxr-step-line"></div>
     <div class="fxr-step" data-step="3">
@@ -133,39 +134,17 @@
       <div class="fxr-booking-card">
         <h2 class="fxr-card-title">📋 تفاصيل الخدمة</h2>
         
+        <div id="fxrProviderNotice" class="fxr-provider-notice" hidden role="alert"></div>
+
         <!-- Provider Info Summary -->
         <div class="fxr-provider-summary" id="providerSummary">
           <div class="fxr-provider-avatar-sm" id="providerAvatar">👨‍🔧</div>
           <div class="fxr-provider-summary-details">
-            <div class="fxr-provider-summary-name" id="providerName">محمد أبو خالد</div>
-            <div class="fxr-provider-summary-specialty" id="providerSpecialty">🔧 تقني تكييف وأجهزة منزلية</div>
-            <div class="fxr-provider-summary-rating" id="providerRating">★★★★★ 4.9</div>
+            <div class="fxr-provider-summary-name" id="providerName">جاري التحميل...</div>
+            <div class="fxr-provider-summary-specialty" id="providerSpecialty">🔧 —</div>
+            <div class="fxr-provider-summary-rating" id="providerRating">⭐ —</div>
           </div>
         </div>
-
-        <!-- Service Type Selection -->
-        <!-- <div class="fxr-form-group">
-          <label class="fxr-form-label">نوع الخدمة <span class="fxr-required">*</span></label>
-          <select class="fxr-form-select" id="serviceType" onchange="fxrUpdateServiceDetails()">
-            <option value="">اختر نوع الخدمة</option>
-            <option value="تصليح تكييف سبليت">❄️ تصليح تكييف سبليت</option>
-            <option value="تصليح تكييف مركزي">🌀 تصليح تكييف مركزي</option>
-            <option value="شحن فريون">🧊 شحن فريون</option>
-            <option value="صيانة دورية">🔧 صيانة دورية</option>
-            <option value="تنظيف مكيفات">🧹 تنظيف مكيفات</option>
-            <option value="تصليح غسالة">👕 تصليح غسالة</option>
-            <option value="تصليح ثلاجة">🧊 تصليح ثلاجة</option>
-            <option value="تصليح سخان مياه">💧 تصليح سخان مياه</option>
-          </select>
-        </div> -->
-      
-        <div class="fxr-form-group">
-  <label class="fxr-form-label">نوع الخدمة <span class="fxr-required">*</span></label>
-  <select class="fxr-form-select" id="serviceType" onchange="fxrUpdateServiceDetails()">
-    <option value="">اختر نوع الخدمة</option>
-    </select>
-</div>
-
 
         <!-- Service Description -->
         <div class="fxr-form-group">
@@ -174,40 +153,46 @@
           <div class="fxr-form-hint">كلما كانت التفاصيل أوضح، كلما استطاع الحرفي تجهيز الأدوات المناسبة</div>
         </div>
 
-        <!-- Service Urgency -->
+        <!-- Booking mode: standard vs emergency -->
         <div class="fxr-form-group">
-          <label class="fxr-form-label">درجة الإلحاح</label>
-          <div class="fxr-urgency-options">
-            <label class="fxr-radio-card">
-              <input type="radio" name="urgency" value="normal" checked>
+          <label class="fxr-form-label">نوع الحجز <span class="fxr-required">*</span></label>
+          <div class="fxr-booking-mode-options">
+            <label class="fxr-radio-card fxr-booking-mode-card">
+              <input type="radio" name="bookingMode" value="standard" checked>
               <div class="fxr-radio-content">
-                <span class="fxr-radio-icon">🟢</span>
+                <span class="fxr-radio-icon">📅</span>
                 <div>
-                  <div class="fxr-radio-title">عادي</div>
-                  <div class="fxr-radio-desc">خلال 2-3 أيام</div>
+                  <div class="fxr-radio-title">حجز عادي (مجدول)</div>
+                  <div class="fxr-radio-desc">اختر يوماً من جدول عمل الحرفي خلال الأسبوع</div>
                 </div>
               </div>
             </label>
-            <label class="fxr-radio-card">
-              <input type="radio" name="urgency" value="urgent">
+            <label class="fxr-radio-card fxr-booking-mode-card">
+              <input type="radio" name="bookingMode" value="emergency">
               <div class="fxr-radio-content">
-                <span class="fxr-radio-icon">🟠</span>
+                <span class="fxr-radio-icon">⚡</span>
                 <div>
-                  <div class="fxr-radio-title">مستعجل</div>
-                  <div class="fxr-radio-desc">خلال 24 ساعة</div>
+                  <div class="fxr-radio-title">حجز مستعجل (نفس اليوم / أسرع وقت)</div>
+                  <div class="fxr-radio-desc">أقرب موعد متاح اليوم أو في أسرع يوم قادم</div>
                 </div>
               </div>
             </label>
-            <label class="fxr-radio-card">
-              <input type="radio" name="urgency" value="emergency">
-              <div class="fxr-radio-content">
-                <span class="fxr-radio-icon">🔴</span>
-                <div>
-                  <div class="fxr-radio-title">طوارئ</div>
-                  <div class="fxr-radio-desc">خلال 4 ساعات</div>
-                </div>
-              </div>
-            </label>
+          </div>
+        </div>
+
+        <!-- Date Selection -->
+        <div class="fxr-form-group">
+          <label class="fxr-form-label" id="fxrDateSelectLabel">موعد الخدمة — اختر اليوم <span class="fxr-required">*</span></label>
+          <div class="fxr-date-grid" id="dateGrid">
+            <!-- Dates will be generated by JS -->
+          </div>
+        </div>
+
+        <!-- Time Selection -->
+        <div class="fxr-form-group" id="timeGroup" style="display: none;">
+          <label class="fxr-form-label">موعد الخدمة — اختر الساعة <span class="fxr-required">*</span></label>
+          <div class="fxr-time-grid" id="timeGrid">
+            <!-- Times will be generated by JS -->
           </div>
         </div>
 
@@ -217,26 +202,10 @@
       </div>
     </div>
 
-    <!-- STEP 2: Date & Location -->
+    <!-- STEP 2: Location -->
     <div class="fxr-booking-step" id="step2">
       <div class="fxr-booking-card">
-        <h2 class="fxr-card-title">📍 الموعد والموقع</h2>
-
-        <!-- Date Selection -->
-        <div class="fxr-form-group">
-          <label class="fxr-form-label">اختر تاريخ الخدمة <span class="fxr-required">*</span></label>
-          <div class="fxr-date-grid" id="dateGrid">
-            <!-- Dates will be generated by JS -->
-          </div>
-        </div>
-
-        <!-- Time Selection -->
-        <div class="fxr-form-group" id="timeGroup" style="display: none;">
-          <label class="fxr-form-label">اختر الوقت المناسب <span class="fxr-required">*</span></label>
-          <div class="fxr-time-grid" id="timeGrid">
-            <!-- Times will be generated by JS -->
-          </div>
-        </div>
+        <h2 class="fxr-card-title">🗓 الموقع</h2>
 
         <!-- Location Type -->
         <div class="fxr-form-group">
@@ -288,7 +257,7 @@
                 <option value="Salat">السلط</option>
                 <option value="Mafraq">المفرق</option>
                 <option value="Karak">الكرك</option>
-                <option value="Ma''an">معان</option>
+                <option value="Ma'an">معان</option>
                 <option value="Tafileh">الطفيلة</option>
                 <option value="Ajloun">عجلون</option>
                 <option value="Jerash">جرش</option>
@@ -415,6 +384,13 @@
 
 <!-- JS Files -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-datetime.js"></script>
+<script src="js/fxr-header.js"></script>
 <script src="js/booking.js"></script>
 
 </body>

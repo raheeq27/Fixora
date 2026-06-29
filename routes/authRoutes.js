@@ -1,41 +1,48 @@
 import express from 'express';
-import { 
-    register, 
-    login, 
-    updateClientProfile, 
-    updateProviderProfile, 
-    getClientProfile, 
-    getProviderProfile,
-    uploadProviderDocument,
-    verifyProvider
-} from '../controllers/authController.js';
-import authMiddleware from '../middleware/authMiddleware.js'; 
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRole } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', (req, res) => {
-  res.status(201).json({
-    success: true,
-    message: 'تم التسجيل بنجاح',
-    userId: "f0a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5",
-    user: {
-      id: "f0a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5",
-      first_name: req.body.first_name || "Raneem",
-      email: req.body.email,
-      role: req.body.role
-    }
-  });
+// نستخدم الاستيراد داخل المسار (Dynamic Import) لتجنب مشكلة الـ undefined
+router.post('/register', async (req, res, next) => {
+    const { register } = await import('../controllers/authController.js');
+    return register(req, res, next);
 });
 
-router.post('/login', login);
+router.post('/login', async (req, res, next) => {
+    const { login } = await import('../controllers/authController.js');
+    return login(req, res, next);
+});
 
-router.get('/profile/client', authMiddleware, getClientProfile);
-router.get('/profile/provider', authMiddleware, getProviderProfile);
+router.get('/profile/client', authMiddleware, requireRole('client'), async (req, res, next) => {
+    const { getClientProfile } = await import('../controllers/authController.js');
+    return getClientProfile(req, res, next);
+});
 
-router.put('/update-profile/client', authMiddleware, updateClientProfile);
-router.put('/update-profile/provider', authMiddleware, updateProviderProfile);
+router.get('/profile/provider', authMiddleware, requireRole('provider'), async (req, res, next) => {
+    const { getProviderProfile } = await import('../controllers/authController.js');
+    return getProviderProfile(req, res, next);
+});
 
-router.put('/profile/provider/upload-document', authMiddleware, uploadProviderDocument);
-router.put('/admin/verify-provider', authMiddleware, verifyProvider);
+router.put('/update-profile/client', authMiddleware, requireRole('client'), async (req, res, next) => {
+    const { updateClientProfile } = await import('../controllers/authController.js');
+    return updateClientProfile(req, res, next);
+});
+
+router.put('/update-profile/provider', authMiddleware, requireRole('provider'), async (req, res, next) => {
+    const { updateProviderProfile } = await import('../controllers/authController.js');
+    return updateProviderProfile(req, res, next);
+});
+
+router.put('/profile/provider/upload-document', authMiddleware, requireRole('provider'), async (req, res, next) => {
+    const { uploadProviderDocument } = await import('../controllers/authController.js');
+    return uploadProviderDocument(req, res, next);
+});
+
+router.put('/admin/verify-provider', authMiddleware, requireRole('admin'), async (req, res, next) => {
+    const { verifyProvider } = await import('../controllers/authController.js');
+    return verifyProvider(req, res, next);
+});
 
 export default router;

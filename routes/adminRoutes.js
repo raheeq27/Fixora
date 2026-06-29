@@ -1,27 +1,60 @@
-// routes/adminRoutes.js
 import express from 'express';
-import { 
-    getAllUsers, 
-    verifyProvider, 
-    getAllBookings, 
-    deleteReview // استدعاء الدالة الوحيدة والصحيحة الموجودة في الـ Controller
+import {
+  getDashboardStats,
+  getAllUsers,
+  setUserBan,
+  deleteUser,
+  getPendingProviders,
+  getPendingProviderDetails,
+  verifyProvider,
+  getAllBookings,
+  adminUpdateBooking,
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  suspendCategory,
+  getAllReviews,
+  deleteReview,
+  getReports,
+  resolveReport
 } from '../controllers/adminController.js';
-
-// استيراد حزم الحماية بالمسار الصحيح للمجلد وبدون تكرار
-import authMiddleware from '../middleware/authMiddleware.js'; 
+import {
+  getContactMessages,
+  markContactMessageRead
+} from '../controllers/contactController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 import adminMiddleware from '../middleware/adminMiddleware.js';
 
 const router = express.Router();
 
-// 1. حماية جميع المسارات التالية تلقائياً: يجب أن يكون المستخدم مسجلاً ومسؤولاً (Admin)
 router.use(authMiddleware, adminMiddleware);
 
-// 2. مسارات التحكم بالمستخدمين والفنيين والحجوزات
+router.get('/stats', getDashboardStats);
 router.get('/users', getAllUsers);
-router.put('/verify-provider/:id', verifyProvider); // لتغيير حالة الفني إلى true
-router.get('/bookings', getAllBookings);
+router.patch('/users/:id/ban', setUserBan);
+router.delete('/users/:id', deleteUser);
 
-// 3. مسارات التحكم بالتقييمات والمراجعات (تم حذف التكرار والدالة غير الموجودة)
+router.get('/providers/pending', getPendingProviders);
+router.get('/providers/pending/:profileId', getPendingProviderDetails);
+router.put('/verify-provider/:id', verifyProvider);
+
+router.get('/bookings', getAllBookings);
+router.patch('/bookings/:id', adminUpdateBooking);
+
+router.get('/categories', getCategories);
+router.post('/categories', createCategory);
+router.put('/categories/:id', updateCategory);
+router.patch('/categories/:id/suspend', suspendCategory);
+router.delete('/categories/:id', deleteCategory);
+
+router.get('/reviews', getAllReviews);
 router.delete('/review/:id', deleteReview);
+
+router.get('/reports', getReports);
+router.patch('/reports/:id', resolveReport);
+
+router.get('/contact-messages', getContactMessages);
+router.patch('/contact-messages/:id', markContactMessageRead);
 
 export default router;

@@ -13,6 +13,7 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/search.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 
 <body>
@@ -141,7 +142,7 @@
       <div class="fxr-filter-group">
         <div class="fxr-filter-group-title">المحافظة</div>
         <div class="fxr-filter-item">
-          <input type="checkbox" id="gov-amman" checked onchange="fxrApplyFilters()">
+          <input type="checkbox" id="gov-amman"  onchange="fxrApplyFilters()">
           <label for="gov-amman">عمّان</label>
         </div>
         <div class="fxr-filter-item">
@@ -264,7 +265,12 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
   <!-- استدعاء الملفات كـ سكربت عادي ورا بعض بالترتيب الصحيح -->
-  <script src="js/search-api.js"></script>
+  <script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+  <script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
   <script src="js/search.js"></script>
 </body>
 

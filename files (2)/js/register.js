@@ -9,6 +9,8 @@
 
 const FXR = (() => {
 
+  const api = window.FixoraAPI;
+
   /* ── الدور المختار حالياً ── */
   let _currentRole = 'user'; // 'user' | 'provider'
 
@@ -52,8 +54,62 @@ const FXR = (() => {
       _show('fxr-page-user');
     } else {
       _show('fxr-page-provider');
+      loadProviderCategories();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadProviderCategories() {
+    const specEl = document.getElementById('p-spec');
+    if (!specEl || specEl.dataset.loaded === '1') return;
+    try {
+      const res = await api.getCategories();
+      const cats = res.categories || res.data || [];
+      specEl.innerHTML = '<option value="">— اختر تخصصك —</option>'
+        + cats.filter((c) => c.is_active !== false)
+          .map((c) => `<option value="${c.id}">${c.name_ar}</option>`)
+          .join('');
+      specEl.dataset.loaded = '1';
+    } catch (_) {
+      /* keep static fallback if API unavailable */
+    }
+  }
+
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadProviderRegistrationAssets() {
+    const certInput = document.getElementById('input-cert');
+    if (certInput?.files?.[0]) {
+      const fd = new FormData();
+      fd.append('file', certInput.files[0]);
+      fd.append('doc_type', 'certificate');
+      await api.uploadDocument(fd);
+    }
+
+    const portfolioInput = document.getElementById('input-portfolio');
+    const files = portfolioInput?.files;
+    if (files?.length) {
+      const portfolio = [];
+      for (let i = 0; i < files.length; i++) {
+        const dataUrl = await fileToDataUrl(files[i]);
+        portfolio.push({
+          id: i + 1,
+          description: files[i].name.replace(/\.[^.]+$/, ''),
+          imageData: dataUrl,
+          icon: '📷'
+        });
+      }
+      if (portfolio.length) {
+        await api.updateProviderPortfolio(portfolio);
+      }
+    }
   }
 
   /* ══════════════════════════════════════
@@ -119,17 +175,6 @@ const FXR = (() => {
     } else {
       lbl.textContent = 'لم يتم اختيار ملف';
       lbl.style.color = '';
-    }
-  }
-
-  /* ══════════════════════════════════════
-     أيام العمل
-  ══════════════════════════════════════ */
-  function toggleDay(btn) {
-    if (btn.classList.contains('fxr-day-on')) {
-      btn.classList.replace('fxr-day-on', 'fxr-day-off');
-    } else {
-      btn.classList.replace('fxr-day-off', 'fxr-day-on');
     }
   }
 
@@ -299,10 +344,7 @@ async function submitUser() {
 
     // 3. الإرسال للسيرفر
     try {
-        const response = await fetch('http://localhost:3000/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        await api.register({
                 first_name: fname,
                 last_name: lname,
                 phone: phone,
@@ -310,14 +352,7 @@ async function submitUser() {
                 email: email,
                 password: pass,
                 role: 'client'
-            })
-        });
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            throw new Error(result.message || "حدث خطأ أثناء التسجيل");
-        }
+            });
 
         // 4. في حال النجاح
         const formBody = document.getElementById('user-form-body');
@@ -328,25 +363,96 @@ async function submitUser() {
             success.style.display = 'block';
         }
     } catch (error) {
-        alert("خطأ: " + error.message);
+        alert(error.message === 'Failed to fetch' ? api.networkHint : ('خطأ: ' + error.message));
     }
 }
 
   /* ══════════════════════════════════════
      إرسال — حرفي
   ══════════════════════════════════════ */
-  function submitProvider() {
-    /* ← fetch('/api/register/provider', { method:'POST', body: FormData }) */
+  async function submitProvider() {
+    const fnameEl = document.getElementById('p-fname');
+    const lnameEl = document.getElementById('p-lname');
+    const phoneEl = document.getElementById('p-phone');
+    const emailEl = document.getElementById('p-email');
+    const passEl  = document.getElementById('p-pass');
+    const pass2El = document.getElementById('p-pass2');
+    const termsEl = document.getElementById('p-terms');
+    const specEl  = document.getElementById('p-spec');
+    const govEl   = document.getElementById('p-gov');
+    const bioEl   = document.getElementById('p-bio');
+    const areasEl = document.getElementById('p-areas');
 
-    const card = document.getElementById('fxr-page-provider');
-    if (!card) return;
-    Array.from(card.children).forEach(child => {
-      if (child.id !== 'prov-success') child.style.display = 'none';
-    });
-    const success = document.getElementById('prov-success');
-    if (success) {
-      success.classList.add('fxr-visible');
-      success.style.display = 'block';
+    if (!fnameEl || !lnameEl || !phoneEl || !emailEl || !passEl) return;
+
+    const fname = fnameEl.value.trim();
+    const lname = lnameEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const email = emailEl.value.trim();
+    const pass  = passEl.value;
+    const pass2 = pass2El ? pass2El.value : '';
+    const terms = termsEl ? termsEl.checked : false;
+    const specialtyOpt = specEl?.selectedOptions?.[0];
+    const specialty = specialtyOpt?.textContent?.trim() || '';
+    const category_id = specEl?.value || '';
+    const governorate = govEl ? govEl.value : '';
+    const bio = bioEl ? bioEl.value.trim() : '';
+    const service_areas = areasEl ? areasEl.value.trim() : '';
+
+    let valid = true;
+    if (!fname) { _markInput('p-fname', true); valid = false; }
+    if (!lname) { _markInput('p-lname', true); valid = false; }
+    const phoneOk = /^07\d{8}$/.test(phone);
+    _markInput('p-phone', !phoneOk);
+    if (!phoneOk) { alert('رقم الهاتف غير صحيح'); valid = false; }
+    if (!specialty || !category_id) { alert('اختر تخصصك'); valid = false; }
+    if (!governorate) { alert('اختر المحافظة'); valid = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { valid = false; }
+    const passErr = pass.length < 8;
+    _markInput('p-pass', passErr);
+    _showErr('err-p-pass', passErr);
+    if (passErr) { alert('كلمة السر قصيرة جداً'); valid = false; }
+
+    const pass2Err = pass !== pass2 || !pass2;
+    _markInput('p-pass2', pass2Err);
+    _showErr('err-p-pass2', pass2Err);
+    if (pass2Err) { alert('كلمتا المرور غير متطابقتين'); valid = false; }
+
+    if (!terms) { alert('يجب الموافقة على الشروط'); valid = false; }
+    if (!valid) return;
+
+    try {
+      const reg = await api.register({
+          first_name: fname,
+          last_name: lname,
+          phone,
+          governorate,
+          email,
+          password: pass,
+          role: 'provider',
+          specialty,
+          category_id: parseInt(category_id, 10) || undefined,
+          bio,
+          service_areas: service_areas || undefined
+        });
+
+      const loginRes = await api.login({ email, password: pass });
+      if (loginRes.token) {
+        localStorage.setItem('token', loginRes.token);
+        localStorage.setItem('userId', loginRes.user?.id || reg.userId || '');
+        localStorage.setItem('userRole', loginRes.user?.role || 'provider');
+        localStorage.setItem('userName', loginRes.user?.name || fname);
+      }
+
+      try {
+        await uploadProviderRegistrationAssets();
+      } catch (uploadErr) {
+        console.warn('Portfolio/docs upload:', uploadErr.message);
+      }
+
+      window.location.href = 'provider-pending.html';
+    } catch (error) {
+      alert(error.message === 'Failed to fetch' ? api.networkHint : ('خطأ: ' + error.message));
     }
   }
 
@@ -373,7 +479,6 @@ async function submitUser() {
     goHome,
     nextStep,
     showFileName,
-    toggleDay,
     togglePass,
     checkStrength,
     submitUser,
@@ -382,7 +487,9 @@ async function submitUser() {
 
 })();
 
-// 🌟 أسطر إنقاذ لتعريف دالات التلوين والخطأ المفقودة
+window.FXR = FXR;
+
+// دوال مساعدة للتحقق من الحقول
 function _markInput(id, isError) {
     const el = document.getElementById(id);
     if (el) {

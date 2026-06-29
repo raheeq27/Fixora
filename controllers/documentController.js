@@ -4,18 +4,27 @@ import { sendNotification } from '../utils/notificationHelper.js';
 // 1. رفع وثيقة جديدة للفني
 export const uploadDocument = async (req, res, next) => {
     try {
-        const { provider_id, doc_type } = req.body;
+        const { doc_type } = req.body;
+        const userId = req.user.userId;
 
-        if (!req.file) return res.status(400).json({ message: "يرجى إرفاق الملف." });
-        if (!provider_id) return res.status(400).json({ message: "معرّف الفني مطلوب." });
+        if (!req.file) return res.status(400).json({ success: false, message: "يرجى إرفاق الملف." });
 
+        const profileRes = await pool.query(
+            'SELECT id FROM provider_profiles WHERE user_id = $1',
+            [userId]
+        );
+        if (profileRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'بروفايل الفني غير موجود' });
+        }
+
+        const providerProfileId = profileRes.rows[0].id;
         const file_url = `/uploads/documents/${req.file.filename}`;
 
         const query = `
             INSERT INTO provider_documents (provider_id, doc_type, file_url)
             VALUES ($1, $2, $3) RETURNING *;
         `;
-        const result = await pool.query(query, [provider_id, doc_type || null, file_url]);
+        const result = await pool.query(query, [providerProfileId, doc_type || null, file_url]);
 
         res.status(201).json({ success: true, document: result.rows[0] });
     } catch (error) {
@@ -39,18 +48,38 @@ export const reviewDocument = async (req, res, next) => {
 
             const providerId = docResult.rows[0].provider_id;
 
-            // تحديث حالة الفني
             await pool.query('UPDATE provider_profiles SET is_verified = TRUE WHERE id = $1', [providerId]);
 
-            // إرسال إشعار للفني
-            await sendNotification(providerId, "تم توثيق حسابك! 🎉", "تم قبول وثائقك وتفعيل حسابك كفني موثق.", "system_alert");
+            const pu = await pool.query(
+                'SELECT user_id FROM provider_profiles WHERE id = $1',
+                [providerId]
+            );
+            if (pu.rows.length) {
+                await sendNotification(
+                    pu.rows[0].user_id,
+                    'تم توثيق حسابك',
+                    'تم قبول وثائقك وتفعيل حسابك كفني موثّق.',
+                    'system_alert'
+                );
+            }
 
             return res.status(200).json({ message: "تم قبول الوثيقة وتوثيق الحساب." });
         } else {
             const docResult = await pool.query('UPDATE provider_documents SET is_approved = FALSE WHERE id = $1 RETURNING provider_id', [document_id]);
             
             if (docResult.rows.length > 0) {
-                await sendNotification(docResult.rows[0].provider_id, "تم رفض الوثيقة", "عذراً، لم يتم قبول وثيقتك. يرجى مراجعتها.", "system_alert");
+                const pu = await pool.query(
+                    'SELECT user_id FROM provider_profiles WHERE id = $1',
+                    [docResult.rows[0].provider_id]
+                );
+                if (pu.rows.length) {
+                    await sendNotification(
+                        pu.rows[0].user_id,
+                        'تم رفض الوثيقة',
+                        'عذراً، لم يتم قبول وثيقتك. يرجى مراجعتها.',
+                        'system_alert'
+                    );
+                }
             }
             return res.status(200).json({ message: "تم رفض الوثيقة." });
         }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FIXORA الأردن — بروفايل الحرفي</title>
+  <title>FIXORA الأردن — حساب الحرفي</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,7 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/provider.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
@@ -116,29 +117,25 @@
 <!-- PROVIDER INFO SECTION -->
 <div class="fxr-provider-info-section">
   <div class="fxr-provider-details">
-    <h1 class="fxr-provider-name" id="providerName">محمد أحمد أبو خالد</h1>
+    <h1 class="fxr-provider-name" id="providerName">جاري التحميل...</h1>
     <div class="fxr-provider-specialty-badge" id="providerSpecialty">🔧 تقني تكييف وأجهزة منزلية</div>
     
     <div class="fxr-rating-container">
       <div class="fxr-stars" id="starsRating">★★★★★</div>
-      <span class="fxr-rating-value" id="ratingValue">4.9</span>
-      <span class="fxr-reviews-count" id="reviewsCount">(112 تقييم)</span>
+      <span class="fxr-rating-value" id="ratingValue">—</span>
+      <span class="fxr-reviews-count" id="reviewsCount">(0 تقييم)</span>
     </div>
 
     <div class="fxr-location-tags" id="locationTags">
-      <span class="fxr-location-tag">📍 عمّان</span>
-      <span class="fxr-location-tag">🏘️ الشميساني</span>
-      <span class="fxr-location-tag">🏘️ عبدون</span>
-      <span class="fxr-location-tag">🏘️ الجبيهة</span>
-      <span class="fxr-location-tag">🏘️ الدوار السابع</span>
+      <span class="fxr-location-tag">📍 —</span>
     </div>
   </div>
 
   <div class="fxr-action-buttons">
-    <a href="booking.html" class="fxr-btn fxr-btn-primary fxr-btn-lg" id="bookBtn">
+    <a href="#" class="fxr-btn fxr-btn-primary fxr-btn-lg" id="bookBtn" aria-disabled="true">
       📅 احجز الآن
     </a>
-    <a href="chat.html" class="fxr-btn fxr-btn-outline-dark fxr-btn-lg" id="messageBtn">
+    <a href="#" class="fxr-btn fxr-btn-outline-dark fxr-btn-lg" id="messageBtn" aria-disabled="true">
       💬 راسل الحرفي
     </a>
     <button class="fxr-fav-btn" id="favBtn" onclick="fxrToggleFavorite()">
@@ -176,14 +173,7 @@
   <div class="fxr-content-card">
     <h3 class="fxr-content-title">📍 المناطق المخدومة</h3>
     <div class="fxr-areas-list" id="areasList">
-      <span class="fxr-area-tag">الشميساني</span>
-      <span class="fxr-area-tag">عبدون</span>
-      <span class="fxr-area-tag">الجبيهة</span>
-      <span class="fxr-area-tag">الدوار السابع</span>
-      <span class="fxr-area-tag">مرج الحمام</span>
-      <span class="fxr-area-tag">خلدا</span>
-      <span class="fxr-area-tag">الرابية</span>
-      <span class="fxr-area-tag">تلاع العلي</span>
+      <span class="text-muted">جاري التحميل...</span>
     </div>
   </div>
 
@@ -246,127 +236,58 @@
       </div>
     </div>
   </div>
-
-  <div class="fxr-content-card">
-    <h3 class="fxr-content-title">📅 التقويم الأسبوعي</h3>
-    <div class="fxr-calendar" id="calendar">
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">سبت</div>
-        <div class="fxr-calendar-status available">✓</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">أحد</div>
-        <div class="fxr-calendar-status available">✓</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">اثن</div>
-        <div class="fxr-calendar-status busy">محجوز</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">ثلا</div>
-        <div class="fxr-calendar-status available">✓</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">أرب</div>
-        <div class="fxr-calendar-status available">✓</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">خمي</div>
-        <div class="fxr-calendar-status available">✓</div>
-      </div>
-      <div class="fxr-calendar-day">
-        <div class="fxr-calendar-name">جمعة</div>
-        <div class="fxr-calendar-status closed">إجازة</div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- TAB CONTENT - REVIEWS -->
 <div class="fxr-tab-content" id="reviewsTab">
+  <div class="fxr-content-card fxr-rate-service-card" id="rateServiceCard" hidden>
+    <h3 class="fxr-content-title">⭐ قيّم تجربتك مع هذا الحرفي</h3>
+    <p class="fxr-rate-hint" id="rateServiceHint">بعد إتمام الخدمة يمكنك إرسال تقييمك هنا.</p>
+    <div id="rateBookingPickerWrap" class="fxr-rate-picker" hidden>
+      <label class="fxr-rate-label" for="rateBookingSelect">اختر الحجز</label>
+      <select id="rateBookingSelect" class="fxr-rate-select"></select>
+    </div>
+    <div class="fxr-star-picker" id="starPicker" role="group" aria-label="التقييم">
+      <button type="button" class="fxr-star-btn" data-star="1" aria-label="نجمة واحدة">☆</button>
+      <button type="button" class="fxr-star-btn" data-star="2" aria-label="نجمتان">☆</button>
+      <button type="button" class="fxr-star-btn" data-star="3" aria-label="3 نجوم">☆</button>
+      <button type="button" class="fxr-star-btn" data-star="4" aria-label="4 نجوم">☆</button>
+      <button type="button" class="fxr-star-btn active" data-star="5" aria-label="5 نجوم">★</button>
+    </div>
+    <label class="fxr-rate-label" for="rateCommentInput">تعليقك (اختياري)</label>
+    <textarea id="rateCommentInput" class="fxr-rate-textarea" rows="3" placeholder="صف تجربتك مع الحرفي..."></textarea>
+    <button type="button" class="fxr-btn fxr-btn-primary fxr-btn-block" id="submitReviewBtn">إرسال التقييم</button>
+    <div class="fxr-secret-report" id="secretReportWrap" hidden>
+      <h4 class="fxr-content-title" style="margin-top:20px;font-size:15px">⚠️ بلاغ سري للإدارة</h4>
+      <p class="fxr-rate-hint">يُرسل للإدارة فقط — لا يظهر في ملف الحرفي ولا يُكشف اسمك للحرفي.</p>
+      <div id="reportBookingPickerWrap" class="fxr-rate-picker">
+        <label class="fxr-rate-label" for="reportBookingSelect">اختر الحجز المكتمل</label>
+        <select id="reportBookingSelect" class="fxr-rate-select"></select>
+      </div>
+      <label class="fxr-rate-label" for="reportReasonInput">سبب البلاغ</label>
+      <textarea id="reportReasonInput" class="fxr-rate-textarea" rows="3" placeholder="صف المشكلة بوضوح (10 أحرف على الأقل)..."></textarea>
+      <label class="fxr-report-check">
+        <input type="checkbox" id="reportConfirmCheck"> أؤكد أن هذا بلاغ حقيقي للإدارة
+      </label>
+      <button type="button" class="fxr-btn fxr-btn-outline fxr-btn-block" id="submitReportBtn" style="margin-top:8px;background:#c0392b;color:#fff;border-color:#c0392b">📤 إرسال البلاغ للإدارة</button>
+    </div>
+    <p class="fxr-rate-login-msg" id="rateLoginMsg" hidden>
+      <a href="login.html">سجّل الدخول</a> كعميل لتقييم الخدمة بعد إتمام الحجز.
+    </p>
+  </div>
+
   <div class="fxr-reviews-summary">
     <div class="fxr-summary-rating">
-      <div class="fxr-summary-score" id="summaryScore">4.9</div>
+      <div class="fxr-summary-score" id="summaryScore">—</div>
       <div class="fxr-summary-stars" id="summaryStars">★★★★★</div>
-      <div class="fxr-summary-count" id="summaryCount">بناءً على 112 تقييم</div>
+      <div class="fxr-summary-count" id="summaryCount">جاري التحميل...</div>
     </div>
-    <div class="fxr-rating-bars">
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">5 ★</span>
-        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: 78%"></div></div>
-        <span class="fxr-bar-percent">78%</span>
-      </div>
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">4 ★</span>
-        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: 15%"></div></div>
-        <span class="fxr-bar-percent">15%</span>
-      </div>
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">3 ★</span>
-        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: 5%"></div></div>
-        <span class="fxr-bar-percent">5%</span>
-      </div>
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">2 ★</span>
-        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: 1%"></div></div>
-        <span class="fxr-bar-percent">1%</span>
-      </div>
-      <div class="fxr-rating-bar-item">
-        <span class="fxr-bar-label">1 ★</span>
-        <div class="fxr-bar-bg"><div class="fxr-bar-fill" style="width: 1%"></div></div>
-        <span class="fxr-bar-percent">1%</span>
-      </div>
+    <div class="fxr-rating-bars" id="ratingBars">
     </div>
   </div>
 
   <div class="fxr-reviews-list" id="reviewsList">
-    <div class="fxr-review-card">
-      <div class="fxr-review-header">
-        <div class="fxr-reviewer-avatar">أ</div>
-        <div class="fxr-reviewer-info">
-          <div class="fxr-reviewer-name">أحمد الكيلاني</div>
-          <div class="fxr-review-stars">★★★★★</div>
-        </div>
-        <div class="fxr-review-date">15 مارس 2025</div>
-      </div>
-      <p class="fxr-review-text">خدمة ممتازة وسريعة، أسعاره معقولة جداً. جاء في الوقت المحدد وأصلح المشكلة بكفاءة عالية. أنصح به بشدة.</p>
-    </div>
-
-    <div class="fxr-review-card">
-      <div class="fxr-review-header">
-        <div class="fxr-reviewer-avatar">ر</div>
-        <div class="fxr-reviewer-info">
-          <div class="fxr-reviewer-name">رنا الشرايري</div>
-          <div class="fxr-review-stars">★★★★☆</div>
-        </div>
-        <div class="fxr-review-date">10 مارس 2025</div>
-      </div>
-      <p class="fxr-review-text">جاء في الوقت المحدد وأصلح المشكلة. التعامل محترم والخدمة جيدة. السعر مناسب مقارنة بغيره.</p>
-    </div>
-
-    <div class="fxr-review-card">
-      <div class="fxr-review-header">
-        <div class="fxr-reviewer-avatar">س</div>
-        <div class="fxr-reviewer-info">
-          <div class="fxr-reviewer-name">سامر البطاينة</div>
-          <div class="fxr-review-stars">★★★★★</div>
-        </div>
-        <div class="fxr-review-date">5 مارس 2025</div>
-      </div>
-      <p class="fxr-review-text">ممتاز محترم وفاهم بشغله. شكراً لكم على هذا الحرفي المتميز. سأتعامل معه مرة أخرى بالتأكيد.</p>
-    </div>
-
-    <div class="fxr-review-card">
-      <div class="fxr-review-header">
-        <div class="fxr-reviewer-avatar">ل</div>
-        <div class="fxr-reviewer-info">
-          <div class="fxr-reviewer-name">ليلى عبابنة</div>
-          <div class="fxr-review-stars">★★★★★</div>
-        </div>
-        <div class="fxr-review-date">28 فبراير 2025</div>
-      </div>
-      <p class="fxr-review-text">الله يبارك فيه، أصلح التكييف بسرعة وخبرة. أنصح الجميع بالتعامل معه. أسعاره مناسبة جداً.</p>
-    </div>
+    <p class="text-muted">جاري تحميل التقييمات...</p>
   </div>
 
   <button class="fxr-btn fxr-btn-outline-dark fxr-btn-block" id="showMoreReviews" onclick="fxrShowMoreReviews()">
@@ -377,30 +298,7 @@
 <!-- TAB CONTENT - GALLERY -->
 <div class="fxr-tab-content" id="galleryTab">
   <div class="fxr-gallery-grid" id="galleryGrid">
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">❄️</div>
-      <div class="fxr-gallery-caption">تصليح تكييف سبليت</div>
-    </div>
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">🔧</div>
-      <div class="fxr-gallery-caption">صيانة مكيف مركزي</div>
-    </div>
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">⚙️</div>
-      <div class="fxr-gallery-caption">تركيب وحدة خارجية</div>
-    </div>
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">🧊</div>
-      <div class="fxr-gallery-caption">شحن فريون</div>
-    </div>
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">🌀</div>
-      <div class="fxr-gallery-caption">تنظيف مكيفات</div>
-    </div>
-    <div class="fxr-gallery-item">
-      <div class="fxr-gallery-icon">📺</div>
-      <div class="fxr-gallery-caption">تصليح شاشات</div>
-    </div>
+    <p class="text-muted p-3">جاري تحميل المعرض...</p>
   </div>
 </div>
 
@@ -421,6 +319,12 @@
 
 <!-- JS Files -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
 <script src="js/provider.js"></script>
 
 </body>

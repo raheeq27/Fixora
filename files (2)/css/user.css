@@ -364,6 +364,74 @@ body {
   color: var(--muted);
 }
 
+.profile-order-row,
+.profile-fav-chip {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  margin-bottom: 8px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid rgba(145, 189, 209, 0.3);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.profile-order-row:hover,
+.profile-fav-chip:hover {
+  background: rgba(240, 122, 38, 0.08);
+  border-color: var(--orange);
+}
+
+.profile-order-title,
+.profile-fav-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--dark);
+}
+
+.profile-order-meta {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.profile-order-status {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange);
+}
+
+.profile-fav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+  margin-bottom: 8px;
+  width: auto;
+}
+
+.profile-fav-initial {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fav-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* ======= RESPONSIVE ======= */
 @media (max-width: 600px) {
   .profile-header {

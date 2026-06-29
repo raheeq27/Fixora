@@ -6,6 +6,8 @@
 <title>FIXORA الأردن – لوحة تحكم المستخدم</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/user-dashboard.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
+  <style>.d-none{display:none!important}</style>
 </head>
 <body>
 <!-- HEADER / NAVBAR -->
@@ -18,7 +20,7 @@
       <span></span>
     </button>
     <a href="index.html" class="fxr-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 65px; height: 65px; object-fit: contain;">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon">
       <span class="fxr-logo-text" style="color: white; font-size: 18px; font-weight: 900;">FIX<span style="color: #f07a26;">O</span>RA</span>
     </a>
   </div>
@@ -33,7 +35,20 @@
   </nav>
 
   <div class="fxr-header-btns" style="display: flex; align-items: center; gap: 10px;">
-    <button id="logoutBtn" class="logout-btn" style="background: rgba(240,122,38,.2); color: #f07a26; border: 1.5px solid #f07a26; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">تسجيل الخروج</button>
+    <div class="fxr-notif-wrap" id="fxrNotifWrap">
+      <button type="button" class="fxr-notif-bell" id="fxrNotifBell" aria-label="الإشعارات">
+        <span class="fxr-notif-icon">🔔</span>
+        <span class="fxr-notif-badge d-none" id="fxrNotifBadge">0</span>
+      </button>
+      <div class="fxr-notif-dropdown" id="fxrNotifDropdown" role="menu" aria-hidden="true">
+        <div class="fxr-notif-dropdown-head">
+          <strong>الإشعارات</strong>
+        </div>
+        <ul class="fxr-notif-list" id="fxrNotifList"></ul>
+        <p class="fxr-notif-empty d-none" id="fxrNotifEmpty">لا توجد إشعارات جديدة</p>
+      </div>
+    </div>
+    <button id="headerLogoutBtn" class="logout-btn" style="background: rgba(240,122,38,.2); color: #f07a26; border: 1.5px solid #f07a26; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">تسجيل الخروج</button>
     <a href="login.html" class="fxr-btn fxr-btn-outline" style="border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">دخول</a>
     <a href="register.html" class="fxr-btn fxr-btn-primary" style="background: #f07a26; color: white; border: none; border-radius: 8px; padding: 8px 18px; text-decoration: none; font-size: 13px; font-weight: 700;">تسجيل مجاناً</a>
   </div>
@@ -69,7 +84,7 @@
     
     <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
     
-    <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a>
+    <a href="#" class="fxr-sidebar-link" data-fxr-logout style="color: #f75555;">🚪 تسجيل الخروج</a>
     
   </div>
   
@@ -108,33 +123,28 @@
   <div class="sidebar-item" data-tab="tab-orders">
     <span class="icon">📋</span>
     <span>طلباتي</span>
-    <span class="badge" id="ordersBadge">3</span>
+    <span class="badge" id="ordersBadge" style="display:none">0</span>
   </div>
   <div class="sidebar-item" data-tab="tab-favorites">
     <span class="icon">❤️</span>
     <span>المفضلة</span>
-    <span class="badge" id="favBadge">4</span>
+    <span class="badge" id="favBadge" style="display:none">0</span>
   </div>
   <div class="sidebar-item" data-tab="tab-messages">
     <span class="icon">💬</span>
     <span>الرسائل</span>
-    <span class="badge" id="msgBadge">2</span>
+    <span class="badge" id="msgBadge" style="display:none">0</span>
   </div>
   <div class="sidebar-item" data-tab="tab-notifications">
     <span class="icon">🔔</span>
     <span>الإشعارات</span>
-    <span class="badge" id="notifBadge">3</span>
+    <span class="badge" id="notifBadge" style="display:none">0</span>
   </div>
   <div class="sidebar-item" data-tab="tab-profile">
     <span class="icon">👤</span>
     <span>حسابي</span>
   </div>
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-item" data-tab="tab-settings">
-    <span class="icon">⚙️</span>
-    <span>الإعدادات</span>
-  </div>
-  <div class="sidebar-item" id="logoutBtn" style="margin-top: auto; color: #ff4d4d; cursor: pointer;">
+  <div class="sidebar-item" data-fxr-logout style="margin-top: auto; color: #ff4d4d; cursor: pointer;">
     <span class="icon">🚪</span>
     <span>تسجيل الخروج</span>
   </div>
@@ -148,62 +158,23 @@
     <!-- ========== الصفحة 7: الرئيسية ========== -->
     <div class="tab-panel active" id="tab-dashboard">
       <div class="welcome-header">
-       <h2 id="userNameDisplay">مرحباً أحمد 👋</h2> 
-        <p class="last-login">آخر دخول: اليوم 10:34 ص — عمّان، الأردن 🇯🇴</p>
+       <h2 id="userNameDisplay">مرحباً 👋</h2> 
+        <p class="last-login">لوحة تحكم العميل</p>
       </div>
       
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-number">9</div>
+          <div class="stat-number">0</div>
           <div class="stat-label">إجمالي طلباتي</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">1</div>
+          <div class="stat-number">0</div>
           <div class="stat-label">جارية الآن</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">4</div>
+          <div class="stat-number">0</div>
           <div class="stat-label">حرفيون مفضلون</div>
         </div>
-      </div>
-
-      <div class="section-card">
-        <h3>📋 آخر الطلبات</h3>
-        <div class="orders-preview">
-          <div class="order-row">
-            <span>🔧 تصليح تكييف سبليت</span>
-            <span class="provider-name">محمد أبو خالد</span>
-            <span class="status-badge status-progress">جاري</span>
-          </div>
-          <div class="order-row">
-            <span>⚡ تصليح مفتاح كهرباء</span>
-            <span class="provider-name">خالد النابلسي</span>
-            <span class="status-badge status-done">مكتمل ✓</span>
-          </div>
-          <div class="order-row">
-            <span>🚿 إصلاح تسريب ماء</span>
-            <span class="provider-name">يوسف الحوراني</span>
-            <span class="status-badge status-done">مكتمل ✓</span>
-          </div>
-        </div>
-        <button class="btn-outline view-all-btn" data-goto="orders">عرض جميع الطلبات →</button>
-      </div>
-
-      <div class="section-card">
-        <h3>🔔 آخر الإشعارات</h3>
-        <div class="notif-preview">
-          <div class="notif-item">
-            <div class="notif-icon">✅</div>
-            <div class="notif-text">تم قبول طلبك من قبل محمد أبو خالد</div>
-            <div class="notif-time">منذ 5 دقائق</div>
-          </div>
-          <div class="notif-item">
-            <div class="notif-icon">💬</div>
-            <div class="notif-text">رسالة جديدة من خالد النابلسي</div>
-            <div class="notif-time">منذ ساعة</div>
-          </div>
-        </div>
-        <button class="btn-outline view-all-btn" data-goto="notifications">عرض جميع الإشعارات →</button>
       </div>
     </div>
 
@@ -213,10 +184,11 @@
         <h2>📋 طلباتي</h2>
         <div class="order-filters">
           <button class="filter-btn active" data-filter="all">الكل</button>
-          <button class="filter-btn" data-filter="progress">جاري ⏳</button>
+          <button class="filter-btn" data-filter="progress">جاري الآن ⏳</button>
           <button class="filter-btn" data-filter="accepted">مقبول ✅</button>
           <button class="filter-btn" data-filter="completed">مكتمل ✓</button>
           <button class="filter-btn" data-filter="rejected">مرفوض ❌</button>
+          <button class="filter-btn" data-filter="cancelled">ملغاة 🚫</button>
         </div>
       </div>
 
@@ -251,7 +223,6 @@
     <div class="tab-panel" id="tab-notifications">
       <div class="panel-header">
         <h2>🔔 الإشعارات</h2>
-        <button class="mark-read-btn" id="markAllRead">تحديد الكل كمقروء</button>
       </div>
       <div class="notifications-list" id="notificationsList">
         <!-- سيتم ملؤها بواسطة JavaScript -->
@@ -321,47 +292,18 @@
       </div>
     </div>
 
-    <!-- ========== الإعدادات ========== -->
-    <div class="tab-panel" id="tab-settings">
-      <div class="panel-header">
-        <h2>⚙️ الإعدادات</h2>
-        <p class="panel-sub">تخصيص تجربتك على المنصة</p>
-      </div>
-      <div class="settings-card">
-        <div class="setting-item">
-          <div class="setting-info">
-            <h4>🔔 الإشعارات الفورية</h4>
-            <p>استلام إشعارات عند تحديث الطلبات والرسائل</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="notifToggle" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <div class="setting-info">
-            <h4>📧 الإشعارات البريدية</h4>
-            <p>استلام تحديثات عبر البريد الإلكتروني</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="emailToggle">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <div class="setting-info">
-            <h4>🌙 الوضع الليلي</h4>
-            <p>تغيير مظهر الموقع للوضع الليلي</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="darkModeToggle">
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-      <button class="btn-danger" id="deleteAccountBtn">🗑️ حذف حسابي</button>
-    </div>
+  </div>
+</div>
 
+<div class="fxr-notif-modal-overlay" id="notifModalOverlay" hidden>
+  <div class="fxr-notif-modal" role="dialog" aria-labelledby="notifModalTitle">
+    <button type="button" class="fxr-notif-modal-close" id="notifModalClose" aria-label="إغلاق">✕</button>
+    <h3 id="notifModalTitle">تفاصيل الإشعار</h3>
+    <div id="notifModalBody"></div>
+    <div class="fxr-notif-modal-actions">
+      <button type="button" class="btn-outline" id="notifModalGoOrders">عرض الطلب</button>
+      <button type="button" class="btn-primary" id="notifModalDismiss">حسناً</button>
+    </div>
   </div>
 </div>
 
@@ -378,6 +320,13 @@
   </div>
 </footer>
 
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-datetime.js"></script>
+<script src="js/fxr-header.js"></script>
 <script src="js/user-dashboard.js"></script>
 </body>
 </html>

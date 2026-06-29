@@ -90,6 +90,8 @@ CREATE TABLE users (
     first_name TEXT,
     last_name TEXT,
 
+    is_banned BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -135,6 +137,8 @@ CREATE TABLE provider_profiles (
     is_verified BOOLEAN DEFAULT FALSE,
 
     avg_rating NUMERIC(3,2) DEFAULT 0,
+
+    serviced_areas_text TEXT,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -304,11 +308,11 @@ CREATE TABLE notifications (
 
     user_id UUID NOT NULL,
 
-    type notification_type NOT NULL,
+    type notification_type NOT NULL DEFAULT 'system_alert',
 
     message TEXT NOT NULL,
-    
-    title VARCHAR(100) NOT NULL,
+
+    title VARCHAR(100) NOT NULL DEFAULT 'إشعار',
 
     is_read BOOLEAN DEFAULT FALSE,
 
@@ -318,6 +322,20 @@ CREATE TABLE notifications (
         FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE CASCADE
+);
+
+-- =========================================
+-- USER REPORTS (بلاغات)
+-- =========================================
+
+CREATE TABLE user_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reported_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
+    reason TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================================

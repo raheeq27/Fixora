@@ -1,165 +1,72 @@
 /**
- * FIXORA Chat - راسل الحرفي
- * ملف JavaScript منفصل
+ * FIXORA — دردشة مرتبطة بحجز أو استفسار (API + Socket)
  */
+'use strict';
 
-// بيانات الحرفي
-const PROVIDER = {
-  id: 1,
-  name: "محمد أبو خالد",
-  avatar: "👨‍🔧",
-  status: "online"
-};
-
-// المستخدم الحالي (تم تسجيل دخوله كـ أحمد)
-const CURRENT_USER = {
-  id: 100,
-  name: "أحمد الكيلاني",
-  role: "customer"
-};
-
-// تخزين الرسائل في مصفوفة
+const api = window.FixoraAPI;
 let messages = [];
+let bookingId = null;
+let inquiryId = null;
+let socket = null;
+let userRole = null;
 
-let messageIdCounter = messages.length + 1;
-let typingTimeout = null;
-const typingIndicatorId = "typingIndicator";
+const messagesContainer = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const backBtn = document.getElementById('backBtn');
 
-// الحصول على العناصر
-const messagesContainer = document.getElementById("chatMessages");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const backBtn = document.getElementById("backBtn");
-
-/**
- * عرض جميع الرسائل في الواجهة
- */
 function renderMessages() {
-  messagesContainer.innerHTML = "";
-  messages.forEach(msg => {
-    const isSent = msg.senderId === CURRENT_USER.id;
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-    
-    const bubbleDiv = document.createElement("div");
-    bubbleDiv.className = "message-bubble";
-    bubbleDiv.innerText = msg.text;
-    
-    const timeSpan = document.createElement("div");
-    timeSpan.className = "message-time";
-    timeSpan.innerText = msg.time;
-    
-    messageDiv.appendChild(bubbleDiv);
-    messageDiv.appendChild(timeSpan);
-    messagesContainer.appendChild(messageDiv);
+  if (!messagesContainer) return;
+  messagesContainer.innerHTML = '';
+  const myId = localStorage.getItem('userId');
+  messages.forEach((msg) => {
+    const isSent = String(msg.sender_id) === String(myId);
+    const div = document.createElement('div');
+    div.className = `message ${isSent ? 'sent' : 'received'}`;
+    div.innerHTML = `
+      <div class="message-bubble">${msg.content || msg.message_text || ''}</div>
+      <div class="message-time">${new Date(msg.created_at || Date.now()).toLocaleTimeString('ar-JO', { hour: '2-digit', minute: '2-digit' })}</div>`;
+    messagesContainer.appendChild(div);
   });
-  // تمرير إلى أسفل المحادثة
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-/**
- * إضافة رسالة جديدة إلى المحادثة
- */
-function addMessage(senderId, senderName, text) {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-  const newMsg = {
-    id: messageIdCounter++,
-    senderId: senderId,
-    senderName: senderName,
-    text: text.trim(),
-    time: timeString,
-    timestamp: Date.now()
-  };
-  messages.push(newMsg);
-  renderMessages();
+async function loadHistory() {
+  try {
+    let res;
+    if (inquiryId) {
+      res = await api.getInquiryChat(inquiryId);
+    } else if (bookingId) {
+      res = await api.getChat(bookingId);
+    } else {
+      return;
+    }
+    messages = res.messages || [];
+    renderMessages();
+  } catch (e) {
+    console.warn(e);
+  }
 }
 
-/**
- * إظهار مؤشر الكتابة
- */
-function showTypingIndicator() {
-  if (document.getElementById(typingIndicatorId)) return;
-  const typingDiv = document.createElement("div");
-  typingDiv.id = typingIndicatorId;
-  typingDiv.className = "typing-indicator";
-  typingDiv.innerHTML = `<span>●</span><span>●</span><span>●</span> يكتب ...`;
-  messagesContainer.appendChild(typingDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+async function sendMessage() {
+  const text = messageInput?.value.trim();
+  if (!text) return;
+
+  try {
+    if (inquiryId) {
+      await api.sendInquiryChat(inquiryId, text);
+    } else if (bookingId) {
+      await api.sendChat(bookingId, text);
+    } else {
+      return;
+    }
+    messageInput.value = '';
+    await loadHistory();
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
-/**
- * إخفاء مؤشر الكتابة
- */
-function removeTypingIndicator() {
-  const indicator = document.getElementById(typingIndicatorId);
-  if (indicator) indicator.remove();
-}
-
-/**
- * محاكاة الرد التلقائي من الحرفي
- */
-function simulateProviderReply(userMessage) {
-  removeTypingIndicator();
-  showTypingIndicator();
-  
-  setTimeout(() => {
-    removeTypingIndicator();
-    const replyText = "شكرا لتواصلك سيتم الرد عليك في اقرب وقت ممكن";
-    
-    addMessage(PROVIDER.id, PROVIDER.name, replyText);
-  }, 1300);
-}
-
-/**
- * إرسال الرسالة
- */
-function sendMessage() {
-  const text = messageInput.value.trim();
-  if (text === "") return;
-  
-  addMessage(CURRENT_USER.id, CURRENT_USER.name, text);
-  messageInput.value = "";
-  messageInput.focus();
-  
-  if (typingTimeout) clearTimeout(typingTimeout);
-  
-  typingTimeout = setTimeout(() => {
-    simulateProviderReply(text);
-  }, 700);
-}
-<script src="http://localhost:5000/socket.io/socket.io.js"></script>
-const socket = io('http://localhost:5000');
-
-// 1. بمجرد فتح صفحة الشات، نأخذ معرف الحجز ونخبر السيرفر ليدخلنا لغرفته السياقية الخاصة
-const currentBookingId = "معرف_الحجز_المستخرج_من_الرابط";
-socket.emit('join_booking_chat', currentBookingId);
-
-// 2. كود إرسال الرسالة فور الضغط على زر الإرسال
-function onSendButtonClick() {
-    const text = document.getElementById('message-input').value;
-    
-    const messageData = {
-        bookingId: currentBookingId,
-        message_text: text,
-        sender_name: "تسنيم" // اسم المرسل الحالي
-    };
-
-    // إرسالها حياً للسيرفر عبر السوكت
-    socket.emit('send_new_message', messageData);
-    
-    // وعرضها فوراً في شاشتي أنا أيضاً
-    appendMessageToUI(messageData); 
-}
-
-// 3. الاستماع المستمر للرسائل القادمة حياً من الطرف الآخر بدون أي تحديث أو Refresh للمتصفح!
-socket.on('receive_message', (data) => {
-    console.log("وصلت رسالة جديدة حية الآن 💬:", data);
-    appendMessageToUI(data); // دالة تعرض الرسالة فوراً في الـ DOM للمستخدم
-});
-/**
- * معالجة الضغط على Enter
- */
 function handleKeyPress(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -167,25 +74,127 @@ function handleKeyPress(e) {
   }
 }
 
-/**
- * العودة لصفحة البروفايل
- */
-function goBackToProfile() {
-  // العودة إلى صفحة الحرفي
-  window.location.href = "privider.html";
+function goBack() {
+  if (userRole === 'provider') {
+    window.location.href = 'provider-dashboard.html#messages';
+    return;
+  }
+  if (history.length > 1) {
+    history.back();
+    return;
+  }
+  window.location.href = 'user-dashboard.html?tab=tab-messages';
 }
 
-/**
- * تهيئة الصفحة وربط الأحداث
- */
-function init() {
-  renderMessages();
-  messageInput.focus();
-  
-  sendBtn.addEventListener("click", sendMessage);
-  messageInput.addEventListener("keypress", handleKeyPress);
-  backBtn.addEventListener("click", goBackToProfile);
+function initSocket() {
+  if (typeof io === 'undefined') return;
+  const origin = window.FIXORA_API || location.origin;
+  socket = io(origin);
+  const roomId = inquiryId || bookingId;
+  if (!roomId) return;
+  if (inquiryId) {
+    socket.emit('join_inquiry_chat', inquiryId);
+  } else {
+    socket.emit('join_booking_chat', bookingId);
+  }
+  socket.on('receive_message', () => loadHistory());
 }
 
-// بدء التطبيق عند تحميل الصفحة
-document.addEventListener("DOMContentLoaded", init);
+async function loadChatHeader() {
+  const statusEl = document.getElementById('chatProviderStatus');
+  const statusWrap = document.querySelector('.provider-status');
+  if (statusWrap) statusWrap.style.display = 'none';
+
+  try {
+    const nameEl = document.getElementById('chatProviderName');
+    if (inquiryId) {
+      const threads = await api.getInquiryThreads();
+      const list = threads.data || [];
+      const t = list.find((x) => String(x.id) === String(inquiryId));
+      if (t && nameEl) {
+        nameEl.textContent = (t.other_name || 'محادثة').trim();
+      }
+      return;
+    }
+
+    if (!bookingId) return;
+    const bookings = await api.getMyBookings();
+    const list = bookings.data || [];
+    const b = list.find((x) => String(x.id) === String(bookingId));
+    if (!b) return;
+    const other = userRole === 'provider'
+      ? (b.client_name || 'عميل')
+      : (b.provider_name || 'حرفي');
+    if (nameEl) nameEl.textContent = other.trim();
+
+    const avatarEl = document.getElementById('chatProviderAvatar');
+    if (avatarEl) avatarEl.textContent = '💬';
+  } catch (_) { /* optional */ }
+}
+
+async function resolveInquiryFromProvider(providerId) {
+  const res = await api.startInquiryChat(providerId);
+  return res.inquiryId || res.bookingId;
+}
+
+async function init() {
+  const access = window.FixoraAccess;
+  userRole = access?.getRole?.() || null;
+
+  if (!localStorage.getItem('token')) {
+    localStorage.setItem('redirectAfterLogin', location.pathname + location.search);
+    window.location.href = 'login.html';
+    return;
+  }
+
+  if (userRole !== 'client' && userRole !== 'provider') {
+    window.location.href = 'unauthorized.html';
+    return;
+  }
+
+  const params = new URLSearchParams(location.search);
+  bookingId = params.get('bookingId');
+  inquiryId = params.get('inquiryId');
+  const providerId = params.get('providerId');
+
+  if (!bookingId && !inquiryId && providerId) {
+    if (userRole !== 'client') {
+      alert('المراسلة المباشرة متاحة للعملاء فقط');
+      window.location.href = 'provider-dashboard.html#messages';
+      return;
+    }
+    try {
+      const id = await resolveInquiryFromProvider(providerId);
+      if (id && !params.get('bookingId')) {
+        inquiryId = id;
+        history.replaceState(null, '', `chat.html?inquiryId=${encodeURIComponent(inquiryId)}`);
+      } else {
+        bookingId = id;
+      }
+    } catch (e) {
+      alert(e.message || 'تعذر بدء المحادثة');
+      window.location.href = `privider.html?id=${encodeURIComponent(providerId)}`;
+      return;
+    }
+  }
+
+  if (!bookingId && !inquiryId) {
+    alert('افتح المحادثة من بروفايل الحرفي أو من طلب حجز نشط');
+    if (userRole === 'provider') {
+      window.location.href = 'provider-dashboard.html#messages';
+    } else {
+      window.location.href = 'user-dashboard.html?tab=tab-messages';
+    }
+    return;
+  }
+
+  await loadChatHeader();
+  await loadHistory();
+  initSocket();
+  messageInput?.focus();
+  sendBtn?.addEventListener('click', sendMessage);
+  messageInput?.addEventListener('keypress', handleKeyPress);
+  backBtn?.addEventListener('click', goBack);
+}
+
+document.addEventListener('DOMContentLoaded', init);

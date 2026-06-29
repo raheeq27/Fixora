@@ -1,410 +1,695 @@
 /**
- * FIXORA - لوحة تحكم المستخدم (User Dashboard)
- * كود الإدارة الموحد والربط الحقيقي مع الباك إند وقاعدة البيانات
+ * FIXORA - لوحة تحكم العميل (User Dashboard)
  */
+'use strict';
 
-// ==========================================
-// 1. التحقق من الهوية والحماية (Auth Check)
-// ==========================================
-const token = localStorage.getItem('token');
-
-if (!token) {
-    alert("غير مسموح بالدخول، يرجى تسجيل الدخول أولاً.");
-    window.location.href = 'login.html';
+if (window.FixoraAPI && !window.FixoraAPI.requireAuth('client')) {
+  /* redirected */
 }
 
-// ========== بيانات المستخدم الافتراضية للـ Fallback ==========
 const fallbackUserData = {
-    name: 'مستخدم فيكسورا',
-    phone: '0790000000',
-    email: 'user@fixora.com',
-    city: 'عمّان',
-    area: 'الشميساني'
+  name: 'مستخدم فيكسورا',
+  phone: '0790000000',
+  email: 'user@fixora.com',
+  city: 'عمّان',
+  area: 'الشميساني'
 };
 
-// ========== بيانات الإشعارات والحرفيين والرسائل الثابتة (الواجهة الجمالية) ==========
-let notificationsData = [
-    { id: 1, icon: '✅', title: 'تم قبول طلبك!', text: 'تم قبول طلب تصليح التكييف · الموعد المحدد قريباً', time: 'منذ 5 دقائق', read: false },
-    { id: 2, icon: '💬', title: 'رسالة جديدة', text: 'الفني: "سأكون عندك في الموعد المحدد إن شاء الله"', time: 'منذ 20 دقيقة', read: false },
-    { id: 3, icon: '🎉', title: 'مرحباً في FIXORA الأردن', text: 'حسابك جاهز! ابدأ بالبحث عن أفضل فني في منطقتك', time: 'أمس', read: true }
-];
+let notificationsData = [];
+let favoritesData = [];
+let messagesData = [];
+let allBookings = [];
+let currentOrderFilter = 'all';
+let pendingAvatarDataUrl = null;
 
-const favoritesData = [
-    { id: 1, icon: '👨‍🔧', name: 'محمد أبو خالد', specialty: 'تقني تكييف وأجهزة منزلية', rating: '⭐ 4.9 (48 تقييم)', location: 'عمان، تلاع العلي' },
-    { id: 2, icon: '⚡', name: 'مهندس خالد النابلسي', specialty: 'فني كهرباء وتمديدات ذكية', rating: '⭐ 4.8 (32 تقييم)', location: 'عمان، صويلح' }
-];
+const api = () => window.FixoraAPI;
 
-const messagesData = [
-    { id: 1, icon: '👨‍🔧', sender: 'محمد أبو خالد', preview: 'سأكون عندك في الوقت المحدد إن شاء الله', time: '10:15 ص' },
-    { id: 2, icon: '⚡', sender: 'مهندس خالد النابلسي', preview: 'تم إنهاء الفحص، يرجى مراجعة الفاتورة', time: 'أمس' }
-];
+const STATUS_LABELS = {
+  pending: 'قيد الانتظار',
+  confirmed: 'مقبول',
+  in_progress: 'جاري التنفيذ',
+  completed: 'مكتمل',
+  rejected: 'مرفوض',
+  cancelled: 'ملغى'
+};
 
-// ==========================================
-// 2. الانتظار حتى تحميل كامل عناصر الصفحة
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
+const STATUS_BADGE_CLASS = {
+  pending: 'status-pending',
+  confirmed: 'status-confirmed',
+  in_progress: 'status-progress',
+  completed: 'status-done',
+  rejected: 'status-rejected',
+  cancelled: 'status-cancelled'
+};
 
-    let currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user'));
-
-    // تهيئة محركات الواجهة الأساسية
-    initializeTabs();
-    initializeLogout();
-    renderNotifications();
-    renderFavorites();
-    renderMessages();
-
-    // التحقق من حالة الكاش قبل استدعاء السيرفر
-    if (currentUser && (currentUser.first_name || currentUser.firstName)) {
-        console.log("✅ [FIXORA] تم تحميل البيانات الكاملة من الكاش بنجاح.");
-        displayWelcomeMessage(currentUser);
-        populateProfileFields(currentUser);
-        
-        // جلب الحجوزات المرتبطة بالمستخدم حتى لو كانت البيانات الشخصية في الكاش
-        fetchUserDataFromServer();
-    } else {
-        console.log("ℹ️ [FIXORA] بيانات الاسم غير مكتملة في الكاش، جاري جلب الملف الكامل من السيرفر...");
-        fetchUserDataFromServer();
-    }
-
-    // تفعيل مستمع الأحداث لتعديل الملف الشخصي
-    initializeProfileUpdate();
-});
-
-// ==========================================
-// 3. نظام تبديل التبويبات (Tab Switching)
-// ==========================================
-function initializeTabs() {
-    const sidebarItems = document.querySelectorAll('.sidebar-item');
-    const tabPanels = document.querySelectorAll('.tab-panel, .dashboard-section');
-    const viewAllButtons = document.querySelectorAll('.view-all-btn');
-
-    function switchTab(tabId) {
-        // إزالة الفاعلية من السايد بار والأقسام
-        sidebarItems.forEach(item => item.classList.remove('active'));
-        tabPanels.forEach(panel => {
-            panel.classList.remove('active');
-            panel.style.display = 'none';
-        });
-
-        // تفعيل العنصر المختار في السايد بار
-        const targetSidebarItem = document.querySelector(`.sidebar-item[data-tab="${tabId}"]`);
-        if (targetSidebarItem) targetSidebarItem.classList.add('active');
-
-        // إظهار القسم المطابق للـ id
-        const cleanId = tabId.replace('-section', '');
-        const targetPanel = document.getElementById(`tab-${cleanId}`) || 
-                            document.getElementById(cleanId) || 
-                            document.getElementById(tabId);
-
-        if (targetPanel) {
-            targetPanel.classList.add('active');
-            targetPanel.style.display = 'block';
-            console.log(`🎯 [FIXORA] الانتقال إلى واجهة: [${tabId}]`);
-        } else {
-            console.warn(`⚠️ [FIXORA] لم يتم العثور في الـ HTML على عنصر بـ id يطابق: ${tabId}`);
-        }
-    }
-
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            const tabId = item.getAttribute('data-tab');
-            if (!tabId) return; // تخطي أزرار تسجيل الخروج التي لا تحمل داتا تبويب
-
-            e.preventDefault();
-            switchTab(tabId);
-        });
-    });
-
-    viewAllButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const goToTab = btn.getAttribute('data-goto');
-            if (goToTab) switchTab(goToTab);
-        });
-    });
+function normalizeStatus(status) {
+  return String(status || '').toLowerCase().trim();
 }
 
-// ==========================================
-// 4. عرض البيانات الرسومية وتعبئة الحقول
-// ==========================================
-function displayWelcomeMessage(user) {
-    const nameDisplay = document.getElementById('userNameDisplay');
-    if (!nameDisplay) return;
+function setSidebarBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (count > 0) {
+    el.textContent = count;
+    el.style.display = '';
+  } else {
+    el.textContent = '0';
+    el.style.display = 'none';
+  }
+}
 
-    const name = user.first_name || user.firstName || user.name || fallbackUserData.name;
-    nameDisplay.textContent = `مرحباً ${name} 👋`;
-    
-    // حفظ الاسم في الـ localStorage لسرعة القراءة الفورية عند التحميل القادم
-    localStorage.setItem('userName', name);
+document.addEventListener('DOMContentLoaded', () => {
+  const currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user') || 'null');
+
+  initializeTabs();
+  initializeLogout();
+  initializeNotifications();
+  initializeOrderFilters();
+  initializeProfilePicture();
+  fetchUserDataFromServer();
+  loadFavoritesFromApi();
+  loadBookingsForMessages();
+  openTabFromUrl();
+
+  if (currentUser && (currentUser.first_name || currentUser.firstName)) {
+    displayWelcomeMessage(currentUser);
+    populateProfileFields(currentUser);
+    displayProfileAvatar(currentUser.profile_pic_url);
+  }
+
+  initializeProfileUpdate();
+  window.fxrInitNotifications?.();
+});
+
+function initializeTabs() {
+  const sidebarItems = document.querySelectorAll('.sidebar-item[data-tab]');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  const viewAllButtons = document.querySelectorAll('.view-all-btn');
+
+  function switchTab(tabId) {
+    sidebarItems.forEach((item) => item.classList.remove('active'));
+    tabPanels.forEach((panel) => {
+      panel.classList.remove('active');
+      panel.style.display = 'none';
+    });
+
+    const targetSidebarItem = document.querySelector(`.sidebar-item[data-tab="${tabId}"]`);
+    if (targetSidebarItem) targetSidebarItem.classList.add('active');
+
+    const targetPanel = document.getElementById(tabId);
+    if (targetPanel) {
+      targetPanel.classList.add('active');
+      targetPanel.style.display = 'block';
+    }
+  }
+
+  sidebarItems.forEach((item) => {
+    item.addEventListener('click', (e) => {
+      const tabId = item.getAttribute('data-tab');
+      if (!tabId) return;
+      e.preventDefault();
+      switchTab(tabId);
+    });
+  });
+
+  viewAllButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const goToTab = btn.getAttribute('data-goto');
+      if (goToTab) switchTab(goToTab);
+    });
+  });
+
+  window.fxrDashboardSwitchTab = switchTab;
+}
+
+function openTabFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const hash = (location.hash || '').replace('#', '');
+  const tab = params.get('tab') || hash;
+  if (tab && typeof window.fxrDashboardSwitchTab === 'function') {
+    window.fxrDashboardSwitchTab(tab);
+  }
+}
+
+function displayWelcomeMessage(user) {
+  const nameDisplay = document.getElementById('userNameDisplay');
+  if (!nameDisplay) return;
+  const name = user.first_name || user.firstName || user.name || fallbackUserData.name;
+  nameDisplay.textContent = `مرحباً ${name} 👋`;
+  localStorage.setItem('userName', name);
 }
 
 function populateProfileFields(user) {
-    if (!user) return;
-
-    const firstNameInput = document.getElementById('profileFirstName');
-    const lastNameInput = document.getElementById('profileLastName');
-    const phoneInput = document.getElementById('profilePhone');
-    const emailInput = document.getElementById('profileEmail');
-    const cityInput = document.getElementById('profileCity');
-    const areaInput = document.getElementById('profileArea');
-
-    if (firstNameInput) firstNameInput.value = user.first_name || user.name || '';
-    if (lastNameInput) lastNameInput.value = user.last_name || '';
-    if (phoneInput) phoneInput.value = user.phone || '';
-    if (emailInput) emailInput.value = user.email || '';
-    if (cityInput) cityInput.value = user.governorate || 'Amman';
-    if (areaInput) areaInput.value = user.detailed_area || user.area || '';
+  if (!user) return;
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val != null) el.value = val;
+  };
+  set('profileFirstName', user.first_name || '');
+  set('profileLastName', user.last_name || '');
+  set('profilePhone', user.phone || '');
+  set('profileEmail', user.email || '');
+  set('profileCity', user.governorate || 'Amman');
+  set('profileArea', user.detailed_area || user.address || user.area || '');
 }
 
-// ==========================================
-// 5. جلب بيانات المستخدم والحجوزات من السيرفر
-// ==========================================
+function displayProfileAvatar(url) {
+  const img = document.getElementById('profileAvatarImg');
+  const fallback = document.getElementById('profileAvatarDefault');
+  if (!img || !fallback) return;
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    fallback.style.display = 'flex';
+  }
+}
+
+function initializeProfilePicture() {
+  const btn = document.getElementById('btnUploadPicture');
+  const input = document.getElementById('profilePictureInput');
+  if (!btn || !input) return;
+
+  btn.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingAvatarDataUrl = e.target.result;
+      displayProfileAvatar(pendingAvatarDataUrl);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function initializeOrderFilters() {
+  document.querySelectorAll('.order-filters .filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.order-filters .filter-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentOrderFilter = btn.getAttribute('data-filter') || 'all';
+      renderOrdersFromDB(allBookings);
+    });
+  });
+}
+
+function filterBookings(bookings, filterKey) {
+  if (filterKey === 'all') return bookings;
+  return bookings.filter((b) => {
+    const s = normalizeStatus(b.status);
+    switch (filterKey) {
+      case 'progress':
+        return s === 'pending' || s === 'confirmed' || s === 'in_progress';
+      case 'accepted':
+        return s === 'confirmed';
+      case 'completed':
+        return s === 'completed';
+      case 'rejected':
+        return s === 'rejected';
+      case 'cancelled':
+        return s === 'cancelled';
+      default:
+        return true;
+    }
+  });
+}
+
 async function fetchUserDataFromServer() {
-    let userId = localStorage.getItem('userId');
-    
-    // محاولة استخراج الـ ID من كائن الجلسة كخطة بديلة
-    if (!userId) {
-        const currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user'));
-        userId = currentUser ? currentUser.id : null;
+  let userId = localStorage.getItem('userId');
+  if (!userId) {
+    const currentUser = JSON.parse(sessionStorage.getItem('fixora_current_user') || 'null');
+    userId = currentUser?.id || null;
+  }
+  if (!userId) return;
+
+  try {
+    const result = await api().getProfile(userId);
+    const userData = result.user || result;
+    if (userData) {
+      sessionStorage.setItem('fixora_current_user', JSON.stringify(userData));
+      if (userData.profile_pic_url) {
+        localStorage.setItem('fixora_client_avatar', userData.profile_pic_url);
+      }
+      displayWelcomeMessage(userData);
+      populateProfileFields(userData);
+      displayProfileAvatar(userData.profile_pic_url);
     }
 
-    if (!userId) {
-        console.error("🚨 [FIXORA] لم يتم العثور على المعرف الحقيقي للمستخدم (User ID).");
-        return;
+    const bookingsRes = await api().getMyBookings();
+    allBookings = bookingsRes.data || [];
+    renderOrdersFromDB(allBookings);
+    updateSidebarBadges(allBookings);
+    renderOverviewFromBookings(allBookings);
+    await loadNotificationsFromApi();
+  } catch (error) {
+    console.warn('[FIXORA]', error.message);
+    allBookings = [];
+    renderOrdersFromDB([]);
+    updateSidebarBadges([]);
+    const localName = localStorage.getItem('userName') || fallbackUserData.name;
+    const nameDisplay = document.getElementById('userNameDisplay');
+    if (nameDisplay) nameDisplay.textContent = `مرحباً ${localName} 👋`;
+  }
+}
+
+async function loadFavoritesFromApi() {
+  try {
+    const res = await api().getFavorites();
+    favoritesData = (res.data || []).map((f) => ({
+      id: f.provider_profile_id,
+      name: `${f.first_name || ''} ${f.last_name || ''}`.trim() || 'حرفي',
+      specialty: f.specialty || 'مقدم خدمة',
+      rating: parseFloat(f.avg_rating) || 0,
+      bio: f.bio || ''
+    }));
+    renderFavorites();
+    setSidebarBadge('favBadge', favoritesData.length);
+    const favCount = document.querySelector('#tab-dashboard .stats-grid .stat-card:nth-child(3) .stat-number');
+    if (favCount) favCount.textContent = favoritesData.length;
+  } catch (_) {
+    favoritesData = [];
+    renderFavorites();
+    setSidebarBadge('favBadge', 0);
+  }
+}
+
+async function loadNotificationsFromApi() {
+  try {
+    const res = await api().getNotifications();
+    const rows = res.data || res.notifications || [];
+    notificationsData = rows.map((n) => ({
+      id: n.id,
+      icon: n.type === 'new_review' ? '⭐' : n.title?.includes('رسالة') ? '💬' : '🔔',
+      title: n.title || 'إشعار',
+      text: window.fxrNotifDisplayMessage?.(n.message) || n.message || '',
+      time: new Date(n.created_at).toLocaleDateString('ar-JO'),
+      read: !!n.is_read,
+      rawMessage: n.message,
+      createdAt: n.created_at
+    }));
+  } catch (_) {
+    notificationsData = [];
+  }
+  renderNotifications();
+  renderOverviewNotifications();
+  updateSidebarBadges(allBookings);
+}
+
+async function loadBookingsForMessages() {
+  try {
+    const [bookingsRes, threadsRes] = await Promise.all([
+      api().getMyBookings(),
+      api().getInquiryThreads().catch(() => ({ data: [] }))
+    ]);
+    const bookings = bookingsRes.data || [];
+    const threads = threadsRes.data || [];
+
+    // map: provider_profile_id => thread
+    const threadByProvider = {};
+    threads.forEach((t) => {
+      const pid = String(t.provider_profile_id || '');
+      if (pid) threadByProvider[pid] = t;
+    });
+
+    const seenProviders = new Set();
+    const combined = [];
+
+    // 1) الحرفيون الذين عندهم inquiry thread
+    threads.forEach((t) => {
+      const pid = String(t.provider_profile_id || '');
+      if (!pid || seenProviders.has(pid)) return;
+      seenProviders.add(pid);
+
+      const provBookings = bookings.filter((b) => String(b.provider_id || '') === pid);
+      const latestBooking = provBookings[0];
+
+      const previewParts = [];
+      if (t.specialty) previewParts.push(t.specialty);
+      if (latestBooking?.category_name) previewParts.push(latestBooking.category_name);
+      const preview = previewParts.length ? previewParts.join(' - ') : 'محادثة';
+
+      combined.push({
+        icon: '💬',
+        sender: (t.other_name || 'حرفي').trim(),
+        preview,
+        time: new Date(
+          latestBooking?.updated_at || latestBooking?.created_at || t.created_at
+        ).toLocaleDateString('ar-JO'),
+        href: `chat.html?inquiryId=${encodeURIComponent(t.id)}`
+      });
+    });
+
+    // 2) الحرفيون بدون inquiry thread (حجوزات فقط)
+    bookings.forEach((b) => {
+      const pid = String(b.provider_id || '');
+      if (!pid || seenProviders.has(pid)) return;
+      seenProviders.add(pid);
+
+      combined.push({
+        icon: '💬',
+        sender: (b.provider_name || 'فني').trim(),
+        preview: b.category_name || b.notes || 'محادثة الحجز',
+        time: new Date(b.updated_at || b.created_at).toLocaleDateString('ar-JO'),
+        href: `chat.html?bookingId=${encodeURIComponent(b.id)}`
+      });
+    });
+
+    messagesData = combined.slice(0, 15);
+    renderMessages();
+    setSidebarBadge('msgBadge', messagesData.length);
+  } catch (_) {
+    messagesData = [];
+    renderMessages();
+    setSidebarBadge('msgBadge', 0);
+  }
+}
+async function markNotificationRead(notifId) {
+  try {
+    await api().markNotificationRead(notifId);
+    const n = notificationsData.find((x) => String(x.id) === String(notifId));
+    if (n) n.read = true;
+    renderNotifications();
+    renderOverviewNotifications();
+    updateSidebarBadges(allBookings);
+    window.fxrRefreshNotifications?.();
+  } catch (_) { /* ignore */ }
+}
+
+function handleNotificationClick(notifId) {
+  const n = notificationsData.find((x) => String(x.id) === String(notifId));
+  const link = window.fxrNotifParseLink?.(n?.rawMessage);
+  markNotificationRead(notifId);
+  if (link) {
+    window.location.href = link;
+    return;
+  }
+  window.fxrDashboardSwitchTab?.('tab-notifications');
+}
+
+function initializeNotifications() {
+  window.fxrOnNotificationsUpdated = () => {
+    loadNotificationsFromApi();
+  };
+
+  document.getElementById('notifModalClose')?.addEventListener('click', () => {
+    const overlay = document.getElementById('notifModalOverlay');
+    if (overlay) overlay.hidden = true;
+  });
+
+  document.getElementById('notifModalDismiss')?.addEventListener('click', () => {
+    const overlay = document.getElementById('notifModalOverlay');
+    if (overlay) overlay.hidden = true;
+  });
+
+  document.getElementById('notifModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'notifModalOverlay') e.target.hidden = true;
+  });
+}
+
+function updateSidebarBadges(bookings) {
+  setSidebarBadge('ordersBadge', bookings.length);
+  const unread = notificationsData.filter((n) => !n.read).length;
+  setSidebarBadge('notifBadge', unread);
+}
+
+function renderOverviewFromBookings(bookings) {
+  const stats = document.querySelector('#tab-dashboard .stats-grid');
+  if (stats) {
+    const cards = stats.querySelectorAll('.stat-card .stat-number');
+    if (cards[0]) cards[0].textContent = bookings.length;
+    const active = bookings.filter((b) => {
+      const s = normalizeStatus(b.status);
+      return s === 'pending' || s === 'confirmed' || s === 'in_progress';
+    }).length;
+    if (cards[1]) cards[1].textContent = active;
+    if (cards[2]) cards[2].textContent = favoritesData.length;
+  }
+
+  const preview = document.getElementById('overviewOrdersPreview');
+  if (!preview) return;
+  if (!bookings.length) {
+    preview.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:12px">لا توجد طلبات حديثة</p>';
+    return;
+  }
+
+  preview.innerHTML = bookings.slice(0, 3).map((b) => {
+    const s = normalizeStatus(b.status);
+    const badge = STATUS_BADGE_CLASS[s] || 'status-pending';
+    const label = STATUS_LABELS[s] || b.status;
+    return `
+      <div class="order-row">
+        <span>🔧 ${b.category_name || 'طلب خدمة'}</span>
+        <span class="provider-name">${(b.provider_name || 'فني').trim()}</span>
+        <span class="status-badge ${badge}">${label}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderOverviewNotifications() {
+  const preview = document.getElementById('overviewNotifPreview');
+  if (!preview) return;
+  if (!notificationsData.length) {
+    preview.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:12px">لا توجد إشعارات</p>';
+    return;
+  }
+  preview.innerHTML = `<div class="notif-preview-grid">${notificationsData.slice(0, 3).map((n) => `
+    <button type="button" class="notif-preview-card ${n.read ? 'read' : ''}" data-notif-id="${n.id}">
+      <span class="notif-preview-card-icon">${n.icon}</span>
+      <span class="notif-preview-card-body">
+        <strong class="notif-preview-card-title">${n.title}</strong>
+        <span class="notif-preview-card-text">${n.text}</span>
+      </span>
+      <span class="notif-preview-card-time">${n.time}</span>
+      ${n.read ? '' : '<span class="notif-preview-dot"></span>'}
+    </button>
+  `).join('')}</div>`;
+
+  preview.querySelectorAll('[data-notif-id]').forEach((el) => {
+    el.addEventListener('click', () => {
+      handleNotificationClick(el.getAttribute('data-notif-id'));
+    });
+  });
+}
+
+function renderOrdersFromDB(bookings) {
+  const container = document.getElementById('ordersListFull');
+  if (!container) return;
+
+  const filtered = filterBookings(bookings, currentOrderFilter);
+
+  if (!filtered.length) {
+    container.innerHTML = '<p style="text-align:center;padding:24px;color:#7f8c8d">لا توجد طلبات في هذا التصنيف.</p>';
+    return;
+  }
+
+  container.innerHTML = filtered.map((booking) => {
+    const s = normalizeStatus(booking.status);
+    const badgeClass = STATUS_BADGE_CLASS[s] || 'status-pending';
+    const label = STATUS_LABELS[s] || booking.status || '—';
+    const appt = window.FixoraDateTime
+      ? window.FixoraDateTime.formatBookingAppointment(booking.scheduled_at, booking.start_time)
+      : null;
+    const formattedDate = appt
+      ? appt.full
+      : (booking.scheduled_at
+        ? new Date(booking.scheduled_at).toLocaleDateString('ar-JO', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'قريباً');
+    const providerId = booking.provider_id || '';
+    const providerLink = providerId
+      ? `<a href="privider.html?id=${encodeURIComponent(providerId)}" class="btn-outline" style="display:inline-block;margin-top:10px;font-size:12px">عرض بروفايل الحرفي</a>`
+      : '';
+
+    return `
+      <div class="order-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:15px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <h4 style="margin:0;color:#2c3e50;font-size:16px">${booking.category_name || 'طلب خدمة'}</h4>
+          <span class="status-badge ${badgeClass}" style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">${label}</span>
+        </div>
+        <p style="margin:4px 0;font-size:14px;color:#7f8c8d">👷 الفني: <strong>${(booking.provider_name || '—').trim()}</strong></p>
+        <p style="margin:4px 0;font-size:14px;color:#7f8c8d">📅 الموعد: ${formattedDate}</p>
+        <p style="margin:4px 0;font-size:14px;color:#7f8c8d">📝 ${booking.notes || 'لا توجد ملاحظات'}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <a href="chat.html?bookingId=${encodeURIComponent(booking.id)}" class="btn-outline" style="font-size:12px">💬 محادثة</a>
+          ${providerLink}
+          ${s === 'pending' || s === 'confirmed' ? `<button type="button" class="btn-outline order-cancel-btn" data-booking-id="${booking.id}" style="font-size:12px;color:#c0392b;border-color:#c0392b">إلغاء الطلب</button>` : ''}
+          ${s === 'completed' && providerId
+            ? `<a href="privider.html?id=${encodeURIComponent(providerId)}&tab=reviews" class="btn-primary" style="font-size:12px;background:#f07a26;border:none;padding:6px 14px;border-radius:8px;color:#fff;text-decoration:none;display:inline-block">⭐ قيّم على صفحة الحرفي</a>`
+            : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('.order-cancel-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-booking-id');
+      if (!id || !confirm('هل تريد إلغاء هذا الطلب؟')) return;
+      try {
+        await api().updateBookingStatus(id, 'cancelled');
+        await fetchUserDataFromServer();
+        await loadBookingsForMessages();
+      } catch (e) {
+        alert(e.message || 'تعذر إلغاء الطلب');
+      }
+    });
+  });
+}
+
+function initializeProfileUpdate() {
+  const saveProfileBtn = document.getElementById('saveProfileBtn');
+  if (!saveProfileBtn) return;
+
+  saveProfileBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    const firstName = document.getElementById('profileFirstName')?.value.trim();
+    const lastName = document.getElementById('profileLastName')?.value.trim();
+    const phone = document.getElementById('profilePhone')?.value.trim();
+    const governorate = document.getElementById('profileCity')?.value;
+    const detailedArea = document.getElementById('profileArea')?.value.trim();
+
+    if (!firstName || !lastName || !phone) {
+      alert('يرجى تعبئة الاسم ورقم الهاتف.');
+      return;
     }
 
-    const fallbackBookings = [
-        { id: "1092", service_title: "تصليح تكييف سبليت", booking_date: new Date(), notes: "شحن فريون وتصليح تكييف سبليت عاجل", status: "مؤكد" }
-    ];
+    const payload = {
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      governorate,
+      address: detailedArea,
+      detailed_area: detailedArea
+    };
+    if (pendingAvatarDataUrl) {
+      payload.profile_pic_url = pendingAvatarDataUrl;
+    }
 
     try {
-        const response = await fetch(`http://localhost:3000/api/users/user/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`خطأ سيرفر بكود استجابة: ${response.status}`);
+      const result = await api().updateProfile(payload);
+      if (result.success) {
+        pendingAvatarDataUrl = null;
+        const saved = result.user || {};
+        sessionStorage.setItem('fixora_current_user', JSON.stringify(saved));
+        if (saved.profile_pic_url) {
+          localStorage.setItem('fixora_client_avatar', saved.profile_pic_url);
         }
-
-        const result = await response.json();
-        const userData = result.user || result;
-
-        if (userData) {
-            // تحديث كاش الجلسة بالبيانات المحدثة كاملة
-            sessionStorage.setItem('fixora_current_user', JSON.stringify(userData));
-
-            displayWelcomeMessage(userData);
-            populateProfileFields(userData);
-
-            // جلب الحجوزات الديناميكية المسترجعة من الـ Controller
-            const bookings = result.bookings || userData.bookings || [];
-            renderOrdersFromDB(bookings.length > 0 ? bookings : fallbackBookings);
-            updateBadgesFromDB(bookings.length > 0 ? bookings : fallbackBookings);
-            
-            console.log("✅ [FIXORA] تم تحديث البيانات والحجوزات حياً من قاعدة البيانات.");
-        }
-
+        displayWelcomeMessage(saved);
+        populateProfileFields(saved);
+        displayProfileAvatar(saved.profile_pic_url);
+        alert(result.message || 'تم حفظ التغييرات بنجاح');
+      } else {
+        alert(result.message || 'فشل التحديث');
+      }
     } catch (error) {
-        console.warn("🚨 [FIXORA] تفعيل خطة الطوارئ الآمنة واستخدام الـ Fallback بسبب:", error.message);
-        
-        renderOrdersFromDB(fallbackBookings);
-        updateBadgesFromDB(fallbackBookings);
-        
-        // محاولة عرض الاسم المخزن محلياً لضمان الشكل الجمالي
-        const localName = localStorage.getItem('userName') || fallbackUserData.name;
-        const nameDisplay = document.getElementById('userNameDisplay');
-        if (nameDisplay) nameDisplay.textContent = `مرحباً ${localName} 👋`;
+      alert(error.message || 'حدث خطأ أثناء الحفظ');
     }
+  });
 }
 
-// ==========================================
-// 6. حقن وعرض الحجوزات في شاشات الـ HTML
-// ==========================================
-function renderOrdersFromDB(bookings) {
-    const container = document.getElementById('ordersListContainer');
-    if (!container) return;
-
-    if (!bookings || bookings.length === 0) {
-        container.innerHTML = `<p style="text-align:center; padding:20px; color:#7f8c8d;">لا يوجد لديك حجوزات حالية.</p>`;
-        return;
-    }
-
-    container.innerHTML = bookings.map(booking => {
-        let statusBadge = '';
-        const status = (booking.status || '').toLowerCase();
-        
-        if (status === 'مؤكد' || status === 'confirmed') {
-            statusBadge = '<span class="status-badge status-confirmed" style="background:#2ecc71; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">مؤكد</span>';
-        } else if (status === 'قيد الانتظار' || status === 'pending') {
-            statusBadge = '<span class="status-badge status-pending" style="background:#f1c40f; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">قيد الانتظار</span>';
-        } else {
-            statusBadge = `<span class="status-badge" style="background:#3498db; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px;">${booking.status || 'مؤكد'}</span>`;
-        }
-
-        const rawDate = booking.booking_date || booking.date;
-        const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('ar-JO', { day: 'numeric', month: 'long', year: 'numeric' }) : 'قريباً';
-
-        return `
-            <div class="order-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 style="margin:0; color:#2c3e50; font-size:16px;">طلب خدمة: ${booking.service_title || 'صيانة عامة'}</h4>
-                    ${statusBadge}
-                </div>
-                <p style="margin:4px 0; font-size:14px; color:#7f8c8d;">🔢 رقم الطلب: <span style="color:#2c3e50; font-weight:bold;">#${booking.id || '1092'}</span></p>
-                <p style="margin:4px 0; font-size:14px; color:#7f8c8d;">📅 الموعد: <span style="color:#2c3e50;">${formattedDate}</span></p>
-                <p style="margin:4px 0; font-size:14px; color:#7f8c8d;">📝 تفاصيل وملاحظات: <span style="color:#2c3e50;">${booking.notes || 'لا يوجد ملاحظات إضافية'}</span></p>
-            </div>
-        `;
-    }).join('');
-}
-
-function updateBadgesFromDB(bookings) {
-    const totalCountBadge = document.getElementById('totalOrdersCount');
-    const pendingCountBadge = document.getElementById('pendingOrdersCount');
-    const confirmedCountBadge = document.getElementById('confirmedOrdersCount');
-
-    if (totalCountBadge) totalCountBadge.textContent = bookings.length;
-    
-    const pendingCount = bookings.filter(b => {
-        const s = (b.status || '').toLowerCase();
-        return s === 'قيد الانتظار' || s === 'pending';
-    }).length;
-    if (pendingCountBadge) pendingCountBadge.textContent = pendingCount;
-
-    const confirmedCount = bookings.filter(b => {
-        const s = (b.status || '').toLowerCase();
-        return s === 'مؤكد' || s === 'confirmed' || s === 'completed';
-    }).length;
-    if (confirmedCountBadge) confirmedCountBadge.textContent = confirmedCount > 0 ? confirmedCount : bookings.length;
-}
-
-// ==========================================
-// 7. تحديث البيانات الشخصية (PUT Request)
-// ==========================================
-function initializeProfileUpdate() {
-    const saveProfileBtn = document.getElementById('saveProfileBtn');
-
-    if (!saveProfileBtn) return;
-
-    saveProfileBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-
-        const firstName = document.getElementById('profileFirstName').value.trim();
-        const lastName = document.getElementById('profileLastName').value.trim();
-        const phone = document.getElementById('profilePhone').value.trim();
-        const governorate = document.getElementById('profileCity').value;
-        const detailedArea = document.getElementById('profileArea').value.trim();
-
-        if (!firstName || !lastName || !phone) {
-            alert("يرجى تعبئة الحقول الأساسية: الاسم الأول، العائلة، ورقم الهاتف.");
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:3000/api/users/update-profile', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    first_name: firstName,
-                    last_name: lastName,
-                    phone: phone,
-                    governorate: governorate,
-                    detailed_area: detailedArea
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert(result.message || "تم تحديث البيانات الشخصية بنجاح! 🎉");
-
-                // تحديث الـ Session Storage بالملف الشخصي الجديد المستلم من السيرفر
-                sessionStorage.setItem('fixora_current_user', JSON.stringify(result.user));
-                
-                // تحديث الرسائل والمدخلات الفورية على الشاشة
-                displayWelcomeMessage(result.user);
-                populateProfileFields(result.user);
-            } else {
-                alert(result.message || "فشل تحديث البيانات، يرجى المحاولة لاحقاً.");
-            }
-
-        } catch (error) {
-            console.error("خطأ أثناء تحديث الملف الشخصي:", error);
-            alert("حدث خطأ في الاتصال بالسيرفر، يرجى التحقق من تشغيل السيرفر والمحاولة مجدداً.");
-        }
-    });
-}
-
-// ==========================================
-// 8. عرض البيانات الجمالية للإشعارات والمحادثات
-// ==========================================
 function renderNotifications() {
-    const container = document.getElementById('notificationsList');
-    if (!container) return;
-    container.innerHTML = notificationsData.map(notif => `
-        <div class="notification-item ${notif.read ? 'read' : ''}" style="padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 20px;">${notif.icon}</div>
-            <div style="flex: 1;">
-                <strong style="color:#2c3e50; font-size:14px;">${notif.title}</strong>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color:#555;">${notif.text}</p>
-                <span style="font-size: 11px; color: #999;">${notif.time}</span>
-            </div>
-        </div>
-    `).join('');
+  const container = document.getElementById('notificationsList');
+  if (!container) return;
+  if (!notificationsData.length) {
+    container.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:20px">لا توجد إشعارات</p>';
+    return;
+  }
+  container.innerHTML = notificationsData.map((notif) => `
+    <button type="button" class="notification-item ${notif.read ? 'read' : ''}" data-notif-id="${notif.id}">
+      <div class="notif-item-icon">${notif.icon}</div>
+      <div class="notif-item-body">
+        <strong>${notif.title}</strong>
+        <p>${notif.text}</p>
+        <span class="notif-item-time">${notif.time}</span>
+      </div>
+      ${notif.read ? '' : '<span class="notif-unread-dot" aria-hidden="true"></span>'}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('[data-notif-id]').forEach((el) => {
+    el.addEventListener('click', () => {
+      handleNotificationClick(el.getAttribute('data-notif-id'));
+    });
+  });
 }
 
 function renderFavorites() {
-    const container = document.getElementById('favoritesList');
-    if (!container) return;
-    container.innerHTML = favoritesData.map(fav => `
-        <div class="favorite-card" style="padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px;">
-            <div style="font-size: 24px; background: #f0f4f8; padding: 8px; border-radius: 50%;">${fav.icon}</div>
-            <div>
-                <strong style="color:#2c3e50;">${fav.name}</strong>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color:#7f8c8d;">${fav.specialty} · 📍 ${fav.location} · <span style="color:#f1c40f;">${fav.rating}</span></p>
-            </div>
+  const container = document.getElementById('favListFull');
+  if (!container) return;
+  if (!favoritesData.length) {
+    container.innerHTML = `
+      <p style="text-align:center;color:#7f8c8d;padding:24px">
+        لا يوجد حرفيون في المفضلة.<br>
+        أضف حرفياً من <a href="search.html">صفحة البحث</a> أو من <a href="privider.html">بروفايله</a>.
+      </p>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="fav-cards-grid">${favoritesData.map((fav) => {
+    const stars = fav.rating > 0 ? `⭐ ${fav.rating.toFixed(1)}` : '⭐ جديد';
+    const initial = (fav.name || 'ح').charAt(0);
+    return `
+      <article class="fav-card">
+        <div class="fav-card-avatar">${initial}</div>
+        <div class="fav-card-main">
+          <h3 class="fav-card-name">${fav.name}</h3>
+          <p class="fav-card-meta">${fav.specialty}</p>
+          <p class="fav-card-rating">${stars}</p>
+          ${fav.bio ? `<p class="fav-card-bio">${fav.bio.slice(0, 100)}${fav.bio.length > 100 ? '…' : ''}</p>` : ''}
         </div>
-    `).join('');
+        <div class="fav-card-actions">
+          <a href="privider.html?id=${encodeURIComponent(fav.id)}" class="btn-outline">عرض الحساب</a>
+          <a href="booking.html?id=${encodeURIComponent(fav.id)}" class="btn-primary">احجز الآن</a>
+        </div>
+      </article>`;
+  }).join('')}</div>`;
 }
 
 function renderMessages() {
-    const container = document.getElementById('messagesList');
-    if (!container) return;
-    container.innerHTML = messagesData.map(msg => `
-        <div class="message-item" style="padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 20px;">${msg.icon}</div>
-            <div>
-                <strong style="color:#2c3e50;">${msg.sender}</strong>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color:#7f8c8d;">${msg.preview}</p>
-            </div>
-        </div>
-    `).join('');
+  const container = document.getElementById('messagesList');
+  if (!container) return;
+  if (!messagesData.length) {
+    container.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:20px">لا توجد محادثات بعد</p>';
+    return;
+  }
+  container.innerHTML = messagesData.map((msg) => `
+    <a href="${msg.href}" class="message-item" style="padding:12px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit">
+      <div style="font-size:20px">${msg.icon}</div>
+      <div>
+        <strong style="color:#2c3e50">${msg.sender}</strong>
+        <p style="margin:3px 0 0;font-size:13px;color:#7f8c8d">${msg.preview}</p>
+        <span style="font-size:11px;color:#999">${msg.time}</span>
+      </div>
+    </a>
+  `).join('');
 }
 
-// ==========================================
-// 9. إدارة تسجيل الخروج بأمان (Logout)
-// ==========================================
 function initializeLogout() {
-    const logoutBtn = document.getElementById('logoutBtn') || document.getElementById('logout-btn');
-    const sidebarLogoutLink = document.querySelector('.fxr-sidebar-links a[style*="color: #f75555"]');
+  const handleLogout = (e) => {
+    if (e) e.preventDefault();
+    if (window.FixoraAccess?.logout) {
+      window.FixoraAccess.logout();
+      return;
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    sessionStorage.removeItem('fixora_current_user');
+    window.location.href = 'login.html';
+  };
 
-    const handleLogout = (e) => {
-        if (e) e.preventDefault();
-        
-        // تنظيف جلسة المستخدم والتوكنات بالكامل لمنع الوصول غير المصرح به
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        alert('تم تسجيل الخروج بنجاح! نراكم قريباً في FIXORA الأردن.');
-        window.location.href = 'login.html';
-    };
+  document.getElementById('headerLogoutBtn')?.addEventListener('click', handleLogout);
+  document.querySelectorAll('[data-fxr-logout]').forEach((el) => {
+    el.addEventListener('click', handleLogout);
+  });
 
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    if (sidebarLogoutLink) sidebarLogoutLink.addEventListener('click', handleLogout);
+  const dashLogout = document.querySelector('.dashboard-sidebar .sidebar-item[data-fxr-logout]');
+  if (dashLogout) {
+    dashLogout.addEventListener('click', handleLogout);
+  }
 }
+
+/** إعادة تحميل المفضلة (يُستدعى من صفحة الحرفي بعد الإضافة) */
+window.fxrRefreshClientFavorites = loadFavoritesFromApi;

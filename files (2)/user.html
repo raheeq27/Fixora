@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/fxr-theme.css">
 <link rel="stylesheet" href="css/fxr-home.css">
 <link rel="stylesheet" href="css/user.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
@@ -74,7 +75,7 @@
     <a href="#" class="fxr-sidebar-link" style="color: #f75555;">🚪 تسجيل الخروج</a> -->
     <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px;"></div>
     
-<a href="#" class="fxr-sidebar-link" style="color: #f75555;" onclick="handleLogout()">🚪 تسجيل الخروج</a>
+<a href="#" class="fxr-sidebar-link" data-fxr-logout style="color: #f75555;">🚪 تسجيل الخروج</a>
   </div>
   
   <style>
@@ -109,15 +110,13 @@
   <div class="profile-header">
     <div class="profile-avatar">👤</div>
     <div class="profile-info">
-      <h1 id="userName">أحمد محمد الكيلاني</h1>
+      <h1 id="userName">جاري التحميل...</h1>
       <div class="member-since">
-        <span class="profile-badge">🇯🇴 عمّان، الأردن</span>
+        <span class="profile-badge" id="profileLocationBadge">📍 جاري التحميل...</span>
         <span class="profile-badge">✅ حساب موثق</span>
       </div>
-      <div class="profile-stats">
-        <span>📋 9 طلبات</span>
-        <span>⭐ 4.8 متوسط التقييم</span>
-        <span>❤️ 4 حرفيين مفضلين</span>
+      <div class="profile-stats" id="profileStats">
+        <span>جاري التحميل...</span>
       </div>
     </div>
   </div>
@@ -131,35 +130,35 @@
         <div class="info-icon">👤</div>
         <div class="info-text">
           <label>الاسم الكامل</label>
-          <div class="value" id="displayFullName">أحمد محمد الكيلاني</div>
+          <div class="value" id="displayFullName">—</div>
         </div>
       </div>
       <div class="info-row">
         <div class="info-icon">📞</div>
         <div class="info-text">
           <label>رقم الجوال</label>
-          <div class="value" id="displayPhone">0791234567</div>
+          <div class="value" id="displayPhone">—</div>
         </div>
       </div>
       <div class="info-row">
         <div class="info-icon">✉️</div>
         <div class="info-text">
           <label>البريد الإلكتروني</label>
-          <div class="value" id="displayEmail">ahmad@example.com</div>
+          <div class="value" id="displayEmail">—</div>
         </div>
       </div>
       <div class="info-row">
         <div class="info-icon">📍</div>
         <div class="info-text">
           <label>المحافظة / المنطقة</label>
-          <div class="value" id="displayLocation">عمّان – العبدلي</div>
+          <div class="value" id="displayLocation">—</div>
         </div>
       </div>
       <div class="info-row">
         <div class="info-icon">📅</div>
         <div class="info-text">
           <label>تاريخ الانضمام</label>
-          <div class="value" id="displayJoinDate">15 يناير 2025</div>
+          <div class="value" id="displayJoinDate">—</div>
         </div>
       </div>
       <button class="edit-btn" id="editProfileBtn">✏️ تعديل الملف الشخصي</button>
@@ -169,30 +168,7 @@
     <div class="info-card">
       <h3>📋 آخر الطلبات</h3>
       <div class="orders-list" id="ordersList">
-        <div class="order-item">
-          <div class="order-icon">❄️</div>
-          <div class="order-details">
-            <div class="order-title">تصليح تكييف سبليت</div>
-            <div class="order-provider">محمد أبو خالد · الشميساني · 15 مارس 2025</div>
-          </div>
-          <span class="order-status">قيد التنفيذ</span>
-        </div>
-        <div class="order-item">
-          <div class="order-icon">⚡</div>
-          <div class="order-details">
-            <div class="order-title">تصليح مفتاح كهرباء</div>
-            <div class="order-provider">خالد النابلسي · عبدون · 10 مارس 2025</div>
-          </div>
-          <span class="order-status">مكتمل ✓</span>
-        </div>
-        <div class="order-item">
-          <div class="order-icon">🚿</div>
-          <div class="order-details">
-            <div class="order-title">إصلاح تسريب ماء</div>
-            <div class="order-provider">يوسف الحوراني · إربد · 2 مارس 2025</div>
-          </div>
-          <span class="order-status">مكتمل ✓</span>
-        </div>
+        <p class="text-muted">جاري التحميل...</p>
       </div>
       <button class="edit-btn" style="margin-top:12px;background:transparent;" id="viewAllOrdersBtn">📋 عرض جميع الطلبات</button>
     </div>
@@ -201,35 +177,9 @@
     <div class="info-card">
       <h3>❤️ الحرفيون المفضلون</h3>
       <div class="fav-grid" id="favList">
-        <div class="fav-item">
-          <div class="fav-icon">👨‍🔧</div>
-          <div>
-            <div class="fav-name">محمد أبو خالد</div>
-            <div class="fav-specialty">تكييف وأجهزة</div>
-          </div>
-        </div>
-        <div class="fav-item">
-          <div class="fav-icon">👨‍🔧</div>
-          <div>
-            <div class="fav-name">خالد النابلسي</div>
-            <div class="fav-specialty">كهرباء منزلية</div>
-          </div>
-        </div>
-        <div class="fav-item">
-          <div class="fav-icon">👨‍🔧</div>
-          <div>
-            <div class="fav-name">يوسف الحوراني</div>
-            <div class="fav-specialty">سباكة</div>
-          </div>
-        </div>
-        <div class="fav-item">
-          <div class="fav-icon">👨‍🔧</div>
-          <div>
-            <div class="fav-name">فراس الزيادات</div>
-            <div class="fav-specialty">تكييف وتبريد</div>
-          </div>
-        </div>
+        <p class="text-muted">جاري التحميل...</p>
       </div>
+      <button class="edit-btn" style="margin-top:12px;background:transparent;" id="viewAllFavoritesBtn" type="button">❤️ عرض جميع المفضلة</button>
     </div>
 
     <!-- إحصائيات سريعة -->
@@ -239,14 +189,14 @@
         <div class="info-icon">📋</div>
         <div class="info-text">
           <label>إجمالي الطلبات</label>
-          <div class="value">9 طلبات (1 قيد التنفيذ، 8 مكتملة)</div>
+          <div class="value" id="statTotalOrders">—</div>
         </div>
       </div>
       <div class="info-row">
-        <div class="info-icon">⭐</div>
+        <div class="info-icon">❤️</div>
         <div class="info-text">
-          <label>متوسط تقييمي للحرفيين</label>
-          <div class="value">4.8 ★ من 5</div>
+          <label>الحرفيون المفضلون</label>
+          <div class="value" id="statFavorites">—</div>
         </div>
       </div>
      
@@ -272,6 +222,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="script.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/user.js"></script>
 </body>
 </html>

@@ -1,0 +1,270 @@
+.fxr-admin-page {
+  font-family: 'Cairo', sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* تحديث الـ Shell ليكون أكثر مرونة وتوافقاً مع الـ Navbar */
+.fxr-admin-shell {
+  display: flex; /* تحويله من grid إلى flex لسهولة التحكم */
+  max-width: 100%;
+  margin: 0;
+  min-height: calc(100vh - 120px); /* ضبط الارتفاع لضمان بقاء الفوتر في الأسفل */
+  direction: rtl;
+}
+
+/* تحديث الـ Sidebar ليتطابق مع تصميم الموقع */
+.fxr-admin-sidebar {
+  width: 260px;
+  background: #2a3236;
+  color: #fff;
+  padding-top: 20px;
+  /* إزالة الـ sticky إذا كان يسبب تداخلاً مع الـ Navbar */
+  position: sticky;
+  top: 0; 
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.fxr-admin-main {
+  order: 2;
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.fxr-admin-sidebar-head {
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.75rem;
+}
+
+.fxr-admin-sidebar-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f07a26;
+}
+
+.fxr-admin-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+}
+
+.fxr-admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: right;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 12px 24px;
+  margin: 2px 0;
+  border-radius: 0;
+  border-right: 3px solid transparent;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.fxr-admin-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.fxr-admin-nav-item.active {
+  background: rgba(240, 122, 38, 0.2);
+  color: #f07a26;
+  border-right-color: #f07a26;
+}
+
+.fxr-admin-panel {
+  display: none;
+}
+
+.fxr-admin-panel.active {
+  display: block;
+  animation: fxrFadeIn 0.2s ease;
+}
+
+@keyframes fxrFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fxr-admin-page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: #1e2a38;
+}
+
+.fxr-admin-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.fxr-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.fxr-stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.fxr-stat-val {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #f07a26;
+}
+
+.fxr-stat-lbl {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.fxr-admin-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.fxr-search-input {
+  max-width: 260px;
+  border-radius: 999px;
+}
+
+.fxr-admin-table thead th {
+  background: #f8f9fb;
+  font-size: 0.78rem;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.fxr-admin-table tbody td {
+  vertical-align: middle;
+  font-size: 0.88rem;
+}
+
+.fxr-status-pill {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: #eef1f5;
+}
+
+.fxr-admin-badge {
+  background: #ffc107;
+  color: #1e2a38;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.fxr-sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 10px 20px;
+}
+
+.fxr-footer {
+  background: var(--fxr-dark, #3f4a4f);
+  padding: 20px 32px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.fxr-footer-copy {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.fxr-footer-brand {
+  color: #f07a26;
+  font-weight: 700;
+}
+
+.fxr-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.fxr-footer-links a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.fxr-header-user {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.d-none { display: none !important; }
+
+@media (max-width: 900px) {
+  .fxr-admin-shell {
+    grid-template-columns: 1fr;
+  }
+  .fxr-admin-sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    padding: 12px 0;
+  }
+  .fxr-admin-nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .fxr-admin-nav-item {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 8px 16px;
+    margin: 0;
+    border-radius: 8px;
+    border-right: none;
+    white-space: nowrap;
+  }
+  .fxr-admin-nav-item.active {
+  border-right: none;
+  box-shadow: inset 0 -3px 0 #f07a26;
+  }
+}
+
+.fxr-admin-nav-badge {
+  margin-right: auto;
+  background: #f07a26;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  min-width: 22px;
+  text-align: center;
+}

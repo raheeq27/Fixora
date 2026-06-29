@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIXORA — غير مصرح</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
+  <style>
+    body { font-family: Cairo, sans-serif; background: #f0f1f0; margin: 0; min-height: 100vh; }
+    .unauth-wrap { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 64px); padding: 24px; }
+    .box { background: #fff; padding: 32px; border-radius: 12px; max-width: 420px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    h1 { color: #3f4a4f; font-size: 22px; }
+    p { color: #7a8f96; line-height: 1.7; }
+    .btn { display: inline-block; margin: 8px; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; }
+    .primary { background: #f07a26; color: #fff; }
+    .outline { border: 1px solid #3f4a4f; color: #3f4a4f; }
+  </style>
+</head>
+<body>
+<header class="fxr-header" style="position:sticky;top:0;z-index:1000;">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <button type="button" class="fxr-hamburger-btn" data-fxr-sidebar-toggle><span></span><span></span><span></span></button>
+    <a href="index.html" class="fxr-logo"><span class="fxr-logo-text">FIX<span style="color:#f07a26">O</span>RA</span></a>
+  </div>
+  <div class="fxr-header-btns"><a href="index.html" class="fxr-btn fxr-btn-outline">الرئيسية</a></div>
+</header>
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay"></div>
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo"><span class="fxr-logo-text">FIXORA</span></a>
+    <button type="button" class="fxr-sidebar-close">✕</button>
+  </div>
+  <div class="fxr-sidebar-links"></div>
+</aside>
+  <div class="unauth-wrap"><div class="box">
+    <h1>🚫 غير مصرح</h1>
+    <p id="msg">لا يمكنك فتح هذه الصفحة بحسابك الحالي.</p>
+    <a href="index.html" class="btn outline">الرئيسية</a>
+    <a href="#" id="homeBtn" class="btn primary">لوحتي</a>
+  </div></div>
+  <script src="js/api-config.js"></script>
+  <script src="js/fxr-api.js"></script>
+  <script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
+  <script src="js/fxr-navbar.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const from = params.get('from');
+      if (from) {
+        document.getElementById('msg').textContent =
+          'الصفحة «' + from + '» مخصصة لنوع حساب آخر. استخدم الحساب المناسب أو ارجع للوحة تحكمك.';
+      }
+      const role = window.FixoraAccess?.getRole();
+      const home = role && window.FixoraAccess.ROLE_HOME[role]
+        ? window.FixoraAccess.ROLE_HOME[role]
+        : 'index.html';
+      document.getElementById('homeBtn').href = home;
+    })();
+  </script>
+</body>
+</html>

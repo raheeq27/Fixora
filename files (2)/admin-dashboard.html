@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة — Fixora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+</head>
+<body class="fxr-admin-page" data-fxr-partials-base="partials/">
+
+  <div id="fxr-navbar-root"></div>
+
+  <div class="fxr-admin-shell">
+    <aside class="fxr-admin-sidebar" id="adminSidebar">
+      <div class="fxr-admin-sidebar-head">
+        <span class="fxr-admin-sidebar-title">لوحة الإدارة</span>
+      </div>
+      <nav class="fxr-admin-nav-list" id="adminNav">
+        <button type="button" class="fxr-admin-nav-item active" data-panel="stats">📊 الإحصائيات</button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="users">👥 المستخدمون</button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="bookings">📅 الحجوزات</button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="providers">🛠️ حرفيون معلّقون <span class="fxr-admin-nav-badge d-none" id="adminPendingBadge">0</span></button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="categories">🏷️ إدارة المهن</button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="reviews">⭐ البلاغات والتقييمات <span class="fxr-admin-nav-badge d-none" id="adminReportsBadge">0</span></button>
+        <button type="button" class="fxr-admin-nav-item" data-panel="contact">📨 تواصل معنا <span class="fxr-admin-nav-badge d-none" id="adminContactBadge">0</span></button>
+      </nav>
+    </aside>
+
+    <main class="fxr-admin-main" id="adminMain">
+      <!-- الإحصائيات -->
+      <section class="fxr-admin-panel active" id="panel-stats" data-panel="stats">
+        <h1 class="fxr-admin-page-title">نظرة عامة</h1>
+        <div class="fxr-stats-grid" id="statsGrid">
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statUsers">—</span><span class="fxr-stat-lbl">المستخدمون</span></div>
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statProviders">—</span><span class="fxr-stat-lbl">الحرفيون</span></div>
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statBookings">—</span><span class="fxr-stat-lbl">الحجوزات</span></div>
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statPending">—</span><span class="fxr-stat-lbl">بانتظار الاعتماد</span></div>
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statReviews">—</span><span class="fxr-stat-lbl">التقييمات</span></div>
+          <div class="fxr-stat-card"><span class="fxr-stat-val" id="statReports">—</span><span class="fxr-stat-lbl">بلاغات معلّقة</span></div>
+        </div>
+      </section>
+
+      <!-- المستخدمون -->
+      <section class="fxr-admin-panel" id="panel-users" data-panel="users">
+        <div class="fxr-admin-panel-head">
+          <h1 class="fxr-admin-page-title">المستخدمون</h1>
+          <input type="search" class="form-control form-control-sm fxr-search-input" id="userSearch" placeholder="بحث...">
+        </div>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <tbody id="usersTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- الحجوزات -->
+      <section class="fxr-admin-panel" id="panel-bookings" data-panel="bookings">
+        <div class="fxr-admin-panel-head">
+          <h1 class="fxr-admin-page-title">الحجوزات</h1>
+          <input type="search" class="form-control form-control-sm fxr-search-input" id="bookingSearch" placeholder="بحث...">
+        </div>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>العميل</th><th>الحرفي</th><th>الحالة</th><th>الموعد</th><th>تعديل</th></tr></thead>
+            <tbody id="bookingsTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- الحرفيون -->
+      <section class="fxr-admin-panel" id="panel-providers" data-panel="providers">
+        <h1 class="fxr-admin-page-title">حرفيون بانتظار الاعتماد</h1>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>الاسم</th><th>التخصص</th><th>البريد</th><th>معرض / مستندات</th><th>إجراء</th></tr></thead>
+            <tbody id="providersTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- المهن -->
+      <section class="fxr-admin-panel" id="panel-categories" data-panel="categories">
+        <div class="fxr-admin-panel-head">
+          <h1 class="fxr-admin-page-title">إدارة المهن</h1>
+          <button type="button" class="btn btn-sm btn-primary" id="addCategoryBtn">+ مهنة جديدة</button>
+        </div>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>المهنة</th><th>نشطة</th><th>إجراء</th></tr></thead>
+            <tbody id="categoriesTableBody"><tr><td colspan="3" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- التقييمات والبلاغات -->
+      <section class="fxr-admin-panel" id="panel-reviews" data-panel="reviews">
+        <h1 class="fxr-admin-page-title">التقييمات</h1>
+        <div class="table-responsive fxr-admin-table-wrap mb-4">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>العميل</th><th>الحرفي</th><th>التقييم</th><th>التعليق</th><th>إجراء</th></tr></thead>
+            <tbody id="reviewsTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+        <h2 class="h5 mb-3">البلاغات</h2>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>المُبلّغ</th><th>المُبلّغ عنه</th><th>السبب</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <tbody id="reportsTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- رسائل تواصل معنا -->
+      <section class="fxr-admin-panel" id="panel-contact" data-panel="contact">
+        <h1 class="fxr-admin-page-title">رسائل «تواصل معنا»</h1>
+        <p class="text-muted small mb-3">الرسائل الواردة من صفحة تواصل معنا — معلومات المرسل ونص الرسالة</p>
+        <div class="table-responsive fxr-admin-table-wrap">
+          <table class="table table-hover fxr-admin-table">
+            <thead><tr><th>المرسل</th><th>الجوال</th><th>البريد</th><th>الموضوع</th><th>الرسالة</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <tbody id="contactMessagesTableBody"><tr><td colspan="8" class="text-center py-4 text-muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="fxr-footer-root"></div>
+
+  <!-- تعديل حجز -->
+  <div class="modal fade" id="editBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">تعديل الحجز</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" id="editBookingId">
+          <label class="form-label">الحالة</label>
+          <select class="form-select mb-2" id="editBookingStatus">
+            <option value="pending">قيد الانتظار</option>
+            <option value="confirmed">مؤكد</option>
+            <option value="in_progress">قيد التنفيذ</option>
+            <option value="completed">مكتمل</option>
+            <option value="cancelled">ملغى</option>
+            <option value="rejected">مرفوض</option>
+          </select>
+          <label class="form-label">الموعد</label>
+          <input type="datetime-local" class="form-control mb-2" id="editBookingDate">
+          <label class="form-label">ملاحظات</label>
+          <textarea class="form-control" id="editBookingNotes" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-primary" id="saveBookingBtn">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- مهنة -->
+  <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="categoryModalTitle">مهنة</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" id="categoryEditId">
+          <label class="form-label">الاسم بالعربية</label>
+          <input type="text" class="form-control" id="categoryNameInput">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-primary" id="saveCategoryBtn">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="pendingProviderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ملف الحرفي — معرض الأعمال والمستندات</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="pendingProviderModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 start-0 p-3">
+    <div id="adminToast" class="toast align-items-center text-bg-dark border-0"><div class="d-flex"><div class="toast-body" id="adminToastBody">—</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api-config.js"></script>
+  <script src="js/fxr-api.js"></script>
+  <script src="js/fxr-access.js"></script>
+  <script src="js/fxr-navbar.js"></script>
+  <script src="js/fxr-notifications.js"></script>
+  <script src="js/fxr-header.js"></script>
+  <script src="js/fxr-layout.js"></script>
+  <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -16,7 +16,7 @@
   --shadow: 0 8px 30px rgba(63,74,79,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direction:rtl}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direction:rtl;min-height:100vh;display:flex;flex-direction:column}
 .sh{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-wrap:wrap}
 .sl-{color:var(--white);font-size:16px;font-weight:900;letter-spacing:2px}.sl- span{color:var(--orange)}
 .snav{display:flex;gap:4px;flex-wrap:wrap}
@@ -30,7 +30,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 .hero-about{background:linear-gradient(135deg,#3f4a4f,#2a3236);padding:48px 24px;text-align:center;color:white}
 .hero-about h1{font-size:28px;font-weight:900;margin-bottom:12px}
 .hero-about p{font-size:14px;color:var(--blue);max-width:700px;margin:0 auto}
-.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px;flex:1}
 .mission-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px;margin-bottom:48px}
 .mission-card{background:white;border-radius:20px;padding:28px 20px;text-align:center;box-shadow:var(--shadow)}
 .mission-card .icon{font-size:42px;margin-bottom:12px}
@@ -38,6 +38,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 .mission-card p{font-size:13px;color:var(--muted);line-height:1.5}
 @media(max-width:700px){.sh{padding:12px;height:auto;gap:8px}.hero-about h1{font-size:22px}}
 </style>
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
@@ -151,20 +152,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
       <p>الشفافية، الاحترافية، الالتزام بالمواعيد، ودعم الاقتصاد المحلي الأردني أولاً.</p>
     </div>
   </div>
-
-  <div style="background:white;border-radius:24px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow)">
-    <h2 style="font-size:18px;font-weight:900;margin-bottom:10px;border-right:4px solid var(--orange);padding-right:14px">لماذا يثق الأردنيون بـ FIXORA؟</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:22px">
-      <div><span style="color:var(--orange);font-weight:900;">✓</span> فحص هوية الحرفي وبطاقة العمل</div>
-      <div><span style="color:var(--orange);font-weight:900;">✓</span> أسعار بالدينار الأردني بدون رسوم خفية</div>
-      <div><span style="color:var(--orange);font-weight:900;">✓</span> دعم فني عبر واتساب لجميع مناطق المملكة</div>
-      <div><span style="color:var(--orange);font-weight:900;">✓</span> ضمان استرجاع المبلغ في حال عدم الرضا</div>
-    </div>
-  </div>
 </div>
 
 <!-- FOOTER -->
-<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center;">
+<footer class="fxr-footer" style="background: #3f4a4f; padding: 20px 32px; text-align: center; margin-top: auto;">
   <div style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-bottom: 10px;">
     © 2026 <span style="color: #f07a26; font-weight: 700;">FIXORA</span> الأردن 🇯🇴 — جميع الحقوق محفوظة
   </div>
@@ -176,5 +167,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 </footer>
 
 
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
 </body>
 </html>

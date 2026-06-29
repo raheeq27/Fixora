@@ -1,29 +1,39 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const { Pool } = pg;
 
-// إعداد الاتصال باستخدام متغيرات البيئة لضمان السرية التامة
+const trimEnv = (v) => (typeof v === 'string' ? v.trim() : v);
+
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
-    
-    // إعدادات أداء حوض الاتصالات (Pool Configuration)
-    max: 20,                  // الحد الأقصى للاتصالات المتزامنة
-    idleTimeoutMillis: 30000, // إغلاق الاتصال تلقائياً إذا ظل خاملاً لـ 30 ثانية
-    connectionTimeoutMillis: 2000, // وقت الانتظار قبل فشل الاتصال الجديد
+    user: trimEnv(process.env.DB_USER),
+    host: trimEnv(process.env.DB_HOST),
+    database: trimEnv(process.env.DB_NAME),
+    password: trimEnv(process.env.DB_PASSWORD),
+    port: process.env.DB_PORT ? parseInt(String(process.env.DB_PORT).trim(), 10) : 5432,
+
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
 });
 
-// اختبار الاتصال الأولي للتأكد من أن البيانات تعمل بنجاح
 pool.connect((err, client, release) => {
     if (err) {
+        if (err.code === '28P01') {
+            return console.error(
+                '❌ فشل الاتصال بقاعدة بيانات Fixora: كلمة مرور PostgreSQL في .env (DB_PASSWORD) لا تطابق المستخدم',
+                trimEnv(process.env.DB_USER)
+            );
+        }
         return console.error('❌ فشل الاتصال بقاعدة بيانات Fixora:', err.stack);
     }
     console.log('✅ Connected to Fixora database successfully');
-    release(); // تحرير الاتصال وإعادته للحوض
+    release();
 });
+
 export default pool;

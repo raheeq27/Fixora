@@ -6,12 +6,12 @@
   <title>FIXORA الأردن – تسجيل الدخول</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
-<div class="login-page">
-  <!-- HEADER / NAVBAR -->
-<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+<!-- HEADER / NAVBAR -->
+<header class="fxr-header">
   <div style="display: flex; align-items: center; gap: 16px;">
     <!-- Hamburger button -->
     <button class="fxr-hamburger-btn" onclick="fxrToggleSidebar()">
@@ -97,6 +97,7 @@
   </script>
 </aside>
 
+<div class="login-page">
   <div class="login-container">
     <div class="login-card">
       <div class="card-header">
@@ -203,6 +204,12 @@
   </div>
 </div>
 
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
 <script src="js/login.js"></script>
 </body>
 </html>

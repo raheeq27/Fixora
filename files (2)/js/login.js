@@ -170,29 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             requestBody.password = password;
 
-            const response = await fetch('http://localhost:3000/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
+            const data = await window.FixoraAPI.login(requestBody);
 
-            const rawResponse = await response.text();
-            let data = {};
-
-            try {
-                data = JSON.parse(rawResponse);
-            } catch (jsonError) {
-                data = { success: false, message: rawResponse };
-            }
-
-            console.log('LOGIN RESPONSE:', data);
-
-            // =========================================
-            // Success
-            // =========================================
-            if (response.ok && data.success) {
+            if (data.success) {
                 showToast('تم تسجيل الدخول بنجاح 🎉', 'success');
 
                 // Remember Me Logic
@@ -215,34 +195,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentUser.id) {
                     localStorage.setItem('userId', currentUser.id);
                 }
+                const displayName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim();
+                if (displayName) {
+                    localStorage.setItem('userName', displayName.split(' ')[0] || displayName);
+                }
 
                 // التوجيه التلقائي حسب الصلاحيات والـ Role المرجعة من السيرفر
                 setTimeout(() => {
-                    const role = currentUser.role || 'client';
-                    const redirect = localStorage.getItem('redirectAfterLogin');
+                    const role = window.FixoraAccess
+                      ? window.FixoraAccess.normalizeRole(currentUser.role || 'client')
+                      : (currentUser.role || 'client');
 
-                    if (redirect) {
-                        localStorage.removeItem('redirectAfterLogin');
-                        window.location.href = redirect;
+                    const safeRedirect = window.FixoraAccess
+                      ? window.FixoraAccess.resolveRedirectAfterLogin(role)
+                      : null;
+
+                    if (safeRedirect) {
+                        window.location.href = safeRedirect;
                         return;
                     }
 
                     if (role === 'provider') {
-                        window.location.href = 'provider-dashboard.html';
-                    } else if (role === 'admin') {
+                        window.FixoraAPI.getProviderProfile()
+                          .then((res) => {
+                            const verified = res.profile?.is_verified;
+                            window.location.href = verified
+                              ? 'provider-dashboard.html'
+                              : 'provider-pending.html';
+                          })
+                          .catch(() => {
+                            window.location.href = 'provider-pending.html';
+                          });
+                        return;
+                    }
+
+                    if (window.FixoraAccess) {
+                        window.FixoraAccess.redirectToRoleHome(role);
+                        return;
+                    }
+
+                    if (role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
                     } else {
-                        window.location.href = 'user-dashboard.html';
+                        window.location.href = 'index.html';
                     }
                 }, 1000);
-
-            } else {
-                showToast(data.message || 'بيانات الدخول غير صحيحة', 'error');
             }
 
         } catch (error) {
             console.error('Login Error:', error);
-            showToast('فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً', 'error');
+            showToast(
+              error.message === 'Failed to fetch'
+                ? window.FixoraAPI.networkHint
+                : (error.message || 'فشل تسجيل الدخول'),
+              'error'
+            );
         } finally {
             loginBtn.disabled = false;
             loginBtn.textContent = 'تسجيل الدخول';

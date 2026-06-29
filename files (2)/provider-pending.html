@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بانتظار اعتماد الحساب — Fixora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f4f6f9; min-height: 100vh; margin: 0; }
+    .fxr-pending-wrap { max-width: 520px; margin: 4rem auto; padding: 2rem; text-align: center; }
+    .fxr-pending-card {
+      background: #fff; border-radius: 16px; padding: 2.5rem 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+    .fxr-pending-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .fxr-pending-card h1 { font-size: 1.35rem; color: #1e2a38; margin-bottom: 0.75rem; }
+    .fxr-pending-card p { color: #6c757d; line-height: 1.7; font-size: 0.95rem; }
+    .fxr-pending-status {
+      margin-top: 1.25rem; padding: 12px; background: rgba(240,122,38,0.1);
+      border-radius: 10px; color: #e8590c; font-weight: 600; font-size: 0.9rem;
+    }
+    .d-none { display: none !important; }
+  </style>
+</head>
+<body data-fxr-partials-base="partials/">
+
+  <div id="fxr-navbar-root"></div>
+
+  <main class="fxr-pending-wrap">
+    <div class="fxr-pending-card">
+      <div class="fxr-pending-icon">⏳</div>
+      <h1>حسابك قيد المراجعة</h1>
+      <p>
+        شكراً لتسجيلك كحرفي في Fixora. سيقوم فريق الإدارة بمراجعة بياناتك واعتماد حسابك.
+        <strong>بعد الاعتماد</strong> ستصلك إشعار وتتمكن من فتح لوحة التحكم والظهور للعملاء.
+      </p>
+      <div class="fxr-pending-status" id="pendingStatus">جاري التحقق من حالة الحساب...</div>
+    </div>
+  </main>
+
+  <script src="js/api-config.js"></script>
+  <script src="js/fxr-api.js"></script>
+  <script src="js/fxr-access.js"></script>
+<script src="js/fxr-header.js"></script>
+  <script src="js/fxr-navbar.js"></script>
+  <script src="js/fxr-layout.js"></script>
+  <script src="js/fxr-notifications.js"></script>
+  <script>
+    (async function () {
+      if (!window.FixoraAPI?.requireAuth('provider')) return;
+
+      const statusEl = document.getElementById('pendingStatus');
+
+      async function checkApproval() {
+        try {
+          const res = await window.FixoraAPI.getProviderProfile();
+          const p = res.profile || {};
+          if (p.is_verified) {
+            statusEl.textContent = 'تم اعتماد حسابك! جاري التحويل للوحة التحكم...';
+            setTimeout(() => { location.href = 'provider-dashboard.html'; }, 1200);
+            return true;
+          }
+          statusEl.textContent = 'لا يزال حسابك بانتظار اعتماد الإدارة.';
+          return false;
+        } catch (e) {
+          statusEl.textContent = e.message || 'تعذر التحقق من الحالة';
+          return false;
+        }
+      }
+
+      await checkApproval();
+      setInterval(checkApproval, 20000);
+      if (window.fxrInitNotifications) window.fxrInitNotifications();
+    })();
+  </script>
+</body>
+</html>

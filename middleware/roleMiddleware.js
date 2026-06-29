@@ -1,11 +1,20 @@
-// ميدل وير لتحديد من يمكنه الوصول للمسار بناءً على الرتبة (admin, provider, client)
-export const restrictTo = (...allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user || !allowedRoles.includes(req.user.role)) {
-            const error = new Error('ليس لديك الصلاحية الكافية للقيام بهذا الإجراء');
-            error.statusCode = 403; // Forbidden
-            return next(error);
-        }
-        next();
-    };
+/**
+ * Role-based API protection (RequireRole / restrictTo).
+ * Use after authMiddleware so req.user is set from JWT.
+ */
+export const requireRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'ليس لديك الصلاحية للوصول إلى هذا المورد.',
+        requiredRoles: allowedRoles,
+        yourRole: req.user?.role || null
+      });
+    }
+    next();
+  };
 };
+
+/** @deprecated use requireRole — kept for existing imports */
+export const restrictTo = requireRole;

@@ -25,6 +25,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 .snav a.on{background:var(--orange);color:white}
 .sf{background:var(--dark);color:rgba(255,255,255,.5);padding:16px 24px;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .sf span{color:var(--orange)}
+.hero-about{background:linear-gradient(120deg,#2a3236,#3f4a4f);padding:56px 24px;text-align:center;color:white}
+.hero-about h1{font-size:28px;font-weight:900;margin-bottom:12px}
+.hero-about p{font-size:14px;color:#91bdd1;max-width:700px;margin:0 auto}
 .contact-hero{background:linear-gradient(120deg,#2a3236,#3f4a4f);padding:40px 20px;text-align:center;color:white}
 .contact-hero h1{font-size:26px;margin-bottom:8px}
 .contact-hero p{font-size:13px;color:var(--blue)}
@@ -47,6 +50,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
 .submit-btn{background:var(--orange);color:white;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;width:100%;cursor:pointer;font-family:inherit;transition:all 0.2s}
 .submit-btn:hover{background:#e06618;transform:translateY(-1px)}
 </style>
+  <link rel="stylesheet" href="css/fxr-navbar.css">
 </head>
 <body>
 
@@ -136,9 +140,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
     }
   </script>
 </aside>
->
-  <h1>📞 تواصل مع فريق FIXORA الأردن</h1>
-  <p>نحن هنا للإجابة عن استفساراتك، مساعدتك في طلب خدمة، أو أي اقتراح يخدم المجتمع الأردني.</p>
+
+<div class="hero-about">
+  <h1>📞 تواصل معنا</h1>
+  <p>نحن هنا للإجابة عن استفساراتك ومساعدتك — نرد عليك خلال 24 ساعة 🇯🇴</p>
 </div>
 
 <div class="contact-wrapper">
@@ -241,5 +246,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--dark);direc
     document.getElementById('topic').selectedIndex = 0;
   });
 </script>
+<script src="js/api-config.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
 </body>
 </html>

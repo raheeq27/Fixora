@@ -5,21 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>FIXORA الأردن – راسل الحرفي</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fxr-navbar.css">
   <link rel="stylesheet" href="css/chat.css">
 </head>
 <body>
 
+<header class="fxr-header" style="z-index: 1000; position: sticky; top: 0;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <button type="button" class="fxr-hamburger-btn" data-fxr-sidebar-toggle aria-label="القائمة">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="index.html" class="fxr-logo">
+      <img src="png/logo-header.jpeg" alt="FIXORA" class="fxr-logo-icon" style="width: 48px; height: 48px; object-fit: contain;">
+      <span class="fxr-logo-text">FIX<span>O</span>RA</span>
+    </a>
+  </div>
+  <nav>
+    <ul class="fxr-nav">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="user-dashboard.html">لوحة التحكم</a></li>
+    </ul>
+  </nav>
+  <div class="fxr-header-btns">
+    <a href="login.html" class="fxr-btn fxr-btn-outline">دخول</a>
+  </div>
+</header>
+
+<div class="fxr-main-sidebar-overlay" id="fxrSidebarOverlay"></div>
+<aside class="fxr-main-sidebar" id="fxrMainSidebar">
+  <div class="fxr-sidebar-header">
+    <a href="index.html" class="fxr-logo"><span class="fxr-logo-text">FIX<span>O</span>RA</span></a>
+    <button type="button" class="fxr-sidebar-close" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="fxr-sidebar-links"></div>
+</aside>
+
 <div class="chat-app">
   <!-- رأس الصفحة مع معلومات الحرفي -->
   <div class="chat-header">
-    <button class="back-btn" id="backBtn" title="العودة للبروفايل">✕</button>
+    <button class="back-btn" id="backBtn" title="العودة للحساب">✕</button>
     <div class="provider-info">
-      <div class="provider-avatar">👨‍🔧</div>
+      <div class="provider-avatar" id="chatProviderAvatar">👷</div>
       <div class="provider-details">
-        <h3>محمد أبو خالد</h3>
+        <h3 id="chatProviderName">محادثة الحجز</h3>
         <div class="provider-status">
           <span class="status-dot"></span>
-          <span>متصل · متاح الآن</span>
+          <span id="chatProviderStatus">متصل</span>
         </div>
       </div>
     </div>
@@ -40,6 +71,13 @@
   </div>
 </div>
 
+<script src="js/api-config.js"></script>
+<script src="js/fxr-api.js"></script>
+<script src="js/fxr-access.js"></script>
+<script src="js/fxr-notifications.js"></script>
+<script src="js/fxr-header.js"></script>
+<script src="js/fxr-navbar.js"></script>
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
 <script src="js/chat.js"></script>
 </body>
 </html>

@@ -1,7 +1,13 @@
 import express from 'express';
-import { createBooking, getUserBookings } from '../controllers/bookingController.js';
+import {
+  createBooking,
+  getUserBookings,
+  updateBookingStatus,
+  getAvailableSlots
+} from '../controllers/bookingController.js';
 import { getUserNotifications, markNotificationAsRead } from '../controllers/notificationController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRole } from '../middleware/roleMiddleware.js';
 import pool from '../config/db.js';
 
 const router = express.Router();
@@ -17,11 +23,14 @@ router.get('/categories', async (req, res) => {
 });
 
 // --- مسارات الحجوزات (محمية) ---
-router.post('/', authMiddleware, createBooking);
-router.get('/my-bookings', authMiddleware, getUserBookings);
+router.get('/available-slots', authMiddleware, requireRole('client'), getAvailableSlots);
+router.post('/', authMiddleware, requireRole('client'), createBooking);
+router.post('/create-booking', authMiddleware, requireRole('client'), createBooking);
+router.get('/my-bookings', authMiddleware, requireRole('client', 'provider'), getUserBookings);
+router.patch('/:id/status', authMiddleware, requireRole('client', 'provider'), updateBookingStatus);
 
 // --- مسارات الإشعارات (محمية) ---
-router.get('/notifications', authMiddleware, getUserNotifications);
-router.put('/notifications/:id/read', authMiddleware, markNotificationAsRead);
+router.get('/notifications', authMiddleware, requireRole('client', 'provider', 'admin'), getUserNotifications);
+router.put('/notifications/:id/read', authMiddleware, requireRole('client', 'provider', 'admin'), markNotificationAsRead);
 
 export default router;

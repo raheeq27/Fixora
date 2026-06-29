@@ -30,7 +30,7 @@ body {
 .chat-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 64px);
   max-width: 900px;
   margin: 0 auto;
   background: var(--bg);

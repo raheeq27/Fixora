@@ -7,17 +7,17 @@ import {
     getMyFavorites   // 👈 استيراد دالة جلب قائمة المفضلات لتلوين أيقونات الفرونتند
 } from '../controllers/interactionController.js';
 
-import authMiddleware from '../middleware/authMiddleware.js'; // الـ Middleware الخاص بكِ
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRole } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-// تطبيق الـ Middleware على جميع المسارات بالأسفل لمنع التكرار والحماية
 router.use(authMiddleware);
 
 // =========================================
 // 1. مسار التقييمات (Reviews)
 // =========================================
-router.post('/review', createReview);
+router.post('/review', requireRole('client'), createReview);
 
 // =========================================
 // 2. مسارات الرسائل والدردشة السياقية (Messages)
@@ -29,7 +29,7 @@ router.get('/bookings/:bookingId/messages', getChatHistory); // جلب شات ح
 // =========================================
 // 3. مسارات المفضلة (Favorites)
 // =========================================
-router.post('/favorite', toggleFavorite); // إضافة أو حذف فني من المفضلة
-router.get('/favorites', getMyFavorites); // جلب الفنيين المفضلين للعميل الحالي
+router.post('/favorite', requireRole('client'), toggleFavorite);
+router.get('/favorites', requireRole('client'), getMyFavorites);
 
 export default router;

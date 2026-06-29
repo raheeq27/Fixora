@@ -1,99 +1,200 @@
-// بيانات المستخدم (تأتي من قاعدة البيانات بعد تسجيل الدخول)
-let userData = {
-    fullName: 'أحمد محمد الكيلاني',
-    phone: '0791234567',
-    email: 'ahmad@example.com',
-    location: 'عمّان – العبدلي',
-    joinDate: '15 يناير 2025'
+/**
+ * FIXORA — user profile page (client)
+ */
+'use strict';
+
+const api = window.FixoraAPI;
+
+const GOV_AR = {
+  Amman: 'عمّان',
+  Irbid: 'إربد',
+  Zarqa: 'الزرقاء',
+  Balqa: 'البلقاء',
+  Salat: 'السلط',
+  Mafraq: 'المفرق',
+  Jerash: 'جرش',
+  Ajloun: 'عجلون',
+  Madaba: 'مأدبا',
+  Karak: 'الكرك',
+  Tafilah: 'الطفيلة',
+  "Ma'an": 'معان',
+  Aqaba: 'العقبة'
 };
 
-// تحديث واجهة المستخدم بالبيانات
-function updateProfileUI() {
-    const firstName = userData.fullName.split(' ')[0];
-    const lastName = userData.fullName.split(' ')[1] || '';
-    document.getElementById('userName').textContent = firstName + ' ' + lastName;
-    document.getElementById('displayFullName').textContent = userData.fullName;
-    document.getElementById('displayPhone').textContent = userData.phone;
-    document.getElementById('displayEmail').textContent = userData.email;
-    document.getElementById('displayLocation').textContent = userData.location;
-    document.getElementById('displayJoinDate').textContent = userData.joinDate;
+const STATUS_LABELS = {
+  pending: 'قيد الانتظار',
+  confirmed: 'مقبول',
+  in_progress: 'جاري التنفيذ',
+  completed: 'مكتمل',
+  rejected: 'مرفوض',
+  cancelled: 'ملغى'
+};
+
+function govLabel(g) {
+  return GOV_AR[g] || g || '—';
 }
 
-// التحقق من صحة رقم الجوال الأردني
-function isValidJordanianPhone(phone) {
-    return /^07[0-9]{8}$/.test(phone);
+async function loadUserProfile() {
+  if (api && !api.requireAuth('client')) return;
+
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  try {
+    const [profileRes, bookingsRes, favRes] = await Promise.all([
+      api.getProfile(userId),
+      api.getMyBookings().catch(() => ({ data: [] })),
+      api.getFavorites().catch(() => ({ data: [] }))
+    ]);
+
+    const user = profileRes.user || profileRes;
+    if (!user) return;
+
+    const profileUser = {
+      ...user,
+      profile_pic_url: user.profile_pic_url || null
+    };
+    sessionStorage.setItem('fixora_current_user', JSON.stringify(profileUser));
+
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'مستخدم';
+    const picUrl = user.profile_pic_url || localStorage.getItem('fixora_client_avatar') || null;
+    const area = user.detailed_area || user.area || user.address || '';
+    const location = [govLabel(user.governorate), area].filter(Boolean).join(' – ') || '—';
+    const joinDate = user.created_at
+      ? new Date(user.created_at).toLocaleDateString('ar-JO', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+
+    const bookings = bookingsRes.data || [];
+    const favorites = favRes.data || [];
+
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    set('userName', fullName);
+
+    const avatarWrap = document.querySelector('.profile-header .profile-avatar');
+    if (avatarWrap) {
+      if (picUrl) {
+        avatarWrap.innerHTML = `<img src="${picUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      } else {
+        avatarWrap.textContent = '👤';
+      }
+    }
+    set('displayFullName', fullName);
+    set('displayPhone', user.phone || '—');
+    set('displayEmail', user.email || '—');
+    set('displayLocation', location);
+    set('displayJoinDate', joinDate);
+
+    const locationBadge = document.getElementById('profileLocationBadge');
+    if (locationBadge) locationBadge.textContent = `📍 ${location}`;
+
+    const statsEl = document.getElementById('profileStats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <span>📋 ${bookings.length} طلب</span>
+        <span>❤️ ${favorites.length} حرفي مفضل</span>
+      `;
+    }
+
+    const totalOrders = document.getElementById('statTotalOrders');
+    const statFavs = document.getElementById('statFavorites');
+    if (totalOrders) totalOrders.textContent = String(bookings.length);
+    if (statFavs) statFavs.textContent = String(favorites.length);
+
+    renderOrdersList(bookings);
+    renderFavoritesList(favorites);
+  } catch (e) {
+    console.warn('تعذر تحميل الملف الشخصي', e);
+  }
 }
 
-// التحقق من صحة البريد الإلكتروني
-function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function renderOrdersList(bookings) {
+  const ordersList = document.getElementById('ordersList');
+  if (!ordersList) return;
+
+  if (!bookings.length) {
+    ordersList.innerHTML = '<p class="text-muted">لا توجد طلبات بعد.</p>';
+    return;
+  }
+
+  ordersList.innerHTML = bookings.slice(0, 5).map((b) => {
+    const s = String(b.status || '').toLowerCase();
+    const label = STATUS_LABELS[s] || b.status;
+    const date = b.scheduled_at || b.created_at;
+    const when = date
+      ? new Date(date).toLocaleDateString('ar-JO', { day: 'numeric', month: 'short' })
+      : '—';
+    return `
+      <a href="user-dashboard.html?tab=tab-orders" class="profile-order-row">
+        <span class="profile-order-title">${b.category_name || 'طلب خدمة'}</span>
+        <span class="profile-order-meta">${(b.provider_name || 'فني').trim()} · ${when}</span>
+        <span class="profile-order-status">${label}</span>
+      </a>`;
+  }).join('');
 }
 
-// تعديل الملف الشخصي
-function editProfile() {
-    let newName = prompt('الاسم الكامل:', userData.fullName);
-    if (newName && newName.trim()) {
-        userData.fullName = newName.trim();
-    }
-    
-    let newPhone = prompt('رقم الجوال (أردني - يبدأ بـ 07):', userData.phone);
-    if (newPhone && newPhone.trim()) {
-        if (isValidJordanianPhone(newPhone.trim())) {
-            userData.phone = newPhone.trim();
-        } else {
-            alert('❌ رقم الجوال غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 10 أرقام.');
-        }
-    }
-    
-    let newEmail = prompt('البريد الإلكتروني:', userData.email);
-    if (newEmail && newEmail.trim()) {
-        if (isValidEmail(newEmail.trim())) {
-            userData.email = newEmail.trim();
-        } else {
-            alert('❌ البريد الإلكتروني غير صحيح.');
-        }
-    }
-    
-    let newLocation = prompt('المحافظة والمنطقة:', userData.location);
-    if (newLocation && newLocation.trim()) {
-        userData.location = newLocation.trim();
-    }
-    
-    updateProfileUI();
-    alert('✅ تم تحديث الملف الشخصي بنجاح!');
+function renderFavoritesList(favorites) {
+  const favoritesList = document.getElementById('favList');
+  if (!favoritesList) return;
+
+  if (!favorites.length) {
+    favoritesList.innerHTML = '<p class="text-muted">لا يوجد حرفيون في المفضلة.</p>';
+    return;
+  }
+
+  favoritesList.innerHTML = favorites.slice(0, 6).map((f) => {
+    const name = `${f.first_name || ''} ${f.last_name || ''}`.trim() || 'حرفي';
+    const id = f.provider_profile_id || f.id;
+    return `
+      <a href="user-dashboard.html?tab=tab-favorites" class="profile-fav-chip" title="${name}">
+        <span class="profile-fav-initial">${name.charAt(0)}</span>
+        <span class="profile-fav-name">${name}</span>
+      </a>`;
+  }).join('');
 }
 
-// تسجيل الخروج
 function logout() {
-    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        alert('🔐 تم تسجيل الخروج بنجاح. سيتم توجيهك إلى الصفحة الرئيسية.');
-        // في التطبيق الحقيقي: window.location.href = 'index.html';
-    }
+  if (window.FixoraAccess) {
+    window.FixoraAccess.logout();
+    return;
+  }
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = 'login.html';
 }
 
-// عرض جميع الطلبات
-function viewAllOrders() {
-    alert('📋 سيتم توجيهك إلى صفحة جميع الطلبات قريباً.');
-}
+window.handleLogout = logout;
 
-// عند تحميل الصفحة بالكامل
-document.addEventListener('DOMContentLoaded', function() {
-    // تحديث واجهة المستخدم
-    updateProfileUI();
-    
-    // إضافة مستمعي الأحداث
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-    
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    if (editProfileBtn) {
-        editProfileBtn.addEventListener('click', editProfile);
-    }
-    
-    const viewAllOrdersBtn = document.getElementById('viewAllOrdersBtn');
-    if (viewAllOrdersBtn) {
-        viewAllOrdersBtn.addEventListener('click', viewAllOrders);
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  loadUserProfile();
+
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    logout();
+  });
+
+  document.querySelectorAll('[data-fxr-logout]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
+  });
+
+  document.getElementById('editProfileBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = 'user-dashboard.html?tab=tab-profile';
+  });
+
+  document.getElementById('viewAllOrdersBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = 'user-dashboard.html?tab=tab-orders';
+  });
+
+  document.getElementById('viewAllFavoritesBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = 'user-dashboard.html?tab=tab-favorites';
+  });
 });
